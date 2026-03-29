@@ -1,0 +1,84 @@
+services:
+  # 1. Main Backend Web Service (Uses Yarn)
+  - type: web
+    name: billeasy-backend
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: yarn install
+    startCommand: yarn start
+    rootDir: backend
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: DATABASE_URL
+        fromDatabase:
+          name: billeasy-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+
+  # 2. Main Frontend Static Site (Uses Yarn)
+  - type: static
+    name: billeasy-frontend
+    runtime: static
+    plan: free
+    buildCommand: yarn install && yarn build
+    publishDir: dist
+    rootDir: frontend
+    envVars:
+      - key: VITE_BACKEND_URL
+        fromService:
+          type: web
+          name: billeasy-backend
+          property: host
+
+  # 3. Admin Backend Web Service (Uses NPM)
+  - type: web
+    name: billeasy-admin-backend
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm install
+    startCommand: npm start
+    rootDir: admin/backend
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: DATABASE_URL
+        fromDatabase:
+          name: billeasy-db
+          property: connectionString
+      - key: DATABASE_URL_ADMIN
+        fromDatabase:
+          name: billeasy-db
+          property: connectionString
+      - key: ADMIN_SECRET
+        value: developer_secret_key_2026
+      - key: NODE_ENV
+        value: production
+
+  # 4. Admin Frontend Static Site (Uses NPM)
+  - type: static
+    name: billeasy-admin-frontend
+    runtime: static
+    plan: free
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    rootDir: admin/frontend
+    envVars:
+      - key: VITE_ADMIN_BACKEND_URL
+        fromService:
+          type: web
+          name: billeasy-admin-backend
+          property: host
+      - key: VITE_ADMIN_SECRET
+        value: developer_secret_key_2026
+
+databases:
+  # Unified Render PostgreSQL Database
+  - name: billeasy-db
+    plan: free
+    region: oregon
