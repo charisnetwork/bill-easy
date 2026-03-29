@@ -10,8 +10,10 @@ yarn-error.log
 *.log
 
 # Frontend build
-frontend/
+dist/
+build/
 admin/frontend/dist/
+admin/frontend/build/
 
 # System
 .git/
