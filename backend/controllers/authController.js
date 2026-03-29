@@ -40,18 +40,36 @@ const register = async (req, res) => {
       role: 'owner'
     });
 
+    // Create UserCompany association
+    await UserCompany.create({
+      user_id: user.id,
+      company_id: company.id,
+      role: 'owner'
+    });
+
     // Find or create Free plan
-    let freePlan = await Plan.findOne({ where: { plan_name: 'Free' } });
+    let freePlan = await Plan.findOne({ where: { plan_name: 'Free Account' } });
 
     if (!freePlan) {
       freePlan = await Plan.create({
-        plan_name: 'Free',
+        plan_name: 'Free Account',
         price: 0,
-        billing_cycle: 'monthly',
+        billing_cycle: 'lifetime',
         max_users: 1,
         max_invoices_per_month: 50,
-        max_products: 50,
-        storage_limit: 100
+        max_products: 100,
+        features: {
+          gst_billing: true,
+          inventory_management: true,
+          reports: true,
+          quotations: true,
+          eway_bills: false,
+          multi_godowns: false,
+          staff_attendance_payroll: false,
+          manage_businesses: 1,
+          user_activity_tracker: false
+        },
+        is_active: true
       });
     }
 

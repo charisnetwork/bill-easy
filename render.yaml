@@ -30,11 +30,7 @@ services:
     rootDir: frontend
     envVars:
       - key: VITE_BACKEND_URL
-        fromService:
-          type: web
-          name: billeasy-backend
-          property: host
-
+        value: https://billeasy-backend.onrender.com # Update this if your backend service name is different
   # 3. Admin Backend Web Service
   - type: web
     name: billeasy-admin-backend
@@ -70,10 +66,7 @@ services:
     rootDir: admin/frontend
     envVars:
       - key: VITE_ADMIN_BACKEND_URL
-        fromService:
-          type: web
-          name: billeasy-admin-backend
-          property: host
+        value: https://billeasy-admin-backend.onrender.com # Update this if your admin backend name is different
       - key: VITE_ADMIN_SECRET
         value: developer_secret_key_2026
 
