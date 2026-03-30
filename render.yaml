@@ -30,7 +30,9 @@ services:
     rootDir: frontend
     envVars:
       - key: VITE_BACKEND_URL
-        value: https://billeasy-backend.onrender.com # Update this if your backend service name is different
+        value: https://billeasy-backend.onrender.com
+      - key: REACT_APP_BACKEND_URL
+        value: https://billeasy-backend.onrender.com
     routes:
       - type: rewrite
         source: /*

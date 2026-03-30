@@ -14,7 +14,7 @@ export default defineConfig({
       }
     }
   },
-  envPrefix: 'REACT_APP_',
+  envPrefix: ['VITE_', 'REACT_APP_'],
   define: {
     // Security fix: map specific required variables
     'process.env.REACT_APP_BACKEND_URL': JSON.stringify(process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001'),
