@@ -1,5 +1,6 @@
 const { Plan, Subscription, Company, Coupon, PlanFeature } = require('../models');
 const Razorpay = require('razorpay');
+const crypto = require('crypto');
 
 let razorpay;
 if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
@@ -102,7 +103,25 @@ const getCurrentSubscription = async (req, res) => {
 
 const upgradePlan = async (req, res) => {
   try {
-    const { plan_id, payment_reference, coupon_id } = req.body;
+    const { plan_id, payment_reference, coupon_id, order_id, signature, payment_id } = req.body;
+
+    // Verify Razorpay signature if payment_id, order_id and signature are provided
+    if (payment_id && order_id && signature) {
+      if (!process.env.RAZORPAY_KEY_SECRET) {
+        console.error('❌ RAZORPAY_KEY_SECRET is not set');
+        return res.status(500).json({ error: 'Payment gateway not fully configured' });
+      }
+
+      const body = order_id + "|" + payment_id;
+      const expectedSignature = crypto
+        .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+        .update(body.toString())
+        .digest('hex');
+
+      if (expectedSignature !== signature) {
+        return res.status(400).json({ error: 'Invalid payment signature' });
+      }
+    }
 
     const newPlan = await Plan.findByPk(plan_id);
     if (!newPlan) {

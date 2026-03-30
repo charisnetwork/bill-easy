@@ -99,8 +99,14 @@ export const SubscriptionPage = () => {
       });
       const { order, key_id } = res.data;
 
+      if (!window.Razorpay) {
+        toast.error("Razorpay script not loaded. Please refresh the page.");
+        setUpgrading(false);
+        return;
+      }
+
       const options = {
-        key: key_id,
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || key_id,
         amount: order.amount,
         currency: order.currency,
         name: "BillEasy SaaS",
