@@ -26,8 +26,28 @@ const GlobalNotification = adminDB.define('GlobalNotification', {
   sent_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
 }, { tableName: 'GlobalNotifications', timestamps: false });
 
+const AdminUser = adminDB.define('AdminUser', {
+  id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+  name: { type: DataTypes.STRING, defaultValue: 'Prashanth' },
+  email: { type: DataTypes.STRING, allowNull: false, unique: true },
+  phone: { type: DataTypes.STRING, allowNull: false, unique: true },
+  password: { type: DataTypes.STRING, allowNull: false },
+  last_password_reset: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+  is_active: { type: DataTypes.BOOLEAN, defaultValue: true }
+}, { tableName: 'AdminUsers' });
+
+const AdminOTP = adminDB.define('AdminOTP', {
+  id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+  email: { type: DataTypes.STRING, allowNull: false },
+  otp: { type: DataTypes.STRING, allowNull: false },
+  expires_at: { type: DataTypes.DATE, allowNull: false },
+  verified: { type: DataTypes.BOOLEAN, defaultValue: false }
+}, { tableName: 'AdminOTPs' });
+
 module.exports = { 
   Affiliate, 
   PlatformExpense, 
-  GlobalNotification 
+  GlobalNotification,
+  AdminUser,
+  AdminOTP
 };
