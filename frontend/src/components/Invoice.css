@@ -1,0 +1,124 @@
+.invoice-container {
+  font-family: 'Inter', sans-serif;
+  color: #1e293b;
+  line-height: 1.5;
+}
+
+.invoice-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 2px solid #f1f5f9;
+  padding-bottom: 2rem;
+  margin-bottom: 2rem;
+}
+
+.invoice-title {
+  text-align: right;
+}
+
+.invoice-title h1 {
+  font-size: 2rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.025em;
+  margin: 0;
+  color: #0f172a;
+}
+
+.address-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.address-box {
+  background-color: #f8fafc;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+
+.address-box h3 {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #64748b;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+}
+
+.invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+  border: 1px solid #e2e8f0;
+}
+
+.invoice-table th {
+  background-color: #0f172a;
+  color: white;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.invoice-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.875rem;
+}
+
+/* Vertical Lines Implementation */
+.invoice-table th:not(:last-child),
+.invoice-table td:not(:last-child) {
+  border-right: 1px solid #e2e8f0;
+}
+
+.invoice-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 4rem;
+}
+
+.gst-breakdown {
+  width: 300px;
+  font-size: 0.875rem;
+}
+
+.gst-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed #e2e8f0;
+}
+
+.signature-block {
+  text-align: center;
+  width: 250px;
+}
+
+.signature-line {
+  border-top: 2px solid #0f172a;
+  margin-top: 4rem;
+  padding-top: 0.5rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+@media print {
+  .invoice-container {
+    padding: 0;
+  }
+  .address-box {
+    border: 1px solid #cbd5e1 !important;
+    background-color: transparent !important;
+  }
+}
