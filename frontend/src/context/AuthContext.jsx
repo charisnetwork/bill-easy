@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 
-const API_URL = (import.meta.env.VITE_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL || '') + '/api';
+const API_URL = 'https://billeasy-backend.onrender.com/api';
 
 const AuthContext = createContext(null);
 
