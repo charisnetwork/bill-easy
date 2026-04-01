@@ -27,7 +27,7 @@ export const SubscriptionPage = () => {
     { id: 'eway_bills', label: 'E-way Bills', premiumLimit: '5/month', enterpriseLimit: 'Unlimited' },
     { id: 'staff_attendance_payroll', label: 'Staff Attendance & Payroll' },
     { id: 'multi_godowns', label: 'Multiple Godowns/Warehouses' },
-    { id: 'manage_businesses', label: 'Manage Multiple Businesses' },
+    { id: 'can_manage_multiple', label: 'Manage Multiple Businesses' },
     { id: 'user_activity_tracker', label: 'User Activity Tracker' },
     { id: 'priority_support', label: 'Priority Support' },
   ];

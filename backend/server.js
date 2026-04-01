@@ -206,8 +206,9 @@ const seedPlans = async () => {
           quotations: true,
           eway_bills: true, // Limited access check in Guard
           multi_godowns: true,
-          staff_attendance_payroll: false,
+          staff_attendance_payroll: true,
           manage_businesses: 2,
+          can_manage_multiple: false,
           user_activity_tracker: false
         },
         is_active: true
@@ -228,6 +229,7 @@ const seedPlans = async () => {
           multi_godowns: true,
           staff_attendance_payroll: true,
           manage_businesses: 3,
+          can_manage_multiple: true,
           user_activity_tracker: true,
           priority_support: true
         },

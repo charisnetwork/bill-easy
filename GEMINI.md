@@ -85,12 +85,26 @@ Deploy as two separate projects on Vercel:
 - [x] **Unified Frontend API:** Consolidated Axios instances and implemented `VITE_BACKEND_URL` environment variables in the frontend.
 - [x] **Production Dependency Management:** Added `cloudinary` and `multer-storage-cloudinary` to backend packages.
 
-### Required Environment Variables for Render.com:
-- `DATABASE_URL`: Main PostgreSQL connection string.
-- `JWT_SECRET`: Random secure string.
-- `CLOUDINARY_URL`: Cloudinary connection string (e.g., `cloudinary://api_key:api_secret@cloud_name`).
-- `ALLOWED_ORIGINS`: Comma-separated list of domains (e.g., `https://charisbilleasy.store,https://admin.charisbilleasy.store`).
-- `VITE_BACKEND_URL`: `https://your-backend-url.onrender.com/api`.
+## Subscription Plan Enforcement
+
+The platform enforces plan limits and features via the `SubscriptionGuard` and `checkSubscriptionQuota` middleware.
+
+### Current Plan Details (April 2026 Update)
+
+| Feature | Free Account | Premium | Enterprise |
+| :--- | :--- | :--- | :--- |
+| **Price** | Free | ₹499/3 Months | ₹699/3 Months |
+| **Manage Businesses** | 1 | 2 | 3 |
+| **User Access** | 1 | 5 | 20 |
+| **Invoices / Month** | 50 | 999,999 | 999,999 |
+| **E-way Bills** | Upgrade | 5 / Month | Unlimited |
+| **Staff & Payroll** | Upgrade | Included | Included |
+| **Multiple Godowns** | Upgrade | Included | Included |
+| **Multi-Business UI** | Upgrade | Upgrade | Included |
+| **Activity Tracker** | Upgrade | Upgrade | Included |
+| **Priority Support** | Upgrade | Upgrade | Included |
+
+*Note: "Multi-Business UI" refers to the ability to manage more than 2 businesses simultaneously as a designated feature.*
 
 ### Backend Setup
 1. `cd backend`
