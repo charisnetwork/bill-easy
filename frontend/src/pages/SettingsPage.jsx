@@ -1290,12 +1290,3 @@ export const SettingsPage = () => {
 };
 
 export default SettingsPage;
-        </Card>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default SettingsPage;

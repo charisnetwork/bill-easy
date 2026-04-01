@@ -317,6 +317,3 @@ const QuotationPreview = () => {
 };
 
 export default QuotationPreview;
-
-
-export default QuotationPreview;
