@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { invoiceAPI, companyAPI } from "../services/api";
+import { invoiceAPI, companyAPI, BASE_URL } from '../services/api';
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
@@ -96,12 +96,12 @@ const InvoicePreview = () => {
 
   const downloadPdf = () => {
     const token = localStorage.getItem('token');
-    window.open(`${process.env.REACT_APP_BACKEND_URL}/api/invoices/${id}/pdf?token=${token}`, "_blank");
+    window.open(`${BASE_URL}/api/invoices/${id}/pdf?token=${token}`, "_blank");
   };
 
   const shareWhatsapp = () => {
     const token = localStorage.getItem('token');
-    const message = `Invoice ${invoice.invoice_number} from ${company.name}\n\nAmount: ₹${invoice.total_amount}\n\nView/Download: ${process.env.REACT_APP_BACKEND_URL}/api/invoices/${id}/pdf?token=${token}`;
+    const message = `Invoice ${invoice.invoice_number} from ${company.name}\n\nAmount: ₹${invoice.total_amount}\n\nView/Download: ${BASE_URL}/api/invoices/${id}/pdf?token=${token}`;
     const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank");
   };

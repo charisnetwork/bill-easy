@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { BASE_URL } from '../services/api';
 import {
   LayoutDashboard, Users, Package, FileText, ShoppingCart,
   Wallet, BarChart3, Settings, LogOut, Menu, X, CreditCard,
@@ -346,7 +347,7 @@ export const DashboardLayout = ({ children }) => {
               <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden shadow-sm">
                 {company?.logo ? (
                   <img 
-                    src={company.logo.startsWith('http') ? company.logo : `${process.env.REACT_APP_BACKEND_URL}/uploads${company.logo.startsWith('/') ? '' : '/'}${company.logo}`} 
+                    src={company.logo.startsWith('http') ? company.logo : `${BASE_URL}/uploads${company.logo.startsWith('/') ? '' : '/'}${company.logo}`} 
                     alt="Logo" 
                     className="w-full h-full object-contain p-1"
                   />

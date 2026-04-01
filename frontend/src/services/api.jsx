@@ -1,12 +1,15 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_BACKEND_URL || 'https://billeasy-backend.onrender.com/api';
+const BASE_URL = import.meta.env.VITE_BACKEND_URL || 'https://billeasy-backend.onrender.com';
+const API_URL = `${BASE_URL}/api`;
 
 const getToken = () => localStorage.getItem('token');
 
 const api = axios.create({
   baseURL: API_URL
 });
+
+export { BASE_URL, API_URL };
 
 api.interceptors.request.use((config) => {
   const token = getToken();

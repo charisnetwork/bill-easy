@@ -1,5 +1,6 @@
 import React from 'react';
 import { format } from 'date-fns';
+import { BASE_URL } from '../services/api';
 import './Invoice.css';
 
 const Invoice = ({ invoice, company }) => {
@@ -16,7 +17,7 @@ const Invoice = ({ invoice, company }) => {
         <div className="flex items-center gap-6">
           {company.logo ? (
             <img 
-              src={`${process.env.REACT_APP_BACKEND_URL}/uploads${company.logo.startsWith('/') ? '' : '/'}${company.logo}`} 
+              src={`${BASE_URL}/uploads${company.logo.startsWith('/') ? '' : '/'}${company.logo}`} 
               alt="Company Logo" 
               className="h-20 w-auto object-contain"
             />
@@ -154,7 +155,7 @@ const Invoice = ({ invoice, company }) => {
           <div className="signature-block">
             {company.signature && (
               <img 
-                src={`${process.env.REACT_APP_BACKEND_URL}/uploads${company.signature.startsWith('/') ? '' : '/'}${company.signature}`} 
+                src={`${BASE_URL}/uploads${company.signature.startsWith('/') ? '' : '/'}${company.signature}`} 
                 alt="Signature" 
                 className="h-16 w-auto mx-auto mb-2 mix-blend-multiply" 
               />
