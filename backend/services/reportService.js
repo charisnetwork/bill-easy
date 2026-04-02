@@ -1,4 +1,4 @@
-const { Invoice, Purchase, Expense, Customer, Supplier, Product, InvoiceItem, PurchaseItem, UserCompany, Subscription, Plan, sequelize } = require('../models');
+const { Invoice, Purchase, Expense, Customer, Supplier, Product, InvoiceItem, PurchaseItem, UserCompany, Subscription, Plan, sequelize, Godown } = require('../models');
 const { Op } = require('sequelize');
 
 class ReportService {
@@ -262,10 +262,11 @@ class ReportService {
       user ? UserCompany.count({ where: { user_id: user.id } }) : Promise.resolve(1)
     ]);
 
-    // Get business limit from plan
+    // Get business limit from plan safely
     let totalBusinessesLimit = 1;
-    if (user?.Company?.Subscription?.Plan) {
-      let features = user.Company.Subscription.Plan.features || {};
+    const plan = user?.Company?.Subscription?.Plan || user?.Company?.Subscription?.plan;
+    if (plan) {
+      let features = plan.features || {};
       if (typeof features === 'string') {
         try { features = JSON.parse(features); } catch (e) { features = {}; }
       }
@@ -286,8 +287,8 @@ class ReportService {
     for (let i = 6; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
-      const dayStart = new Date(date.setHours(0, 0, 0, 0));
-      const dayEnd = new Date(date.setHours(23, 59, 59, 999));
+      const dayStart = new Date(new Date(date).setHours(0, 0, 0, 0));
+      const dayEnd = new Date(new Date(date).setHours(23, 59, 59, 999));
 
       const daySales = await Invoice.sum('total_amount', {
         where: {
