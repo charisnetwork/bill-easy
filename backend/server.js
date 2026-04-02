@@ -31,6 +31,9 @@ const paymentRoutes = require('./routes/payments');
 
 const app = express();
 
+// Trust proxy for express-rate-limit
+app.set('trust proxy', 1);
+
 /* =========================================
    SECURITY
 ========================================= */
