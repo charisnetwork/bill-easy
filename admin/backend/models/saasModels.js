@@ -2,11 +2,11 @@ const { DataTypes } = require('sequelize');
 const { saasDB } = require('../config/db');
 
 // Defining only needed fields for Admin Analytics to reduce complexity
+// Removed explicit createdAt/updatedAt because they are handled by commonConfig.define.underscored = true
 const Company = saasDB.define('Company', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
-  name: { type: DataTypes.STRING },
-  createdAt: { type: DataTypes.DATE }
-}, { tableName: 'companies', timestamps: true });
+  name: { type: DataTypes.STRING }
+}, { tableName: 'companies' });
 
 const Plan = saasDB.define('Plan', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
@@ -44,16 +44,14 @@ const Subscription = saasDB.define('Subscription', {
   status: { type: DataTypes.ENUM('active', 'expired', 'cancelled', 'trial') },
   payment_status: { type: DataTypes.ENUM('paid', 'pending', 'failed') },
   start_date: { type: DataTypes.DATE },
-  expiry_date: { type: DataTypes.DATE },
-  createdAt: { type: DataTypes.DATE }
-}, { tableName: 'subscriptions', timestamps: true });
+  expiry_date: { type: DataTypes.DATE }
+}, { tableName: 'subscriptions' });
 
 const Invoice = saasDB.define('Invoice', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
   total_amount: { type: DataTypes.DECIMAL(12, 2) },
-  company_id: { type: DataTypes.UUID },
-  createdAt: { type: DataTypes.DATE }
-}, { tableName: 'invoices', timestamps: true });
+  company_id: { type: DataTypes.UUID }
+}, { tableName: 'invoices' });
 
 const User = saasDB.define('User', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
@@ -62,9 +60,9 @@ const User = saasDB.define('User', {
   phone: { type: DataTypes.STRING },
   company_id: { type: DataTypes.UUID },
   role: { type: DataTypes.ENUM('owner', 'admin', 'staff'), defaultValue: 'staff' }
-}, { tableName: 'users', timestamps: true });
+}, { tableName: 'users' });
 
-// Core Associations for Analytics
+// Core Associations for Analytics (must match backend/models/index.js if shared DB)
 Company.hasMany(Subscription, { foreignKey: 'company_id' });
 Subscription.belongsTo(Company, { foreignKey: 'company_id' });
 Subscription.belongsTo(Plan, { foreignKey: 'plan_id' });

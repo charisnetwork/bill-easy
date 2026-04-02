@@ -9,10 +9,7 @@ const Affiliate = adminDB.define('Affiliate', {
   mobile_no: { type: DataTypes.STRING, allowNull: false },
   status: { type: DataTypes.ENUM('active', 'inactive'), defaultValue: 'active' }
 }, { 
-  tableName: 'Affiliates', 
-  timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at'
+  tableName: 'Affiliates'
 });
 
 const PlatformExpense = adminDB.define('PlatformExpense', {
@@ -22,10 +19,7 @@ const PlatformExpense = adminDB.define('PlatformExpense', {
   date: { type: DataTypes.DATEONLY, defaultValue: DataTypes.NOW },
   description: { type: DataTypes.TEXT }
 }, { 
-  tableName: 'PlatformExpenses', 
-  timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at'
+  tableName: 'PlatformExpenses'
 });
 
 const GlobalNotification = adminDB.define('GlobalNotification', {
@@ -35,10 +29,7 @@ const GlobalNotification = adminDB.define('GlobalNotification', {
   target_audience: { type: DataTypes.STRING, defaultValue: 'all' },
   sent_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
 }, { 
-  tableName: 'GlobalNotifications', 
-  timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at'
+  tableName: 'GlobalNotifications'
 });
 
 const AdminUser = adminDB.define('AdminUser', {

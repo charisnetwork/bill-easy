@@ -8,29 +8,22 @@ const dialectOptions = {
   }
 };
 
-// Main SaaS Database connection for Analytics and Coupons
-const saasDB = new Sequelize(process.env.DATABASE_URL || process.env.DATABASE_URL_SaaS, {
+// Common configuration to match SaaS backend exactly
+const commonConfig = {
   dialect: 'postgres',
-  logging: false,
+  logging: false, // Set to console.log for debugging if needed
   define: {
     freezeTableName: true,
     underscored: true,
     timestamps: true
   },
   dialectOptions
-});
+};
 
-// Admin-specific Database connection for Affiliates, Admin Users, etc.
-// If DATABASE_URL_ADMIN is not set, it fallbacks to the same DB but a separate instance to avoid model leakage
-const adminDB = new Sequelize(process.env.DATABASE_URL_ADMIN || process.env.DATABASE_URL, {
-  dialect: 'postgres',
-  logging: false,
-  define: {
-    freezeTableName: true,
-    underscored: true,
-    timestamps: true
-  },
-  dialectOptions
-});
+// Main SaaS Database connection
+const saasDB = new Sequelize(process.env.DATABASE_URL || process.env.DATABASE_URL_SaaS, commonConfig);
+
+// Admin-specific Database connection
+const adminDB = new Sequelize(process.env.DATABASE_URL_ADMIN || process.env.DATABASE_URL, commonConfig);
 
 module.exports = { saasDB, adminDB };

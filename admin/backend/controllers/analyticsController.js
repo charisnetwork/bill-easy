@@ -80,9 +80,9 @@ exports.getRevenueAnalytics = async (req, res) => {
 // GET /admin/dashboard/subscribers
 exports.getSubscribers = async (req, res) => {
   try {
-    // We use manual fetching for associated models to ensure it works across different DB connections
+    // Explicitly use created_at for ordering when underscored is true
     const subscriptions = await Subscription.findAll({
-      order: [['createdAt', 'DESC']]
+      order: [['created_at', 'DESC']]
     });
 
     const detailedSubscribers = await Promise.all(subscriptions.map(async (sub) => {
@@ -90,8 +90,11 @@ exports.getSubscribers = async (req, res) => {
       const company = sub.company_id ? await Company.findByPk(sub.company_id) : null;
       const coupon = sub.coupon_id ? await Coupon.findByPk(sub.coupon_id) : null;
 
+      const subData = sub.toJSON();
+      // Ensure frontend sees 'createdAt' even if DB uses 'created_at'
       return {
-        ...sub.toJSON(),
+        ...subData,
+        createdAt: subData.created_at || subData.createdAt,
         Plan: plan,
         Company: company,
         Coupon: coupon
@@ -125,14 +128,16 @@ exports.getCouponAnalytics = async (req, res) => {
 
     const subscriptions = await Subscription.findAll({
       where: { coupon_id: id },
-      order: [['createdAt', 'DESC']]
+      order: [['created_at', 'DESC']]
     });
 
     const detailedUsers = await Promise.all(subscriptions.map(async (sub) => {
         const company = sub.company_id ? await Company.findByPk(sub.company_id) : null;
         const plan = sub.plan_id ? await Plan.findByPk(sub.plan_id) : null;
+        const subData = sub.toJSON();
         return {
-            ...sub.toJSON(),
+            ...subData,
+            createdAt: subData.created_at || subData.createdAt,
             Company: company,
             Plan: plan
         };
