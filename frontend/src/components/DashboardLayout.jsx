@@ -5,7 +5,7 @@ import { BASE_URL } from '../services/api';
 import {
   LayoutDashboard, Users, Package, FileText, ShoppingCart,
   Wallet, BarChart3, Settings, LogOut, Menu, X, CreditCard,
-  Building2, ChevronDown, Bell, Search, Truck, Plus
+  Building2, ChevronDown, Bell, Search, Truck, Plus, Shield
 } from 'lucide-react';
 import { Button } from './ui/button';
 import {
