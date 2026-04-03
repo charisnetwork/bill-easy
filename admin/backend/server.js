@@ -11,9 +11,13 @@ const PORT = process.env.PORT || 3025;
 
 // Robust CORS Configuration
 app.use(cors({
-  origin: '*',
+  origin: [
+    'https://admin.charisbilleasy.store',
+    'http://localhost:3021'
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-secret'],
+  credentials: true,
   optionsSuccessStatus: 200
 }));
 
