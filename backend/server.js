@@ -54,8 +54,6 @@ app.use(
         : [
           'https://charisbilleasy.store', 
           'https://admin.charisbilleasy.store',
-          'https://admin.charisbilleasy.store',
-          'https://admin.charisbilleasy.store',
           'http://localhost:3000',
           'http://localhost:3021'
         ];
