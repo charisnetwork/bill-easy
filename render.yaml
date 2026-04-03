@@ -1,7 +1,7 @@
 services:
   # 1. Main Backend Web Service
   - type: web
-    name: billeasy-backend
+    name: billeasy-admin-backend-app
     runtime: node
     plan: free
     region: oregon
@@ -34,7 +34,7 @@ services:
 
   # 2. Main Frontend Static Site
   - type: static
-    name: billeasy-frontend
+    name: billeasy-admin-frontend-app
     runtime: static
     plan: free
     buildCommand: npm install --force --legacy-peer-deps && npm run build
@@ -42,9 +42,9 @@ services:
     rootDir: frontend
     envVars:
       - key: VITE_BACKEND_URL
-        value: https://billeasy-backend.onrender.com
+        value: https://billeasy-admin-backend.onrender.com
       - key: REACT_APP_BACKEND_URL
-        value: https://billeasy-backend.onrender.com
+        value: https://billeasy-admin-backend.onrender.com
       - key: VITE_RAZORPAY_KEY_ID
         sync: false
     routes:

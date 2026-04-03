@@ -54,8 +54,8 @@ app.use(
         : [
           'https://charisbilleasy.store', 
           'https://admin.charisbilleasy.store',
-          'https://billeasy-frontend.onrender.com',
-          'https://billeasy-admin-frontend.onrender.com',
+          'https://admin.charisbilleasy.store',
+          'https://admin.charisbilleasy.store',
           'http://localhost:3000',
           'http://localhost:3021'
         ];

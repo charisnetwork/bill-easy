@@ -3,36 +3,15 @@ const router = express.Router();
 const analyticsController = require('../controllers/analyticsController');
 const managementController = require('../controllers/managementController');
 
-const jwt = require('jsonwebtoken');
-const authController = require('../controllers/authController');
-
-// Standard JWT auth middleware
+// Developer-only simple auth middleware
 const authMiddleware = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ error: "No token provided" });
+  const secret = req.headers['x-admin-secret'];
+  if (secret === process.env.ADMIN_SECRET) {
+    return next();
   }
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'admin_secret_key');
-    req.user = decoded;
-    next();
-  } catch (error) {
-    return res.status(403).json({ error: "Token invalid or expired" });
-  }
+  return res.status(403).json({ error: "Unauthorized access" });
 };
 
-// Public Auth Routes
-router.post('/auth/login', authController.login);
-router.post('/auth/request-otp', authController.requestOTP);
-router.post('/auth/verify-login', authController.verifyOTPAndLogin);
-
-// Protected Auth Routes
-router.post('/auth/reset-password', authMiddleware, authController.resetPassword);
-
-// Apply auth to all analytics and management routes
 router.use(authMiddleware);
 
 // Dashboard & Analytics

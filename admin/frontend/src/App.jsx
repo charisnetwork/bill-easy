@@ -9,13 +9,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line 
 } from 'recharts';
 
-/**
- * PRODUCTION URL CONFIGURATION
- * We hardcode the absolute Render backend URL to prevent relative path 404 errors.
- */
-const API_BASE_URL = 'https://billeasy-admin-backend.onrender.com/api';
-
-const ADMIN_SECRET = import.meta.env.VITE_ADMIN_SECRET || 'developer_secret_key_2026';
+const API_BASE_URL = (import.meta.env.VITE_ADMIN_BACKEND_URL || 'http://localhost:3025') + '/api';
+const ADMIN_SECRET = 'developer_secret_key_2026';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -23,13 +18,6 @@ const api = axios.create({
 });
 
 const AdminApp = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('admin_token'));
-  const [showLogin, setShowLogin] = useState(!isAuthenticated);
-  const [showResetPassword, setShowResetPassword] = useState(false);
-  
-  const [loginForm, setLoginForm] = useState({ identifier: '', password: '' });
-  const [newPassword, setNewPassword] = useState('');
-  
   const [activeTab, setActiveTab] = useState('dashboard');
   const [summary, setSummary] = useState(null);
   const [revenueData, setRevenueData] = useState([]);
@@ -39,15 +27,27 @@ const AdminApp = () => {
   const [affiliates, setAffiliates] = useState([]);
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  
+  const ALL_FEATURES = [
+    { id: 'gst_billing', label: 'GST Invoicing' },
+    { id: 'inventory_management', label: 'Inventory Management' },
+    { id: 'reports', label: '25+ Reports' },
+    { id: 'quotations', label: 'Quotations & Estimates' },
+    { id: 'eway_bills', label: 'E-way Bills' },
+    { id: 'staff_attendance_payroll', label: 'Staff Attendance & Payroll' },
+    { id: 'multi_godowns', label: 'Multiple Godowns/Warehouses' },
+    { id: 'manage_businesses', label: 'Manage Multiple Businesses' },
+    { id: 'user_activity_tracker', label: 'User Activity Tracker' },
+    { id: 'priority_support', label: 'Priority Support' },
+  ];
   const [selectedCoupon, setSelectedCoupon] = useState(null);
   const [couponAnalytics, setCouponAnalytics] = useState(null);
-
+  
   // Modal states
   const [showCouponModal, setShowCouponModal] = useState(false);
   const [showAffiliateModal, setShowAffiliateModal] = useState(false);
   const [showPlanModal, setShowPlanModal] = useState(false);
-
+  
   const [couponForm, setCouponForm] = useState({
     code: '',
     discount_type: 'percentage',
@@ -72,112 +72,32 @@ const AdminApp = () => {
     is_active: true
   });
 
-  const ALL_FEATURES = [
-    { id: 'gst_billing', label: 'GST Invoicing' },
-    { id: 'inventory_management', label: 'Inventory Management' },
-    { id: 'reports', label: '25+ Reports' },
-    { id: 'quotations', label: 'Quotations & Estimates' },
-    { id: 'eway_bills', label: 'E-way Bills' },
-    { id: 'staff_attendance_payroll', label: 'Staff Attendance & Payroll' },
-    { id: 'multi_godowns', label: 'Multiple Godowns/Warehouses' },
-    { id: 'can_manage_multiple', label: 'Manage Multiple Businesses' },
-    { id: 'user_activity_tracker', label: 'User Activity Tracker' },
-    { id: 'priority_support', label: 'Priority Support' },
-  ];
-
-  // Authenticated API instance
-  const authApi = React.useMemo(() => axios.create({
-    baseURL: API_BASE_URL,
-    headers: { 
-      'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
-      'x-admin-secret': ADMIN_SECRET
-    }
-  }), [isAuthenticated]);
+  useEffect(() => {
+    fetchAllData();
+  }, []);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchAllData();
-    } else {
-      setLoading(false);
-    }
-  }, [isAuthenticated]);
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await api.post('/auth/login', {
-        identifier: loginForm.identifier,
-        password: loginForm.password
-      });
-      
-      localStorage.setItem('admin_token', res.data.token);
-      
-      if (res.data.needsReset) {
-        setShowResetPassword(true);
-        setIsAuthenticated(true); // partially auth'd to reach reset
-      } else {
-        setIsAuthenticated(true);
-        setShowLogin(false);
-        window.location.reload(); // Refresh to set headers correctly in axios instance
-      }
-    } catch (err) {
-      alert(err.response?.data?.error || 'Login failed');
-    }
-  };
-
-  const handleResetPassword = async (e) => {
-    e.preventDefault();
-    try {
-      await authApi.post('/auth/reset-password', { newPassword });
-      alert('Password updated successfully!');
-      setShowResetPassword(false);
-      setShowLogin(false);
-      window.location.reload();
-    } catch (err) {
-      alert(err.response?.data?.error || 'Reset failed');
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('admin_token');
-    setIsAuthenticated(false);
-    setShowLogin(true);
-    window.location.reload();
-  };
+    fetchRevenue();
+  }, [revenueType]);
 
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      // Use full URL or absolute path via baseURL
       const [sRes, subRes, cRes, afRes, pRes] = await Promise.all([
-        authApi.get('/dashboard/summary'),
-        authApi.get('/dashboard/subscribers'),
-        authApi.get('/coupons'),
-        authApi.get('/affiliates'),
-        authApi.get('/plans')
+        api.get('/dashboard/summary'),
+        api.get('/dashboard/subscribers'),
+        api.get('/coupons'),
+        api.get('/affiliates'),
+        api.get('/plans')
       ]);
       setSummary(sRes.data);
       setSubscribers(subRes.data);
       setCoupons(cRes.data);
       setAffiliates(afRes.data);
       setPlans(pRes.data);
-    } catch (err) {
-      console.error("CRITICAL FETCH ERROR:", err);
-      // If it's a 404, it might be due to the baseURL mismatch
-      if (err.response?.status === 404) {
-        console.warn("Endpoints not found. Check if API_BASE_URL is absolute and ends with /api");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-      setPlans(pRes.data);
       fetchRevenue();
     } catch (err) {
       console.error(err);
-      if (err.response?.status === 401 || err.response?.status === 403) {
-        handleLogout();
-      }
     } finally {
       setLoading(false);
     }
@@ -185,13 +105,13 @@ const AdminApp = () => {
 
   const handleToggleFeature = async (planName, featureKey, currentState) => {
     try {
-      await authApi.patch('/plans/update', {
+      await api.patch('/plans/update', {
         plan_name: planName,
         feature_key: featureKey,
         is_enabled: !currentState
       });
       // Refresh plans data
-      const pRes = await authApi.get('/plans');
+      const pRes = await api.get('/plans');
       setPlans(pRes.data);
     } catch (err) {
       console.error(err);
@@ -202,7 +122,7 @@ const AdminApp = () => {
   const handleUpdatePlan = async (e) => {
     e.preventDefault();
     try {
-      await authApi.patch(`/plans/${planForm.id}`, {
+      await api.patch(`/plans/${planForm.id}`, {
         price: planForm.price,
         billing_cycle: planForm.billing_cycle,
         is_active: planForm.is_active
@@ -219,7 +139,7 @@ const AdminApp = () => {
   const handleCreateAffiliate = async (e) => {
     e.preventDefault();
     try {
-      await authApi.post('/affiliates', affiliateForm);
+      await api.post('/affiliates', affiliateForm);
       setShowAffiliateModal(false);
       setAffiliateForm({ company_name: '', contact_person: '', email: '', mobile_no: '' });
       alert('Affiliate added successfully!');
@@ -233,7 +153,7 @@ const AdminApp = () => {
   const handleDeleteAffiliate = async (id) => {
     if (window.confirm('Delete this affiliate?')) {
       try {
-        await authApi.delete(`/affiliates/${id}`);
+        await api.delete(`/affiliates/${id}`);
         alert('Affiliate deleted!');
         fetchAllData();
       } catch (err) {
@@ -245,7 +165,7 @@ const AdminApp = () => {
 
   const fetchRevenue = async () => {
     try {
-      const res = await authApi.get(`/dashboard/revenue?type=${revenueType}`);
+      const res = await api.get(`/dashboard/revenue?type=${revenueType}`);
       setRevenueData(res.data);
     } catch (err) {
       console.error(err);
@@ -254,7 +174,7 @@ const AdminApp = () => {
 
   const fetchCouponAnalytics = async (id) => {
     try {
-      const res = await authApi.get(`/coupons/${id}/analytics`);
+      const res = await api.get(`/coupons/${id}/analytics`);
       setCouponAnalytics(res.data);
       setActiveTab('coupon-drilldown');
     } catch (err) {
@@ -265,7 +185,7 @@ const AdminApp = () => {
   const handleCreateCoupon = async (e) => {
     e.preventDefault();
     try {
-      await authApi.post('/coupons', couponForm);
+      await api.post('/coupons', couponForm);
       setShowCouponModal(false);
       alert('Coupon created successfully!');
       fetchAllData();
@@ -277,7 +197,7 @@ const AdminApp = () => {
   const handleDeleteCoupon = async (id) => {
     if (window.confirm('Delete this coupon?')) {
       try {
-        await authApi.delete(`/coupons/${id}`);
+        await api.delete(`/coupons/${id}`);
         fetchAllData();
       } catch (err) {
         console.error(err);
@@ -285,82 +205,7 @@ const AdminApp = () => {
     }
   };
 
-  if (showLogin) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
-        <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl">
-          <div className="mb-8 text-center">
-            <Shield className="w-12 h-12 text-indigo-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Admin Portal</h2>
-            <p className="text-slate-500 text-xs font-bold mt-2">Prashanth's Developer Control</p>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div>
-              <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block">Email or Mobile</label>
-              <div className="relative">
-                <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
-                <input 
-                  required
-                  type="text" 
-                  value={loginForm.identifier}
-                  onChange={e => setLoginForm({...loginForm, identifier: e.target.value})}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-12 pr-4 py-3 text-white font-bold focus:border-indigo-500 outline-none transition-all"
-                  placeholder="pachu.mgd@gmail.com"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block">Security Password</label>
-              <div className="relative">
-                <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
-                <input 
-                  required
-                  type="password" 
-                  value={loginForm.password}
-                  onChange={e => setLoginForm({...loginForm, password: e.target.value})}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-12 pr-4 py-3 text-white font-bold focus:border-indigo-500 outline-none transition-all"
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
-            <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-xl transition-all shadow-lg shadow-indigo-900/50">AUTHORIZE ACCESS</button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
-  if (showResetPassword) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
-        <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl">
-          <div className="mb-8 text-center">
-            <Shield className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Security Reset</h2>
-            <p className="text-slate-500 text-xs font-bold mt-2">Your password is over 30 days old. Please update.</p>
-          </div>
-          <form onSubmit={handleResetPassword} className="space-y-6">
-            <div>
-              <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block">New Admin Password</label>
-              <input 
-                required
-                type="password" 
-                value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white font-bold focus:border-indigo-500 outline-none transition-all"
-                placeholder="New security key"
-              />
-            </div>
-            <button type="submit" className="w-full bg-amber-600 hover:bg-amber-500 text-white font-black py-4 rounded-xl transition-all shadow-lg shadow-amber-900/50">UPDATE & CONTINUE</button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
-  if (loading) return <div className="flex items-center justify-center min-h-screen bg-slate-950 text-indigo-400 font-black animate-pulse uppercase tracking-widest">Booting Admin Core...</div>;
-
+  if (loading) return <div className="flex items-center justify-center min-h-screen bg-slate-950 text-indigo-400 font-black animate-pulse">BOOTING CONTROL CENTER...</div>;
 
   return (
     <div className="flex h-screen bg-slate-950 text-slate-300 font-sans selection:bg-indigo-500/30">
@@ -396,14 +241,6 @@ const AdminApp = () => {
             </button>
           ))}
         </nav>
-
-        <button 
-          onClick={handleLogout}
-          className="mt-auto w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 transition-all duration-200 text-sm font-bold"
-        >
-          <LogOut className="w-5 h-5" />
-          Logout
-        </button>
       </aside>
 
       {/* Main Content */}
@@ -525,11 +362,11 @@ const AdminApp = () => {
                     <button 
                       onClick={() => {
                         setPlanForm({
-                          id: plan.id,
-                          plan_name: plan.plan_name,
-                          price: plan.price,
-                          billing_cycle: plan.billing_cycle,
-                          is_active: plan.is_active
+                          id: plan.id || '',
+                          plan_name: plan.plan_name || '',
+                          price: plan.price ?? 0,
+                          billing_cycle: plan.billing_cycle || 'monthly',
+                          is_active: plan.is_active ?? true
                         });
                         setShowPlanModal(true);
                       }}
@@ -871,7 +708,7 @@ const AdminApp = () => {
                       <input 
                         required
                         type="number" 
-                        value={planForm.price}
+                        value={planForm.price ?? ''}
                         onChange={e => setPlanForm({...planForm, price: e.target.value})}
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white font-bold focus:border-indigo-500 outline-none transition-all"
                       />
@@ -879,7 +716,7 @@ const AdminApp = () => {
                    <div>
                       <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block">Billing Cycle</label>
                       <select 
-                        value={planForm.billing_cycle}
+                        value={planForm.billing_cycle ?? 'monthly'}
                         onChange={e => setPlanForm({...planForm, billing_cycle: e.target.value})}
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white font-bold focus:border-indigo-500 outline-none transition-all"
                       >

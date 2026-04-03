@@ -11,76 +11,25 @@ const PORT = process.env.PORT || 3025;
 
 // Robust CORS Configuration
 app.use(cors({
-  origin: (origin, callback) => {
-    const allowedOrigins = process.env.ALLOWED_ORIGINS 
-      ? process.env.ALLOWED_ORIGINS.split(',') 
-      : [
-        'https://admin.charisbilleasy.store', 
-        'https://charisbilleasy.store',
-        'https://billeasy-admin-frontend.onrender.com', 
-        'https://billeasy-frontend.onrender.com',
-        'http://localhost:3021'
-      ];
-    
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.warn(`[CORS Admin] Rejected: ${origin}`);
-      callback(null, false); // Fail silently for some clients or send error
-    }
-  },
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-secret'],
   optionsSuccessStatus: 200
 }));
 
 // Explicit Pre-flight handler
-app.options('(.*)', cors());
+app.options('*', cors());
 
 app.use(express.json());
 app.use(morgan('dev'));
 
-// Debug Route (Public for troubleshooting)
-app.get('/api/debug-db', async (req, res) => {
-  try {
-    const { Subscription, Company, Plan, Coupon } = require('./models/saasModels');
-    const { Affiliate, AdminUser } = require('./models/adminModels');
-    
-    const stats = {
-      timestamp: new Date().toISOString(),
-      saas_database: {
-        subscriptions: await Subscription.count(),
-        companies: await Company.count(),
-        plans: await Plan.count(),
-        coupons: await Coupon.count()
-      },
-      admin_database: {
-        affiliates: await Affiliate.count(),
-        adminUsers: await AdminUser.count()
-      },
-      environment: {
-        has_database_url: !!process.env.DATABASE_URL,
-        has_saas_url: !!process.env.DATABASE_URL_SAAS,
-        has_admin_url: !!process.env.DATABASE_URL_ADMIN,
-        node_env: process.env.NODE_ENV
-      }
-    };
-    res.json(stats);
-  } catch (err) {
-    res.status(500).json({ error: "Debug failed: " + err.message });
-  }
+// Health Check
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // Routes
 app.use('/api', adminRoutes);
-
-// Error Handler
-app.use((err, req, res, next) => {
-  console.error("ADMIN API ERROR:", err);
-  res.status(err.status || 500).json({
-    error: err.message || "Internal server error"
-  });
-});
 
 // Database Sync & Server Start
 const startServer = async () => {

@@ -1,19 +1,17 @@
 const { DataTypes } = require('sequelize');
 const { saasDB } = require('../config/db');
 
-// Defining only needed fields for Admin Analytics to reduce complexity
-// Removed explicit createdAt/updatedAt because they are handled by commonConfig.define.underscored = true
 const Company = saasDB.define('Company', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
-  name: { type: DataTypes.STRING }
-}, { tableName: 'companies' });
+  name: { type: DataTypes.STRING },
+  createdAt: { type: DataTypes.DATE }
+}, { tableName: 'companies', timestamps: true });
 
 const Plan = saasDB.define('Plan', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
   plan_name: { type: DataTypes.STRING },
   price: { type: DataTypes.DECIMAL(10, 2) },
-  billing_cycle: { type: DataTypes.ENUM('monthly','3month','6month','yearly','lifetime'), defaultValue: 'monthly' },
-  is_active: { type: DataTypes.BOOLEAN, defaultValue: true }
+  billing_cycle: { type: DataTypes.ENUM('monthly','3month','6month','yearly','lifetime'), defaultValue: 'monthly' }
 }, { tableName: 'plans' });
 
 const PlanFeature = saasDB.define('PlanFeature', {
@@ -44,13 +42,15 @@ const Subscription = saasDB.define('Subscription', {
   status: { type: DataTypes.ENUM('active', 'expired', 'cancelled', 'trial') },
   payment_status: { type: DataTypes.ENUM('paid', 'pending', 'failed') },
   start_date: { type: DataTypes.DATE },
-  expiry_date: { type: DataTypes.DATE }
+  expiry_date: { type: DataTypes.DATE },
+  createdAt: { type: DataTypes.DATE }
 }, { tableName: 'subscriptions' });
 
 const Invoice = saasDB.define('Invoice', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
   total_amount: { type: DataTypes.DECIMAL(12, 2) },
-  company_id: { type: DataTypes.UUID }
+  company_id: { type: DataTypes.UUID },
+  createdAt: { type: DataTypes.DATE }
 }, { tableName: 'invoices' });
 
 const User = saasDB.define('User', {
@@ -62,7 +62,7 @@ const User = saasDB.define('User', {
   role: { type: DataTypes.ENUM('owner', 'admin', 'staff'), defaultValue: 'staff' }
 }, { tableName: 'users' });
 
-// Core Associations for Analytics (must match backend/models/index.js if shared DB)
+// Associations for Reporting
 Company.hasMany(Subscription, { foreignKey: 'company_id' });
 Subscription.belongsTo(Company, { foreignKey: 'company_id' });
 Subscription.belongsTo(Plan, { foreignKey: 'plan_id' });
@@ -70,7 +70,7 @@ Subscription.belongsTo(Coupon, { foreignKey: 'coupon_id' });
 Coupon.hasMany(Subscription, { foreignKey: 'coupon_id' });
 Company.hasMany(User, { foreignKey: 'company_id' });
 
-// Cross-DB Association with Affiliate (Constraints: false is critical here)
+// Coupon - Affiliate Relationship (Cross-database)
 const { Affiliate } = require('./adminModels');
 Coupon.belongsTo(Affiliate, { foreignKey: 'affiliate_id', as: 'affiliate', constraints: false });
 Affiliate.hasMany(Coupon, { foreignKey: 'affiliate_id', as: 'coupons', constraints: false });

@@ -19,7 +19,7 @@ exports.getPlans = async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error("Get Plans Error:", error);
-    res.status(500).json({ error: "Failed to fetch plans: " + error.message });
+    res.status(500).json({ error: "Failed to fetch plans" });
   }
 };
 
@@ -35,7 +35,7 @@ exports.updatePlan = async (req, res) => {
     res.json({ message: "Plan updated successfully", plan });
   } catch (error) {
     console.error("Update Plan Error:", error);
-    res.status(500).json({ error: "Failed to update plan: " + error.message });
+    res.status(500).json({ error: "Failed to update plan" });
   }
 };
 
@@ -55,7 +55,7 @@ exports.updatePlanFeature = async (req, res) => {
     res.json({ message: "Plan feature updated successfully", feature });
   } catch (error) {
     console.error("Update Plan Feature Error:", error);
-    res.status(500).json({ error: "Failed to update plan feature: " + error.message });
+    res.status(500).json({ error: "Failed to update plan feature" });
   }
 };
 
@@ -66,7 +66,7 @@ exports.getAffiliates = async (req, res) => {
     res.json(affiliates);
   } catch (error) {
     console.error("Get Affiliates Error:", error);
-    res.status(500).json({ error: "Failed to fetch affiliates: " + error.message });
+    res.status(500).json({ error: "Failed to fetch affiliates" });
   }
 };
 
@@ -76,7 +76,7 @@ exports.createAffiliate = async (req, res) => {
     res.status(201).json(affiliate);
   } catch (error) {
     console.error("Create Affiliate Error:", error);
-    res.status(500).json({ error: "Failed to create affiliate: " + error.message });
+    res.status(500).json({ error: "Failed to create affiliate" });
   }
 };
 
@@ -87,14 +87,14 @@ exports.deleteAffiliate = async (req, res) => {
     res.json({ message: "Affiliate deleted" });
   } catch (error) {
     console.error("Delete Affiliate Error:", error);
-    res.status(500).json({ error: "Failed to delete affiliate: " + error.message });
+    res.status(500).json({ error: "Failed to delete affiliate" });
   }
 };
-
 // GET /admin/coupons
 exports.getCoupons = async (req, res) => {
   try {
     const coupons = await Coupon.findAll({ 
+      include: [{ model: Affiliate, as: 'affiliate' }],
       order: [['createdAt', 'DESC']] 
     });
 
@@ -105,17 +105,9 @@ exports.getCoupons = async (req, res) => {
       }) || 0;
 
       const isExpired = coupon.expiry_date && new Date() > new Date(coupon.expiry_date);
-      
-      let affiliate = null;
-      if (coupon.affiliate_id) {
-        affiliate = await Affiliate.findByPk(coupon.affiliate_id);
-      }
 
-      const couponData = coupon.toJSON();
       return {
-        ...couponData,
-        createdAt: couponData.createdAt || couponData.created_at,
-        affiliate,
+        ...coupon.toJSON(),
         usage_count: usageCount,
         revenue_generated: revenueGenerated,
         is_expired: isExpired
@@ -125,7 +117,7 @@ exports.getCoupons = async (req, res) => {
     res.json(detailedCoupons);
   } catch (error) {
     console.error("Get Coupons Error:", error);
-    res.status(500).json({ error: "Failed to fetch coupons: " + error.message });
+    res.status(500).json({ error: "Failed to fetch coupons" });
   }
 };
 
@@ -141,7 +133,7 @@ exports.createCoupon = async (req, res) => {
     res.status(201).json(coupon);
   } catch (error) {
     console.error("Create Coupon Error:", error);
-    res.status(500).json({ error: "Failed to create coupon: " + error.message });
+    res.status(500).json({ error: "Failed to create coupon" });
   }
 };
 
@@ -162,7 +154,7 @@ exports.updateCoupon = async (req, res) => {
     res.json(coupon);
   } catch (error) {
     console.error("Update Coupon Error:", error);
-    res.status(500).json({ error: "Failed to update coupon: " + error.message });
+    res.status(500).json({ error: "Failed to update coupon" });
   }
 };
 
@@ -177,6 +169,6 @@ exports.deleteCoupon = async (req, res) => {
     res.json({ message: "Coupon deleted successfully" });
   } catch (error) {
     console.error("Delete Coupon Error:", error);
-    res.status(500).json({ error: "Failed to delete coupon: " + error.message });
+    res.status(500).json({ error: "Failed to delete coupon" });
   }
 };
