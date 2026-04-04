@@ -11,14 +11,8 @@ const sequelizeOptions = {
   }
 };
 
-// Add SSL for cloud hosting (Render, Railway, etc.)
-const isCloudHosting = process.env.DATABASE_URL?.includes('render.com') || 
-                       process.env.DATABASE_URL?.includes('railway') ||
-                       process.env.DATABASE_URL_ADMIN?.includes('render.com') ||
-                       process.env.DATABASE_URL_ADMIN?.includes('railway') ||
-                       process.env.NODE_ENV === 'production';
-
-if (isCloudHosting) {
+// Enable SSL only for Render hosting
+if (process.env.DATABASE_URL?.includes('render.com')) {
   sequelizeOptions.dialectOptions = {
     ssl: {
       require: true,
