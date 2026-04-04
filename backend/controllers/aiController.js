@@ -10,7 +10,7 @@ const chatWithAssistant = async (req, res) => {
   console.log(">>> Charis Assistant: Request received from Company ID:", companyId);
   
   try {
-    const { question } = req.body;
+    const { question, history = [] } = req.body;
 
     if (!question) {
       return res.status(400).json({ error: "Question is required" });
@@ -70,52 +70,60 @@ const chatWithAssistant = async (req, res) => {
     const company = await Company.findByPk(companyId, { attributes: ['name'] });
     const businessName = company?.name || "the business";
 
-    // 2. Updated Personality & System Instruction
-    const systemInstruction = `You are Charis, a friendly and intelligent business co-pilot for ${businessName}. 
-Rules:
-- Use the provided real-time data only when it is relevant to the user's question. 
-- If the user says "Hi" or gives general greetings, reply like a normal assistant. Do not force financial numbers into every sentence.
-- Formatting: Avoid using excessive markdown like triple asterisks (***). Use clean, readable text. Use bullet points only for lists of items or stock.
-- Actions: If a user asks you to "create a bill," "make an invoice," or perform any database write action, politely explain that you are an AI assistant and they should use the "Create Sales Invoice" button in the sidebar. Do not pretend to have performed the action.
-- Be concise, professional, and helpful.`;
+    // 2. System Instruction with strict "no coding" rule
+    const systemInstruction = `You are Charis, a friendly and intelligent business co-pilot for ${businessName}.
 
-    // 3. Prompt Construction
-    const contextStr = (financialContext || inventoryContext) ? `\nContextual Data:${financialContext}${inventoryContext}` : "";
-    const fullPrompt = `${systemInstruction}${contextStr}\n\nUser Question: ${question}`;
+STRICT RULES:
+1. NO CODING: Never provide code, scripts, terminal commands, or technical implementation details. If asked for code, politely decline and offer business advice instead.
+2. NO DATABASE QUERIES: Never write SQL or database queries. Use the provided real-time data only.
+3. BUSINESS FOCUS ONLY: Only answer questions related to business, billing, invoices, inventory, sales, expenses, and accounting.
+4. GREETINGS: For greetings ("Hi", "Hello"), respond warmly as a business assistant. Do not force financial data into casual conversation.
+5. FORMATTING: Avoid excessive markdown (***). Use clean, readable text. Bullet points only for lists.
+6. ACTIONS: If asked to "create bill", "make invoice", or perform database writes, explain you are an AI and they should use the "Create Sales Invoice" button.
+7. NON-BUSINESS QUERIES: For questions unrelated to business (weather, sports, general knowledge), reply: "I'm Charis, your billing assistant. I'm here to help with your business needs like invoices, inventory, and sales. How can I assist you today?"
+8. Be concise, professional, and helpful.`;
 
-    // 4. Gemini Call with Fallback
+    // 3. Build context for current query
+    const contextStr = (financialContext || inventoryContext) ? `\n[Contextual Data]:${financialContext}${inventoryContext}` : "";
+    const fullPrompt = contextStr ? `${contextStr}\n\nUser: ${question}` : question;
+
+    // 4. Gemini Call with systemInstruction and chat history
     let text;
-    const modelName = "gemini-3-flash-preview";
+    const modelName = "gemini-1.5-flash";
     
     try {
-      console.log(`>>> Charis: Attempting to call ${modelName}...`);
-      const model = genAI.getGenerativeModel({ model: modelName });
-      const result = await model.generateContent(fullPrompt);
+      console.log(`>>> Charis: Starting chat with ${modelName}...`);
+      
+      const model = genAI.getGenerativeModel({ 
+        model: modelName,
+        systemInstruction: systemInstruction
+      });
+
+      // Format history for Gemini
+      const formattedHistory = history.map(msg => ({
+        role: msg.role === 'user' ? 'user' : 'model',
+        parts: [{ text: msg.content }]
+      }));
+
+      // Start chat with history
+      const chat = model.startChat({
+        history: formattedHistory,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 2048,
+        }
+      });
+
+      // Send current message
+      const result = await chat.sendMessage(fullPrompt);
       const response = await result.response;
       text = response.text();
+      
     } catch (apiError) {
-      console.error(">>> Charis API Error (Primary):", apiError.message);
-      try {
-        console.log(`>>> Charis: Retrying with models/${modelName}...`);
-        const model = genAI.getGenerativeModel({ model: `models/${modelName}` });
-        const result = await model.generateContent(fullPrompt);
-        const response = await result.response;
-        text = response.text();
-      } catch (retryError) {
-        console.error(">>> Charis API Error (Retry):", retryError.message);
-        try {
-          console.log(">>> Charis: Falling back to gemini-1.5-flash...");
-          const fallbackModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-          const result = await fallbackModel.generateContent(fullPrompt);
-          const response = await result.response;
-          text = response.text();
-        } catch (fatalError) {
-          console.error(">>> Charis API Fatal Error:", fatalError.message);
-          return res.status(200).json({ 
-            answer: "Charis is currently updating its financial brain. Please try again in a moment." 
-          });
-        }
-      }
+      console.error(">>> Charis API Error:", apiError.message);
+      return res.status(200).json({ 
+        answer: "Charis is currently updating its knowledge. Please try again in a moment." 
+      });
     }
 
     console.log(">>> Charis successfully generated a response.");
