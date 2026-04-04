@@ -83,46 +83,35 @@ STRICT RULES:
 7. NON-BUSINESS QUERIES: For questions unrelated to business (weather, sports, general knowledge), reply: "I'm Charis, your billing assistant. I'm here to help with your business needs like invoices, inventory, and sales. How can I assist you today?"
 8. Be concise, professional, and helpful.`;
 
-    // 3. Build context for current query
+    // 3. Build full prompt with system instruction and context
     const contextStr = (financialContext || inventoryContext) ? `\n[Contextual Data]:${financialContext}${inventoryContext}` : "";
-    const fullPrompt = contextStr ? `${contextStr}\n\nUser: ${question}` : question;
+    const fullPrompt = `${systemInstruction}\n\n${contextStr}\n\nUser Question: ${question}`;
 
-    // 4. Gemini Call with systemInstruction and chat history
+    // 4. Gemini Call with fallback models
     let text;
-    const modelName = "gemini-1.5-flash";
+    const models = ["gemini-1.5-flash", "gemini-pro", "gemini-1.0-pro"];
+    let lastError = null;
     
-    try {
-      console.log(`>>> Charis: Starting chat with ${modelName}...`);
-      
-      const model = genAI.getGenerativeModel({ 
-        model: modelName,
-        systemInstruction: systemInstruction
-      });
-
-      // Format history for Gemini
-      const formattedHistory = history.map(msg => ({
-        role: msg.role === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.content }]
-      }));
-
-      // Start chat with history
-      const chat = model.startChat({
-        history: formattedHistory,
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 2048,
-        }
-      });
-
-      // Send current message
-      const result = await chat.sendMessage(fullPrompt);
-      const response = await result.response;
-      text = response.text();
-      
-    } catch (apiError) {
-      console.error(">>> Charis API Error:", apiError.message);
+    for (const modelName of models) {
+      try {
+        console.log(`>>> Charis: Trying model ${modelName}...`);
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent(fullPrompt);
+        const response = await result.response;
+        text = response.text();
+        console.log(`>>> Charis: Success with ${modelName}`);
+        break; // Success, exit loop
+      } catch (err) {
+        console.error(`>>> Charis: Failed with ${modelName}:`, err.message);
+        lastError = err;
+        continue; // Try next model
+      }
+    }
+    
+    if (!text) {
+      console.error(">>> Charis: All models failed. Last error:", lastError?.message);
       return res.status(200).json({ 
-        answer: "Charis is currently updating its knowledge. Please try again in a moment." 
+        answer: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment." 
       });
     }
 
