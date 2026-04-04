@@ -3,21 +3,119 @@ import axios from 'axios';
 import { 
   LayoutDashboard, Globe, Tag, Megaphone, DollarSign, 
   TrendingUp, TrendingDown, Shield, LogOut, Search, Filter,
-  Users, CreditCard, Calendar, BarChart3, Plus, Trash2, Edit, ChevronRight
+  Users, CreditCard, Calendar, BarChart3, Plus, Trash2, Edit, ChevronRight,
+  Lock, Eye, EyeOff
 } from 'lucide-react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line 
 } from 'recharts';
 
 const API_BASE_URL = 'https://billeasy-admin-backend.onrender.com/api';
-const ADMIN_SECRET = 'developer_secret_key_2026';
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: { 'x-admin-secret': ADMIN_SECRET }
+  baseURL: API_BASE_URL
 });
 
+// Login Component
+const LoginPage = ({ onLogin }) => {
+  const [secret, setSecret] = useState('');
+  const [showSecret, setShowSecret] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      // Test the secret by making a request to the backend
+      const testApi = axios.create({
+        baseURL: API_BASE_URL,
+        headers: { 'x-admin-secret': secret }
+      });
+      
+      await testApi.get('/dashboard/summary');
+      
+      // If successful, store secret and login
+      localStorage.setItem('adminSecret', secret);
+      onLogin(secret);
+    } catch (err) {
+      setError('Invalid admin secret. Access denied.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
+      <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl p-8">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Shield className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-2xl font-black text-white uppercase tracking-tighter">Dev Core</h1>
+          <p className="text-slate-500 text-sm mt-2">Admin Control Center</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block">
+              Admin Secret Key
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+              <input
+                type={showSecret ? 'text' : 'password'}
+                value={secret}
+                onChange={(e) => setSecret(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-12 pr-12 py-4 text-white font-bold focus:border-indigo-500 outline-none transition-all"
+                placeholder="Enter admin secret..."
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowSecret(!showSecret)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
+              >
+                {showSecret ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+          </div>
+
+          {error && (
+            <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-4 text-rose-500 text-sm font-bold text-center">
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 text-white font-black py-4 rounded-xl transition-all shadow-lg shadow-indigo-900/50 flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <span className="animate-pulse">AUTHENTICATING...</span>
+            ) : (
+              <>
+                <Lock className="w-5 h-5" />
+                ACCESS CONTROL CENTER
+              </>
+            )}
+          </button>
+        </form>
+
+        <p className="text-center text-slate-600 text-xs mt-6">
+          Secure Access Only. Unauthorized entry prohibited.
+        </p>
+      </div>
+    </div>
+  );
+};
+
 const AdminApp = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [adminSecret, setAdminSecret] = useState('');
   const [activeTab, setActiveTab] = useState('dashboard');
   const [summary, setSummary] = useState(null);
   const [revenueData, setRevenueData] = useState([]);
@@ -27,6 +125,30 @@ const AdminApp = () => {
   const [affiliates, setAffiliates] = useState([]);
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Check for stored secret on mount
+  useEffect(() => {
+    const storedSecret = localStorage.getItem('adminSecret');
+    if (storedSecret) {
+      setAdminSecret(storedSecret);
+      setIsAuthenticated(true);
+      // Update API headers
+      api.defaults.headers['x-admin-secret'] = storedSecret;
+    }
+  }, []);
+
+  const handleLogin = (secret) => {
+    setAdminSecret(secret);
+    setIsAuthenticated(true);
+    api.defaults.headers['x-admin-secret'] = secret;
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminSecret');
+    setAdminSecret('');
+    setIsAuthenticated(false);
+    delete api.defaults.headers['x-admin-secret'];
+  };
   
   const ALL_FEATURES = [
     { id: 'gst_billing', label: 'GST Invoicing' },
@@ -205,6 +327,11 @@ const AdminApp = () => {
     }
   };
 
+  // Show login page if not authenticated
+  if (!isAuthenticated) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
   if (loading) return <div className="flex items-center justify-center min-h-screen bg-slate-950 text-indigo-400 font-black animate-pulse">BOOTING CONTROL CENTER...</div>;
 
   return (
@@ -241,6 +368,15 @@ const AdminApp = () => {
             </button>
           ))}
         </nav>
+
+        {/* Logout Button */}
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-200 mt-auto"
+        >
+          <LogOut className="w-5 h-5" />
+          Logout
+        </button>
       </aside>
 
       {/* Main Content */}
