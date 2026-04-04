@@ -79,7 +79,7 @@ const Affiliate = sequelize.define('Affiliate', {
   email: { type: DataTypes.STRING, allowNull: false },
   mobile_no: { type: DataTypes.STRING, allowNull: false },
   status: { type: DataTypes.ENUM('active', 'inactive'), defaultValue: 'active' }
-}, { tableName: 'Affiliates' });
+}, { tableName: 'Affiliates', timestamps: false });
 
 const User = sequelize.define('User',{
   id:{ type:DataTypes.UUID, defaultValue:DataTypes.UUIDV4, primaryKey:true },
