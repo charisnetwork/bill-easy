@@ -1,6 +1,14 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { User, Company, Plan, Subscription, UserCompany } = require('../models');
+
+// Helper function to mask email
+const maskEmail = (email) => {
+  const [localPart, domain] = email.split('@');
+  const maskedLocal = localPart.charAt(0) + '***';
+  return `${maskedLocal}@${domain}`;
+};
 
 /* ===============================
    REGISTER
@@ -11,9 +19,25 @@ const register = async (req, res) => {
     const { companyName, email, password, name, phone, gstNumber, address } = req.body;
 
     // Check existing email
-    const existingUser = await User.findOne({ where: { email } });
-    if (existingUser) {
-      return res.status(400).json({ error: 'Email already registered' });
+    const existingUserByEmail = await User.findOne({ where: { email } });
+    if (existingUserByEmail) {
+      return res.status(400).json({ 
+        error: 'ACCOUNT_EXISTS',
+        message: 'An account with this email already exists',
+        maskedEmail: maskEmail(existingUserByEmail.email)
+      });
+    }
+
+    // Check existing mobile number
+    if (phone) {
+      const existingUserByPhone = await User.findOne({ where: { phone } });
+      if (existingUserByPhone) {
+        return res.status(400).json({ 
+          error: 'ACCOUNT_EXISTS',
+          message: 'An account with this mobile number already exists',
+          maskedEmail: maskEmail(existingUserByPhone.email)
+        });
+      }
     }
 
     console.log('Creating company with GST:', gstNumber);
@@ -389,11 +413,108 @@ const switchCompany = async (req, res) => {
 };
 
 
+/* ===============================
+   REQUEST PASSWORD RESET (OTP)
+================================ */
+const resetRequests = new Map(); // Store OTPs temporarily (in production use Redis)
+
+const requestReset = async (req, res) => {
+  try {
+    const { email, phone } = req.body;
+    
+    if (!email && !phone) {
+      return res.status(400).json({ error: 'Email or phone number required' });
+    }
+
+    // Find user by email or phone
+    const user = await User.findOne({
+      where: email ? { email } : { phone }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    
+    // Store OTP and token (expires in 10 minutes)
+    const expiresAt = Date.now() + 10 * 60 * 1000;
+    resetRequests.set(resetToken, {
+      userId: user.id,
+      otp,
+      expiresAt,
+      email: user.email,
+      phone: user.phone
+    });
+
+    // In production, send email or SMS here
+    console.log(`🔐 Password Reset OTP for ${user.email}: ${otp}`);
+
+    res.json({
+      message: 'OTP sent successfully',
+      resetToken,
+      // In development only - remove in production
+      debugOtp: process.env.NODE_ENV !== 'production' ? otp : undefined,
+      maskedEmail: maskEmail(user.email),
+      maskedPhone: user.phone ? `${user.phone.slice(0, 4)}****${user.phone.slice(-2)}` : null
+    });
+
+  } catch (error) {
+    console.error('Request reset error:', error);
+    res.status(500).json({ error: 'Failed to process reset request' });
+  }
+};
+
+/* ===============================
+   VERIFY OTP & RESET PASSWORD
+================================ */
+const verifyReset = async (req, res) => {
+  try {
+    const { resetToken, otp, newPassword } = req.body;
+
+    const resetData = resetRequests.get(resetToken);
+    
+    if (!resetData) {
+      return res.status(400).json({ error: 'Invalid or expired reset token' });
+    }
+
+    if (Date.now() > resetData.expiresAt) {
+      resetRequests.delete(resetToken);
+      return res.status(400).json({ error: 'OTP expired' });
+    }
+
+    if (resetData.otp !== otp) {
+      return res.status(400).json({ error: 'Invalid OTP' });
+    }
+
+    // Update password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await User.update(
+      { password: hashedPassword },
+      { where: { id: resetData.userId } }
+    );
+
+    // Clear reset request
+    resetRequests.delete(resetToken);
+
+    res.json({ message: 'Password reset successful' });
+
+  } catch (error) {
+    console.error('Verify reset error:', error);
+    res.status(500).json({ error: 'Failed to reset password' });
+  }
+};
+
+
 module.exports = {
   register,
   login,
   getProfile,
   updateProfile,
   changePassword,
-  switchCompany
+  switchCompany,
+  requestReset,
+  verifyReset
 };
