@@ -87,7 +87,7 @@ const Footer = () => {
                   const data = {
                     name: formData.get('name'),
                     phone: formData.get('phone'),
-                    message: 'Quick callback request from footer'
+                    message: formData.get('message')
                   };
                   try {
                     const response = await fetch(`${BASE_URL}/api/enquiries`, {
@@ -110,22 +110,29 @@ const Footer = () => {
                 <input 
                   name="name"
                   type="text" 
-                  placeholder="Your Name" 
+                  placeholder="1. Name" 
                   required
                   className="w-full bg-slate-800 border-none rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 outline-none text-slate-200 placeholder-slate-400"
                 />
                 <input 
                   name="phone"
                   type="tel" 
-                  placeholder="Phone Number" 
+                  placeholder="2. Mobile No." 
                   required
                   className="w-full bg-slate-800 border-none rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 outline-none text-slate-200 placeholder-slate-400"
                 />
+                <textarea 
+                  name="message"
+                  placeholder="3. Message" 
+                  rows="3"
+                  required
+                  className="w-full bg-slate-800 border-none rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 outline-none text-slate-200 placeholder-slate-400 resize-none"
+                ></textarea>
                 <button 
                   type="submit"
                   className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-lg text-xs transition-colors shadow-lg shadow-blue-900/20"
                 >
-                  Request Callback
+                  Enquire Now
                 </button>
               </form>
             )}
