@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { BASE_URL } from '../services/api.jsx';
 import { 
   Facebook, 
   Twitter, 
@@ -89,7 +90,7 @@ const Footer = () => {
                     message: 'Quick callback request from footer'
                   };
                   try {
-                    const response = await fetch('https://billeasy-backend.onrender.com/api/enquiries', {
+                    const response = await fetch(`${BASE_URL}/api/enquiries`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify(data)
@@ -111,14 +112,14 @@ const Footer = () => {
                   type="text" 
                   placeholder="Your Name" 
                   required
-                  className="w-full bg-slate-800 border-none rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 outline-none text-white"
+                  className="w-full bg-slate-800 border-none rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 outline-none text-slate-200 placeholder-slate-400"
                 />
                 <input 
                   name="phone"
                   type="tel" 
                   placeholder="Phone Number" 
                   required
-                  className="w-full bg-slate-800 border-none rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 outline-none text-white"
+                  className="w-full bg-slate-800 border-none rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 outline-none text-slate-200 placeholder-slate-400"
                 />
                 <button 
                   type="submit"
