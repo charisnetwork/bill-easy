@@ -1,5 +1,5 @@
 const { Enquiry } = require("../models");
-const { createTransporter, getSenderAddress, getSupportEmail } = require("../config/mail");
+const { createTransporter, createTransporterSync, getSenderAddress, getSupportEmail } = require("../config/mail");
 
 exports.createEnquiry = async (req, res) => {
   try {
@@ -21,10 +21,12 @@ exports.createEnquiry = async (req, res) => {
     console.log(`>>> New Lead Generated: ${name} (${phone})`);
 
     // --- Email Forwarding Logic ---
-    const transporter = createTransporter();
-    
-    if (transporter) {
-      try {
+    try {
+      const transporter = await createTransporter();
+      
+      if (!transporter) {
+        console.warn(">>> [Brevo] Could not create transporter. Email notification skipped.");
+      } else {
         const fromAddress = getSenderAddress();
         const toAddress = getSupportEmail();
         
@@ -33,9 +35,9 @@ exports.createEnquiry = async (req, res) => {
         console.log(`>>> [Brevo] Reply-To: ${email}`);
 
         const mailOptions = {
-          from: fromAddress,         // Must be verified sender in Brevo
-          to: toAddress,             // Recipient
-          replyTo: email,            // Replies go to the person who submitted the form
+          from: fromAddress,
+          to: toAddress,
+          replyTo: email,
           subject: `New Enquiry from ${name}`,
           text: `
 NEW ENQUIRY RECEIVED
@@ -95,15 +97,10 @@ Reply to this email to respond to ${name} at ${email}.
         console.log(`>>> [Brevo] Sending email...`);
         const info = await transporter.sendMail(mailOptions);
         console.log(`>>> [Brevo] Email sent successfully! Message ID: ${info.messageId}`);
-        console.log(`>>> [Brevo] Response: ${info.response}`);
-        
-      } catch (mailErr) {
-        console.error(">>> [Brevo] Mail Sending Error:", mailErr.message);
-        console.error(">>> [Brevo] Full Error:", mailErr);
-        // Log but don't fail the request - enquiry is still saved
       }
-    } else {
-      console.warn(">>> [Brevo] Transporter not created. Email notification skipped.");
+    } catch (mailErr) {
+      console.error(">>> [Brevo] Mail Sending Error:", mailErr.message);
+      // Log but don't fail the request - enquiry is still saved
     }
 
     res.status(201).json({
@@ -122,9 +119,7 @@ exports.testEmailConfig = async (req, res) => {
   try {
     console.log(">>> [Brevo] Testing email configuration...");
     
-    const transporter = createTransporter();
-    
-    if (!transporter) {
+    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
       return res.status(400).json({
         success: false,
         error: "SMTP configuration missing",
@@ -135,6 +130,16 @@ exports.testEmailConfig = async (req, res) => {
           SMTP_PASS: !!process.env.SMTP_PASS,
           SMTP_FROM: process.env.SMTP_FROM || 'support@charisbilleasy.store (default)'
         }
+      });
+    }
+
+    const transporter = await createTransporter();
+    
+    if (!transporter) {
+      return res.status(500).json({
+        success: false,
+        error: "Failed to create transporter",
+        message: "Both port 587 and 465 failed to connect. Check your SMTP credentials."
       });
     }
 

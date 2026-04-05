@@ -12,7 +12,45 @@ const nodemailer = require('nodemailer');
  * The 'auth.user' must be your Brevo SMTP login, not the sender email.
  */
 
-const createTransporter = () => {
+// SMTP Configuration for port 587 (STARTTLS)
+const SMTP_CONFIG_587 = {
+  host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
+  port: 587,
+  secure: false, // Use STARTTLS
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+  tls: {
+    rejectUnauthorized: false
+  },
+  connectionTimeout: 15000, // 15 seconds
+  greetingTimeout: 15000,
+  socketTimeout: 15000,
+  debug: process.env.NODE_ENV === 'development',
+  logger: process.env.NODE_ENV === 'development'
+};
+
+// SMTP Configuration for port 465 (SSL) - Fallback
+const SMTP_CONFIG_465 = {
+  host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
+  port: 465,
+  secure: true, // Use SSL
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+  tls: {
+    rejectUnauthorized: false
+  },
+  connectionTimeout: 15000,
+  greetingTimeout: 15000,
+  socketTimeout: 15000,
+  debug: process.env.NODE_ENV === 'development',
+  logger: process.env.NODE_ENV === 'development'
+};
+
+const createTransporter = async () => {
   // Validate required environment variables
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
     console.error('[Mail Config] Missing SMTP configuration:');
@@ -22,33 +60,45 @@ const createTransporter = () => {
     return null;
   }
 
-  // Brevo SMTP configuration
-  const config = {
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT) || 587,
-    secure: false, // Use STARTTLS
-    auth: {
-      // Brevo SMTP login (NOT the sender email)
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-    tls: {
-      rejectUnauthorized: false,
-      ciphers: 'SSLv3'
-    },
-    connectionTimeout: 15000,
-    greetingTimeout: 15000,
-    socketTimeout: 15000,
-    debug: process.env.NODE_ENV === 'development',
-    logger: process.env.NODE_ENV === 'development'
-  };
+  // Try port 587 first (STARTTLS)
+  console.log('[Mail Config] Attempting connection on port 587 (STARTTLS)...');
+  const transporter587 = nodemailer.createTransport(SMTP_CONFIG_587);
+  
+  try {
+    await transporter587.verify();
+    console.log('[Mail Config] Port 587 connection successful!');
+    return transporter587;
+  } catch (error587) {
+    console.error('[Mail Config] Port 587 failed:', error587.message);
+    
+    // Fallback to port 465 (SSL)
+    console.log('[Mail Config] Falling back to port 465 (SSL)...');
+    const transporter465 = nodemailer.createTransport(SMTP_CONFIG_465);
+    
+    try {
+      await transporter465.verify();
+      console.log('[Mail Config] Port 465 connection successful!');
+      return transporter465;
+    } catch (error465) {
+      console.error('[Mail Config] Port 465 failed:', error465.message);
+      console.error('[Mail Config] Both SMTP ports failed. Email will not be sent.');
+      return null;
+    }
+  }
+};
 
-  console.log('[Mail Config] Creating transporter with:');
-  console.log('[Mail Config] Host:', config.host);
-  console.log('[Mail Config] Port:', config.port);
-  console.log('[Mail Config] Auth User:', config.auth.user);
+/**
+ * Create transporter without verification (for immediate use)
+ * Use this when you want to send without pre-verification
+ */
+const createTransporterSync = () => {
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.error('[Mail Config] Missing SMTP configuration');
+    return null;
+  }
 
-  return nodemailer.createTransport(config);
+  console.log('[Mail Config] Creating transporter (port 587 STARTTLS)...');
+  return nodemailer.createTransport(SMTP_CONFIG_587);
 };
 
 /**
@@ -56,8 +106,6 @@ const createTransporter = () => {
  * This MUST be a verified sender in your Brevo account
  */
 const getSenderAddress = () => {
-  // Use SMTP_FROM env var, or fall back to support@charisbilleasy.store
-  // This email MUST be verified in Brevo as a sender identity
   const sender = process.env.SMTP_FROM || 'support@charisbilleasy.store';
   return `"BillEasy System" <${sender}>`;
 };
@@ -78,7 +126,10 @@ const getSupportEmail = () => {
 
 module.exports = {
   createTransporter,
+  createTransporterSync,
   getSenderAddress,
   getRawSenderEmail,
-  getSupportEmail
+  getSupportEmail,
+  SMTP_CONFIG_587,
+  SMTP_CONFIG_465
 };
