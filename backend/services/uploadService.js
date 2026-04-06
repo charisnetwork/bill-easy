@@ -6,11 +6,12 @@ const fs = require('fs');
 
 /* -------------------------------------------------------------------------
    STORAGE STRATEGY (Priority Order):
-   1. Google Cloud Storage (GCS) - If GCS credentials file exists
+   1. Google Cloud Storage (GCS) - Uses memoryStorage(), controller handles GCS upload
    2. Cloudinary - If CLOUDINARY_URL is present
-   3. Local Disk Storage - Development fallback
+   3. Local Disk Storage - Development fallback (imports only)
    
-   Note: For GCS, we use memoryStorage() and upload from the controller
+   Note: Logo/Signature/QR uploads ALWAYS use memoryStorage to avoid ENOENT errors.
+   The controller uploads directly to GCS. Local disk is only used for imports.
 -------------------------------------------------------------------------- */
 
 // Helper to check if GCS is configured
@@ -43,6 +44,10 @@ const isGCSActive = checkGCSConfig();
 const isCloudinaryActive = !!process.env.CLOUDINARY_URL;
 
 console.log(`[UploadService] GCS Active: ${isGCSActive}, Cloudinary Active: ${isCloudinaryActive}`);
+
+// Memory storage for GCS uploads (logo, signature, qr) - always uses memory
+// This avoids ENOENT errors from diskStorage trying to create local directories
+const memoryStorage = multer.memoryStorage();
 
 // Configure Cloudinary if active (and GCS is not)
 if (isCloudinaryActive && !isGCSActive) {
@@ -112,20 +117,22 @@ const fileFilter = (req, file, cb) => {
 
 /* ---------- MULTER EXPORTS ---------- */
 
+// Logo, Signature, QR uploads: ALWAYS use memoryStorage
+// Controller handles uploading to GCS - no local disk storage
 exports.uploadLogo = multer({
-  storage: getStorage("company/logos"),
+  storage: memoryStorage,
   fileFilter,
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });
 
 exports.uploadSignature = multer({
-  storage: getStorage("company/signatures"),
+  storage: memoryStorage,
   fileFilter,
   limits: { fileSize: 5 * 1024 * 1024 }
 });
 
 exports.uploadQRCode = multer({
-  storage: getStorage("company/qrcodes"),
+  storage: memoryStorage,
   fileFilter,
   limits: { fileSize: 5 * 1024 * 1024 }
 });

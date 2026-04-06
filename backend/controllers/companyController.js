@@ -1,7 +1,6 @@
 const { Company, User, Subscription, Plan, UserCompany, Godown } = require("../models");
 const bcrypt = require("bcryptjs");
-const { uploadImage, deleteImage, isConnected } = require("../utils/storage");
-const { isGCSActive } = require("../services/uploadService");
+const { uploadImage, deleteImage } = require("../utils/storage");
 
 
 /* =========================================================
@@ -160,25 +159,19 @@ const updateSettings = async (req, res) => {
 const uploadLogo = async (req, res) => {
   try {
     const companyId = req.companyId;
-    let logoUrl;
 
-    // If GCS is configured and file has buffer, upload to GCS
-    if (isGCSActive && req.file.buffer) {
-      logoUrl = await uploadImage(
-        req.file.buffer,
-        req.file.originalname,
-        'company/logos',
-        req.file.mimetype
-      );
-    } else if (req.file.path) {
-      // Local storage fallback
-      logoUrl = `/company/logos/${req.file.filename}`;
-    } else if (req.file.secure_url) {
-      // Cloudinary fallback
-      logoUrl = req.file.secure_url;
-    } else {
-      throw new Error('No file data available');
+    // Validate file was uploaded
+    if (!req.file || !req.file.buffer) {
+      return res.status(400).json({ error: 'No file uploaded' });
     }
+
+    // Upload buffer directly to Google Cloud Storage
+    const logoUrl = await uploadImage(
+      req.file.buffer,
+      req.file.originalname,
+      'company/logos',
+      req.file.mimetype
+    );
 
     // Get current company to delete old logo if exists
     const company = await Company.findByPk(companyId);
@@ -213,25 +206,19 @@ const uploadLogo = async (req, res) => {
 const uploadSignature = async (req, res) => {
   try {
     const companyId = req.companyId;
-    let signatureUrl;
 
-    // If GCS is configured and file has buffer, upload to GCS
-    if (isGCSActive && req.file.buffer) {
-      signatureUrl = await uploadImage(
-        req.file.buffer,
-        req.file.originalname,
-        'company/signatures',
-        req.file.mimetype
-      );
-    } else if (req.file.path) {
-      // Local storage fallback
-      signatureUrl = `/company/signatures/${req.file.filename}`;
-    } else if (req.file.secure_url) {
-      // Cloudinary fallback
-      signatureUrl = req.file.secure_url;
-    } else {
-      throw new Error('No file data available');
+    // Validate file was uploaded
+    if (!req.file || !req.file.buffer) {
+      return res.status(400).json({ error: 'No file uploaded' });
     }
+
+    // Upload buffer directly to Google Cloud Storage
+    const signatureUrl = await uploadImage(
+      req.file.buffer,
+      req.file.originalname,
+      'company/signatures',
+      req.file.mimetype
+    );
 
     // Get current company to delete old signature if exists
     const company = await Company.findByPk(companyId);
@@ -266,25 +253,19 @@ const uploadSignature = async (req, res) => {
 const uploadQRCode = async (req, res) => {
   try {
     const companyId = req.companyId;
-    let qrCodeUrl;
 
-    // If GCS is configured and file has buffer, upload to GCS
-    if (isGCSActive && req.file.buffer) {
-      qrCodeUrl = await uploadImage(
-        req.file.buffer,
-        req.file.originalname,
-        'company/qrcodes',
-        req.file.mimetype
-      );
-    } else if (req.file.path) {
-      // Local storage fallback
-      qrCodeUrl = `/company/qrcodes/${req.file.filename}`;
-    } else if (req.file.secure_url) {
-      // Cloudinary fallback
-      qrCodeUrl = req.file.secure_url;
-    } else {
-      throw new Error('No file data available');
+    // Validate file was uploaded
+    if (!req.file || !req.file.buffer) {
+      return res.status(400).json({ error: 'No file uploaded' });
     }
+
+    // Upload buffer directly to Google Cloud Storage
+    const qrCodeUrl = await uploadImage(
+      req.file.buffer,
+      req.file.originalname,
+      'company/qrcodes',
+      req.file.mimetype
+    );
 
     // Get current company to delete old QR code if exists
     const company = await Company.findByPk(companyId);
