@@ -746,6 +746,94 @@ const resetPasswordWithOTP = async (req, res) => {
 };
 
 
+// Legacy reset requests storage (in production use Redis)
+const resetRequests = new Map();
+
+/* ===============================
+   LEGACY: REQUEST PASSWORD RESET
+================================ */
+const requestReset = async (req, res) => {
+  try {
+    const { email, phone } = req.body;
+    
+    if (!email && !phone) {
+      return res.status(400).json({ error: 'Email or phone number required' });
+    }
+
+    const user = await User.findOne({
+      where: email ? { email } : { phone }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = Date.now() + 10 * 60 * 1000;
+    
+    resetRequests.set(resetToken, {
+      userId: user.id,
+      otp,
+      expiresAt,
+      email: user.email,
+      phone: user.phone
+    });
+
+    console.log(`🔐 Password Reset OTP for ${user.email}: ${otp}`);
+
+    res.json({
+      message: 'OTP sent successfully',
+      resetToken,
+      debugOtp: process.env.NODE_ENV !== 'production' ? otp : undefined,
+      maskedEmail: maskEmail(user.email),
+      maskedPhone: user.phone ? `${user.phone.slice(0, 4)}****${user.phone.slice(-2)}` : null
+    });
+
+  } catch (error) {
+    console.error('Request reset error:', error);
+    res.status(500).json({ error: 'Failed to process reset request' });
+  }
+};
+
+/* ===============================
+   LEGACY: VERIFY OTP & RESET
+================================ */
+const verifyReset = async (req, res) => {
+  try {
+    const { resetToken, otp, newPassword } = req.body;
+
+    const resetData = resetRequests.get(resetToken);
+    
+    if (!resetData) {
+      return res.status(400).json({ error: 'Invalid or expired reset token' });
+    }
+
+    if (Date.now() > resetData.expiresAt) {
+      resetRequests.delete(resetToken);
+      return res.status(400).json({ error: 'OTP expired' });
+    }
+
+    if (resetData.otp !== otp) {
+      return res.status(400).json({ error: 'Invalid OTP' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await User.update(
+      { password: hashedPassword },
+      { where: { id: resetData.userId } }
+    );
+
+    resetRequests.delete(resetToken);
+
+    res.json({ message: 'Password reset successful' });
+
+  } catch (error) {
+    console.error('Verify reset error:', error);
+    res.status(500).json({ error: 'Failed to reset password' });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -753,6 +841,8 @@ module.exports = {
   updateProfile,
   changePassword,
   switchCompany,
+  requestReset,
+  verifyReset,
   generateAndSendOTP,
   verifyOTP,
   sendResetLink,
