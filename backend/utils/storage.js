@@ -32,13 +32,22 @@ const loadGCSCredentials = () => {
         const keyFileContent = fs.readFileSync(keyPath, 'utf8');
         gcsCredentials = JSON.parse(keyFileContent);
         
-        // Extract project_id and bucket name from the key file
+        // Extract fields from the key file
         gcsProjectId = gcsCredentials.project_id;
         
-        // Bucket name: env var > explicit default > auto-generated
+        // Validate required fields
+        if (!gcsProjectId || !gcsCredentials.client_email || !gcsCredentials.private_key) {
+          console.error('[GCS] Missing required fields in credentials file');
+          console.error(`  - project_id: ${gcsProjectId ? '✓' : '✗'}`);
+          console.error(`  - client_email: ${gcsCredentials.client_email ? '✓' : '✗'}`);
+          console.error(`  - private_key: ${gcsCredentials.private_key ? '✓' : '✗'}`);
+          continue; // Try next path
+        }
+        
+        // Bucket name: env var > explicit default
         gcsBucketName = GCS_BUCKET_NAME || 'bill-easy-assets';
         
-        console.log(`[GCS] Loaded credentials for project: ${gcsProjectId}`);
+        console.log(`[GCS] Loaded credentials for project: ${gcsProjectId}, service account: ${gcsCredentials.client_email}`);
         return true;
       }
     }
