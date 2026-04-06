@@ -1,5 +1,7 @@
 const { Company, User, Subscription, Plan, UserCompany, Godown } = require("../models");
 const bcrypt = require("bcryptjs");
+const { uploadImage, deleteImage, isConnected } = require("../utils/storage");
+const { isGCSActive } = require("../services/uploadService");
 
 
 /* =========================================================
@@ -156,33 +158,51 @@ const updateSettings = async (req, res) => {
 ========================================================= */
 
 const uploadLogo = async (req, res) => {
-
   try {
-
     const companyId = req.companyId;
+    let logoUrl;
 
-    const logoPath = `/company/logos/${req.file.filename}`;
+    // If GCS is configured and file has buffer, upload to GCS
+    if (isGCSActive && req.file.buffer) {
+      logoUrl = await uploadImage(
+        req.file.buffer,
+        req.file.originalname,
+        'company/logos',
+        req.file.mimetype
+      );
+    } else if (req.file.path) {
+      // Local storage fallback
+      logoUrl = `/company/logos/${req.file.filename}`;
+    } else if (req.file.secure_url) {
+      // Cloudinary fallback
+      logoUrl = req.file.secure_url;
+    } else {
+      throw new Error('No file data available');
+    }
+
+    // Get current company to delete old logo if exists
+    const company = await Company.findByPk(companyId);
+    if (company && company.logo && company.logo.includes('storage.googleapis.com')) {
+      await deleteImage(company.logo);
+    }
 
     await Company.update(
-      { logo: logoPath },
+      { logo: logoUrl },
       { where: { id: companyId } }
     );
 
     res.json({
       success: true,
-      logo: logoPath
+      logo: logoUrl
     });
 
   } catch (err) {
-
-    console.error(err);
-
+    console.error('[UploadLogo] Error:', err);
     res.status(500).json({
-      error: "Logo upload failed"
+      error: "Logo upload failed",
+      message: err.message
     });
-
   }
-
 };
 
 
@@ -191,33 +211,51 @@ const uploadLogo = async (req, res) => {
 ========================================================= */
 
 const uploadSignature = async (req, res) => {
-
   try {
-
     const companyId = req.companyId;
+    let signatureUrl;
 
-    const signaturePath = `/company/signatures/${req.file.filename}`;
+    // If GCS is configured and file has buffer, upload to GCS
+    if (isGCSActive && req.file.buffer) {
+      signatureUrl = await uploadImage(
+        req.file.buffer,
+        req.file.originalname,
+        'company/signatures',
+        req.file.mimetype
+      );
+    } else if (req.file.path) {
+      // Local storage fallback
+      signatureUrl = `/company/signatures/${req.file.filename}`;
+    } else if (req.file.secure_url) {
+      // Cloudinary fallback
+      signatureUrl = req.file.secure_url;
+    } else {
+      throw new Error('No file data available');
+    }
+
+    // Get current company to delete old signature if exists
+    const company = await Company.findByPk(companyId);
+    if (company && company.signature && company.signature.includes('storage.googleapis.com')) {
+      await deleteImage(company.signature);
+    }
 
     await Company.update(
-      { signature: signaturePath },
+      { signature: signatureUrl },
       { where: { id: companyId } }
     );
 
     res.json({
       success: true,
-      signature: signaturePath
+      signature: signatureUrl
     });
 
   } catch (err) {
-
-    console.error(err);
-
+    console.error('[UploadSignature] Error:', err);
     res.status(500).json({
-      error: "Signature upload failed"
+      error: "Signature upload failed",
+      message: err.message
     });
-
   }
-
 };
 
 
@@ -228,19 +266,47 @@ const uploadSignature = async (req, res) => {
 const uploadQRCode = async (req, res) => {
   try {
     const companyId = req.companyId;
-    const qrCodePath = `/company/qrcodes/${req.file.filename}`;
+    let qrCodeUrl;
+
+    // If GCS is configured and file has buffer, upload to GCS
+    if (isGCSActive && req.file.buffer) {
+      qrCodeUrl = await uploadImage(
+        req.file.buffer,
+        req.file.originalname,
+        'company/qrcodes',
+        req.file.mimetype
+      );
+    } else if (req.file.path) {
+      // Local storage fallback
+      qrCodeUrl = `/company/qrcodes/${req.file.filename}`;
+    } else if (req.file.secure_url) {
+      // Cloudinary fallback
+      qrCodeUrl = req.file.secure_url;
+    } else {
+      throw new Error('No file data available');
+    }
+
+    // Get current company to delete old QR code if exists
+    const company = await Company.findByPk(companyId);
+    if (company && company.qr_code && company.qr_code.includes('storage.googleapis.com')) {
+      await deleteImage(company.qr_code);
+    }
+
     await Company.update(
-      { qr_code: qrCodePath },
+      { qr_code: qrCodeUrl },
       { where: { id: companyId } }
     );
+
     res.json({
       success: true,
-      qr_code: qrCodePath
+      qr_code: qrCodeUrl
     });
+
   } catch (err) {
-    console.error(err);
+    console.error('[UploadQRCode] Error:', err);
     res.status(500).json({
-      error: "QR Code upload failed"
+      error: "QR Code upload failed",
+      message: err.message
     });
   }
 };
