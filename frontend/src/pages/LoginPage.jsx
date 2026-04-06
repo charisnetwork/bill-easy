@@ -146,7 +146,7 @@ export const LoginPage = () => {
                         className="flex items-center px-4 py-3 border border-slate-200 rounded-lg bg-white focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all"
                         style={{ display: 'flex', alignItems: 'center' }}
                       >
-                        <Mail className="w-4 h-4 text-slate-400 mr-3 flex-shrink-0" style={{ marginRight: '12px' }} />
+                        <Mail className="w-4 h-4 text-slate-400 mr-4 flex-shrink-0" />
                         <input
                           id="reset-email"
                           type="email"
@@ -201,7 +201,7 @@ export const LoginPage = () => {
                         className="flex items-center px-4 py-3 border border-slate-200 rounded-lg bg-white focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all"
                         style={{ display: 'flex', alignItems: 'center' }}
                       >
-                        <Lock className="w-4 h-4 text-slate-400 mr-3 flex-shrink-0" style={{ marginRight: '12px' }} />
+                        <Lock className="w-4 h-4 text-slate-400 mr-4 flex-shrink-0" />
                         <input
                           id="new-password"
                           type={showPassword ? 'text' : 'password'}
@@ -220,7 +220,7 @@ export const LoginPage = () => {
                         className="flex items-center px-4 py-3 border border-slate-200 rounded-lg bg-white focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all"
                         style={{ display: 'flex', alignItems: 'center' }}
                       >
-                        <Lock className="w-4 h-4 text-slate-400 mr-3 flex-shrink-0" style={{ marginRight: '12px' }} />
+                        <Lock className="w-4 h-4 text-slate-400 mr-4 flex-shrink-0" />
                         <input
                           id="confirm-password"
                           type={showPassword ? 'text' : 'password'}
@@ -283,7 +283,7 @@ export const LoginPage = () => {
                     className="flex items-center px-4 py-3 border border-slate-200 rounded-lg bg-white focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all"
                     style={{ display: 'flex', alignItems: 'center' }}
                   >
-                    <Mail className="w-4 h-4 text-slate-400 mr-3 flex-shrink-0" style={{ marginRight: '12px' }} />
+                    <Mail className="w-4 h-4 text-slate-400 mr-4 flex-shrink-0" />
                     <input
                       id="email"
                       type="email"
@@ -313,7 +313,7 @@ export const LoginPage = () => {
                     className="flex items-center px-4 py-3 border border-slate-200 rounded-lg bg-white focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all"
                     style={{ display: 'flex', alignItems: 'center' }}
                   >
-                    <Lock className="w-4 h-4 text-slate-400 mr-3 flex-shrink-0" style={{ marginRight: '12px' }} />
+                    <Lock className="w-4 h-4 text-slate-400 mr-4 flex-shrink-0" />
                     <input
                       id="password"
                       type={showPassword ? 'text' : 'password'}
