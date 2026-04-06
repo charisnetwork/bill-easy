@@ -92,10 +92,16 @@ const User = sequelize.define('User',{
     type:DataTypes.ENUM('owner','admin','staff'), 
     defaultValue:'staff',
     allowNull: false
-  },  permissions:{ type:DataTypes.JSON, defaultValue:{} },
+  },
+  permissions:{ type:DataTypes.JSON, defaultValue:{} },
   is_active:{ type:DataTypes.BOOLEAN, defaultValue:true },
   email_verified:{ type:DataTypes.BOOLEAN, defaultValue:false },
-  last_login:{ type:DataTypes.DATE }
+  last_login:{ type:DataTypes.DATE },
+  // OTP and Password Reset Fields
+  otp_code:{ type:DataTypes.STRING(6), allowNull:true },
+  otp_expires_at:{ type:DataTypes.DATE, allowNull:true },
+  reset_token:{ type:DataTypes.STRING, allowNull:true },
+  reset_token_expires_at:{ type:DataTypes.DATE, allowNull:true }
 }, { tableName: 'users' });
 
 const Coupon = sequelize.define('Coupon', {

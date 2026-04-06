@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { User, Company, Plan, Subscription, UserCompany } = require('../models');
+const { sendEmailViaAPI } = require('../utils/mailer');
 
 // Helper function to mask email
 const maskEmail = (email) => {
@@ -390,6 +391,10 @@ const changePassword = async (req, res) => {
   }
 };
 
+
+/* ===============================
+   SWITCH COMPANY
+================================ */
 const switchCompany = async (req, res) => {
   try {
     const { companyId } = req.params;
@@ -414,95 +419,328 @@ const switchCompany = async (req, res) => {
 
 
 /* ===============================
-   REQUEST PASSWORD RESET (OTP)
+   EMAIL OTP - GENERATE AND SEND
 ================================ */
-const resetRequests = new Map(); // Store OTPs temporarily (in production use Redis)
-
-const requestReset = async (req, res) => {
+const generateAndSendOTP = async (req, res) => {
   try {
-    const { email, phone } = req.body;
-    
-    if (!email && !phone) {
-      return res.status(400).json({ error: 'Email or phone number required' });
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
     }
 
-    // Find user by email or phone
-    const user = await User.findOne({
-      where: email ? { email } : { phone }
-    });
+    // Find user by email
+    const user = await User.findOne({ where: { email } });
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      // Don't reveal if user exists
+      return res.status(200).json({
+        message: 'If an account exists with this email, an OTP has been sent.',
+        maskedEmail: maskEmail(email)
+      });
     }
 
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    
-    // Store OTP and token (expires in 10 minutes)
-    const expiresAt = Date.now() + 10 * 60 * 1000;
-    resetRequests.set(resetToken, {
-      userId: user.id,
-      otp,
-      expiresAt,
-      email: user.email,
-      phone: user.phone
+
+    // Set expiry to 5 minutes from now
+    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+    // Save OTP to user record
+    await user.update({
+      otp_code: otp,
+      otp_expires_at: otpExpiresAt
     });
 
-    // In production, send email or SMS here
-    console.log(`🔐 Password Reset OTP for ${user.email}: ${otp}`);
+    // Send OTP via Brevo API
+    try {
+      const senderEmail = process.env.SMTP_FROM || 'support@charisbilleasy.store';
+      
+      await sendEmailViaAPI({
+        to: email,
+        subject: 'Your BillEasy Password Reset OTP',
+        textContent: `
+Hello ${user.name},
 
-    res.json({
-      message: 'OTP sent successfully',
-      resetToken,
-      // In development only - remove in production
-      debugOtp: process.env.NODE_ENV !== 'production' ? otp : undefined,
-      maskedEmail: maskEmail(user.email),
-      maskedPhone: user.phone ? `${user.phone.slice(0, 4)}****${user.phone.slice(-2)}` : null
-    });
+Your OTP for password reset is: ${otp}
+
+This OTP is valid for 5 minutes.
+
+If you did not request this, please ignore this email.
+
+Best regards,
+BillEasy Team
+        `,
+        htmlContent: `
+          <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
+            <div style="background: #2563eb; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+              <h2 style="margin: 0;">BillEasy Password Reset</h2>
+            </div>
+            <div style="background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+              <p style="color: #374151; font-size: 16px;">Hello <strong>${user.name}</strong>,</p>
+              <p style="color: #374151;">Your OTP for password reset is:</p>
+              <div style="background: #ffffff; border: 2px dashed #2563eb; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;">
+                <span style="font-size: 32px; font-weight: bold; color: #2563eb; letter-spacing: 8px;">${otp}</span>
+              </div>
+              <p style="color: #6b7280; font-size: 14px;">This OTP is valid for <strong>5 minutes</strong>.</p>
+              <p style="color: #6b7280; font-size: 12px; margin-top: 30px;">If you did not request this, please ignore this email.</p>
+            </div>
+          </div>
+        `
+      });
+
+      console.log(`🔐 OTP sent to ${email}: ${otp}`);
+
+      res.json({
+        message: 'If an account exists with this email, an OTP has been sent.',
+        maskedEmail: maskEmail(email),
+        // Debug only - remove in production
+        debugOtp: process.env.NODE_ENV !== 'production' ? otp : undefined
+      });
+
+    } catch (emailError) {
+      console.error('Failed to send OTP email:', emailError);
+      res.status(500).json({ error: 'Failed to send OTP email' });
+    }
 
   } catch (error) {
-    console.error('Request reset error:', error);
-    res.status(500).json({ error: 'Failed to process reset request' });
+    console.error('Generate OTP error:', error);
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
+
 /* ===============================
-   VERIFY OTP & RESET PASSWORD
+   VERIFY OTP
 ================================ */
-const verifyReset = async (req, res) => {
+const verifyOTP = async (req, res) => {
   try {
-    const { resetToken, otp, newPassword } = req.body;
+    const { email, otp } = req.body;
 
-    const resetData = resetRequests.get(resetToken);
-    
-    if (!resetData) {
-      return res.status(400).json({ error: 'Invalid or expired reset token' });
+    if (!email || !otp) {
+      return res.status(400).json({ error: 'Email and OTP are required' });
     }
 
-    if (Date.now() > resetData.expiresAt) {
-      resetRequests.delete(resetToken);
-      return res.status(400).json({ error: 'OTP expired' });
-    }
+    const user = await User.findOne({ where: { email } });
 
-    if (resetData.otp !== otp) {
+    if (!user) {
       return res.status(400).json({ error: 'Invalid OTP' });
     }
 
-    // Update password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await User.update(
-      { password: hashedPassword },
-      { where: { id: resetData.userId } }
+    // Check if OTP matches and is not expired
+    if (user.otp_code !== otp) {
+      return res.status(400).json({ error: 'Invalid OTP' });
+    }
+
+    if (new Date() > new Date(user.otp_expires_at)) {
+      return res.status(400).json({ error: 'OTP has expired' });
+    }
+
+    // Generate a temporary reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    await user.update({
+      reset_token: resetToken,
+      reset_token_expires_at: resetTokenExpiresAt,
+      // Clear OTP after verification
+      otp_code: null,
+      otp_expires_at: null
+    });
+
+    res.json({
+      message: 'OTP verified successfully',
+      resetToken,
+      expiresAt: resetTokenExpiresAt
+    });
+
+  } catch (error) {
+    console.error('Verify OTP error:', error);
+    res.status(500).json({ error: 'Failed to verify OTP' });
+  }
+};
+
+
+/* ===============================
+   SEND RESET LINK (JWT TOKEN)
+================================ */
+const sendResetLink = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      // Don't reveal if user exists
+      return res.status(200).json({
+        message: 'If an account exists with this email, a reset link has been sent.',
+        maskedEmail: maskEmail(email)
+      });
+    }
+
+    // Generate JWT reset token (valid for 1 hour)
+    const resetToken = jwt.sign(
+      { userId: user.id, purpose: 'password-reset' },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
     );
 
-    // Clear reset request
-    resetRequests.delete(resetToken);
+    const resetLink = `https://charisbilleasy.store/reset-password?token=${resetToken}`;
+
+    // Send reset link via Brevo API
+    try {
+      await sendEmailViaAPI({
+        to: email,
+        subject: 'Reset Your BillEasy Password',
+        textContent: `
+Hello ${user.name},
+
+Click the link below to reset your password:
+
+${resetLink}
+
+This link is valid for 1 hour.
+
+If you did not request this, please ignore this email.
+
+Best regards,
+BillEasy Team
+        `,
+        htmlContent: `
+          <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
+            <div style="background: #2563eb; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+              <h2 style="margin: 0;">Reset Your Password</h2>
+            </div>
+            <div style="background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+              <p style="color: #374151; font-size: 16px;">Hello <strong>${user.name}</strong>,</p>
+              <p style="color: #374151;">Click the button below to reset your password:</p>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${resetLink}" style="background: #2563eb; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">Reset Password</a>
+              </div>
+              <p style="color: #6b7280; font-size: 14px; text-align: center;">Or copy this link:</p>
+              <p style="background: #e5e7eb; padding: 10px; border-radius: 4px; font-size: 12px; word-break: break-all; color: #374151;">${resetLink}</p>
+              <p style="color: #6b7280; font-size: 14px;">This link is valid for <strong>1 hour</strong>.</p>
+              <p style="color: #6b7280; font-size: 12px; margin-top: 30px;">If you did not request this, please ignore this email.</p>
+            </div>
+          </div>
+        `
+      });
+
+      console.log(`🔗 Reset link sent to ${email}`);
+
+      res.json({
+        message: 'If an account exists with this email, a reset link has been sent.',
+        maskedEmail: maskEmail(email)
+      });
+
+    } catch (emailError) {
+      console.error('Failed to send reset link:', emailError);
+      res.status(500).json({ error: 'Failed to send reset link' });
+    }
+
+  } catch (error) {
+    console.error('Send reset link error:', error);
+    res.status(500).json({ error: 'Failed to process request' });
+  }
+};
+
+
+/* ===============================
+   RESET PASSWORD (via Token)
+================================ */
+const resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({ error: 'Token and new password are required' });
+    }
+
+    // Verify JWT token
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (jwtError) {
+      return res.status(400).json({ error: 'Invalid or expired reset token' });
+    }
+
+    // Check if token is for password reset
+    if (decoded.purpose !== 'password-reset') {
+      return res.status(400).json({ error: 'Invalid token purpose' });
+    }
+
+    const user = await User.findByPk(decoded.userId);
+
+    if (!user) {
+      return res.status(400).json({ error: 'User not found' });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password
+    await user.update({
+      password: hashedPassword,
+      reset_token: null,
+      reset_token_expires_at: null
+    });
+
+    console.log(`🔑 Password reset successful for ${user.email}`);
 
     res.json({ message: 'Password reset successful' });
 
   } catch (error) {
-    console.error('Verify reset error:', error);
+    console.error('Reset password error:', error);
+    res.status(500).json({ error: 'Failed to reset password' });
+  }
+};
+
+
+/* ===============================
+   RESET PASSWORD (via OTP)
+================================ */
+const resetPasswordWithOTP = async (req, res) => {
+  try {
+    const { resetToken, newPassword } = req.body;
+
+    if (!resetToken || !newPassword) {
+      return res.status(400).json({ error: 'Reset token and new password are required' });
+    }
+
+    // Find user with valid reset token
+    const user = await User.findOne({
+      where: {
+        reset_token: resetToken,
+        reset_token_expires_at: {
+          $gt: new Date()
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid or expired reset token' });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password and clear tokens
+    await user.update({
+      password: hashedPassword,
+      otp_code: null,
+      otp_expires_at: null,
+      reset_token: null,
+      reset_token_expires_at: null
+    });
+
+    res.json({ message: 'Password reset successful' });
+
+  } catch (error) {
+    console.error('Reset password with OTP error:', error);
     res.status(500).json({ error: 'Failed to reset password' });
   }
 };
@@ -515,6 +753,9 @@ module.exports = {
   updateProfile,
   changePassword,
   switchCompany,
-  requestReset,
-  verifyReset
+  generateAndSendOTP,
+  verifyOTP,
+  sendResetLink,
+  resetPassword,
+  resetPasswordWithOTP
 };
