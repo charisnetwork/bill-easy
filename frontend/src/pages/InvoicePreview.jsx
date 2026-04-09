@@ -194,10 +194,27 @@ const InvoicePreview = () => {
     <div className="container max-w-7xl py-8 space-y-6">
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
-          @page { size: auto; margin: 0mm; }
-          body { margin: 15mm; }
-          .print\\:hidden { display: none !important; }
-          header, footer, nav { display: none !important; }
+          @page { size: A4; margin: 10mm; }
+          body { 
+            margin: 0 !important; 
+            padding: 0 !important;
+            background: white !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          /* Hide all UI elements */
+          .print\\:hidden, nav, aside, .sidebar, [class*="sticky"] {
+            display: none !important;
+          }
+          /* Ensure invoice takes full width */
+          .invoice-paper {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+            border: none !important;
+          }
         }
       `}} />
       {/* 1. Actions Bar */}

@@ -11,7 +11,7 @@ const Invoice = ({ invoice, company }) => {
   const sgst = totalGst / 2;
 
   return (
-    <div className="invoice-container p-8 md:p-12 bg-white">
+    <div className="invoice-container p-8 md:p-12 bg-white print:p-0 print:m-0">
       {/* 1. Flexbox Header */}
       <header className="invoice-header">
         <div className="flex items-center gap-6">
