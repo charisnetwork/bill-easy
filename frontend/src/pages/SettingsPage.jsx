@@ -137,9 +137,6 @@ const businessSchema = z.object({
   state: z.string().min(2, "State is required"),
   pincode: z.string().length(6, "Pincode must be 6 digits"),
   city: z.string().min(2, "City is required"),
-  business_types: z.array(z.string()).default([]),
-  industry: z.string().min(1, "Industry type is required"),
-  registration_type: z.string().min(1, "Registration type is required"),
   extra_details: z.array(z.object({ label: z.string(), value: z.string() })).default([])
 });
 
@@ -321,8 +318,7 @@ export const SettingsPage = () => {
     resolver: zodResolver(businessSchema),
     defaultValues: {
       name: "", phone: "", email: "", address: "", state: "Karnataka",
-      pincode: "", city: "", business_types: [], industry: "Retail",
-      registration_type: "Sole Proprietorship", extra_details: []
+      pincode: "", city: "", extra_details: []
     }
   });
 
@@ -380,11 +376,26 @@ export const SettingsPage = () => {
         
         const c = companyRes.data;
         
+        // Map business_category to invoice template
+        const categoryToTemplate = {
+          'Retail': 'retail',
+          'Automobile': 'automobile',
+          'Pharmacy': 'retail',
+          'Healthcare': 'group5_service',
+          'Hospitality': 'group5_service',
+          'Logistics': 'group6_mfg_construction',
+          'Manufacturing': 'group6_mfg_construction',
+          'Services': 'group5_service',
+          'Distribution': 'distribution'
+        };
+        
+        const defaultTemplate = categoryToTemplate[c.business_category] || 'generic';
+        
         // Reset Invoice Customization Form
         invoiceCustomForm.reset({
-          businessType: c.invoice_business_category || 'generic',
-          columnLabels: c.invoice_column_labels || {},
-          columnToggles: c.invoice_column_toggles || {},
+          businessType: c.invoice_business_category || defaultTemplate,
+          columnLabels: c.invoice_column_labels || BUSINESS_CONFIGS[defaultTemplate]?.labels || {},
+          columnToggles: c.invoice_column_toggles || BUSINESS_CONFIGS[defaultTemplate]?.toggles || {},
           headerColor: c.invoice_header_color || '#1D70B8',
           menuColor: c.invoice_menu_color || '#FFFFFF',
           textSize: c.invoice_text_size || '10pt'
@@ -398,9 +409,6 @@ export const SettingsPage = () => {
           state: c.state || "Karnataka",
           pincode: c.pincode || "",
           city: c.city || "",
-          business_types: c.settings?.businessTypes || [],
-          industry: c.business_category || "Retail",
-          registration_type: c.settings?.ownerType || "Sole Proprietorship",
           extra_details: c.settings?.extra_details || []
         });
 
@@ -476,12 +484,8 @@ export const SettingsPage = () => {
     try {
       const payload = {
         ...values,
-        business_category: values.industry,
         settings: {
           ...company.settings,
-          industry: values.industry,
-          ownerType: values.registration_type,
-          businessTypes: values.business_types,
           extra_details: values.extra_details
         }
       };
@@ -921,6 +925,45 @@ export const SettingsPage = () => {
                 {activeSection === 'business-details' && (
                   <Form {...businessForm}>
                     <form onSubmit={businessForm.handleSubmit(handleBusinessSubmit)} className="space-y-12">
+                      {/* Info Banner for first-time users */}
+                      {searchParams.get('firstTime') === 'true' && (
+                        <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl mb-6">
+                          <div className="flex items-start gap-3">
+                            <CheckCircle2 className="w-5 h-5 text-blue-600 mt-0.5" />
+                            <div>
+                              <h4 className="font-semibold text-blue-900">Welcome! Please review your business details</h4>
+                              <p className="text-sm text-blue-700 mt-1">We've pre-filled the information you provided during registration. Please verify and update if needed.</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Registration Details (Read-only) */}
+                      <div className="p-6 bg-slate-50 rounded-xl border border-slate-200">
+                        <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                          <Building2 className="w-4 h-4" />
+                          Registration Details 
+                          <span className="text-xs font-normal text-slate-500">(Captured during registration)</span>
+                        </h3>
+                        <div className="grid grid-cols-3 gap-4">
+                          <div>
+                            <Label className="text-xs text-slate-500">Company Type</Label>
+                            <p className="font-medium text-slate-900">{company?.company_type || 'Not set'}</p>
+                          </div>
+                          <div>
+                            <Label className="text-xs text-slate-500">Business Category</Label>
+                            <p className="font-medium text-slate-900">{company?.business_category || 'Not set'}</p>
+                          </div>
+                          <div>
+                            <Label className="text-xs text-slate-500">GST Number</Label>
+                            <p className="font-medium text-slate-900">{company?.gst_number || 'Not registered'}</p>
+                          </div>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-3">
+                          To change these details, you need to create a new business from the dropdown above.
+                        </p>
+                      </div>
+
                       <div className="grid grid-cols-2 gap-12">
                         {/* Left Col */}
                         <div className="space-y-8">
@@ -960,14 +1003,8 @@ export const SettingsPage = () => {
                         </div>
                         {/* Right Col */}
                         <div className="space-y-8">
-                          <FormField control={businessForm.control} name="business_types" render={({ field }) => (
-                            <FormItem><FormLabel className="block mb-3">Business Types</FormLabel><div className="flex flex-wrap gap-2">{businessTypes.map(t => <button key={t} type="button" onClick={() => { const cur = field.value || []; const next = cur.includes(t) ? cur.filter(x => x !== t) : [...cur, t]; field.onChange(next); businessForm.setValue('business_types', next, { shouldDirty: true }); }} className={cn("px-4 py-2 rounded-lg text-xs font-semibold border transition-all", field.value?.includes(t) ? "bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-100" : "bg-white border-slate-200 text-slate-600")}>{t}</button>)}</div></FormItem>
-                          )} />
-                          <FormField control={businessForm.control} name="industry" render={({ field }) => (
-                            <FormItem><FormLabel>Industry</FormLabel>
-                              <Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="h-11 w-full justify-between font-normal"><div className="flex items-center gap-2"><Briefcase className="w-4 h-4 text-slate-400" />{field.value || "Select"}</div><Search className="w-4 h-4 opacity-50" /></Button></FormControl></PopoverTrigger>
-                              <PopoverContent className="w-full p-0"><Command><CommandInput placeholder="Search..." /><CommandList><CommandEmpty>No results</CommandEmpty><CommandGroup>{industries.map(i => <CommandItem key={i} onSelect={() => businessForm.setValue("industry", i, { shouldDirty: true })}><Check className={cn("mr-2 h-4 w-4", i === field.value ? "opacity-100" : "opacity-0")} />{i}</CommandItem>)}</CommandGroup></CommandList></Command></PopoverContent></Popover>
-                            <FormMessage /></FormItem>
+                          <FormField control={businessForm.control} name="city" render={({ field }) => (
+                            <FormItem><FormLabel>City</FormLabel><FormControl><Input className="h-11" {...field} /></FormControl><FormMessage /></FormItem>
                           )} />
                           <div className="space-y-4">
                             <Label>Authorized Signature</Label>
@@ -984,6 +1021,17 @@ export const SettingsPage = () => {
                             ))}</div>
                           </div>
                         </div>
+                      </div>
+                      
+                      {/* Save Button */}
+                      <div className="flex justify-end pt-6 border-t border-slate-200">
+                        <Button 
+                          type="submit" 
+                          disabled={submitting}
+                          className="bg-emerald-600 hover:bg-emerald-700"
+                        >
+                          {submitting ? 'Saving...' : 'Save Business Details'}
+                        </Button>
                       </div>
                     </form>
                   </Form>
