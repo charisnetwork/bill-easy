@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const bcrypt = require('bcryptjs');
+const path = require('path');
 const { adminDB, saasDB } = require('./config/db');
 const { AdminUser } = require('./models/adminModels');
 const adminRoutes = require('./routes/adminRoutes');
@@ -12,11 +13,16 @@ const app = express();
 const PORT = process.env.PORT || 3025;
 
 // Robust CORS Configuration
-app.use(cors({
-  origin: [
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',')
+  : [
     'https://admin.charisbilleasy.store',
+    'https://bill-easy-admin-production.up.railway.app',
     'http://localhost:3021'
-  ],
+  ];
+
+app.use(cors({
+  origin: allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-secret'],
   credentials: true,
@@ -36,6 +42,16 @@ app.get('/health', (req, res) => {
 
 // Routes
 app.use('/api', adminRoutes);
+
+// Serve Frontend in Production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../frontend/dist')));
+  
+  app.get(/.*/, (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(path.resolve(__dirname, '../frontend', 'dist', 'index.html'));
+  });
+}
 
 // Database Sync & Server Start
 const startServer = async () => {
