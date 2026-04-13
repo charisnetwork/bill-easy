@@ -44,6 +44,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
     'https://charisbilleasy.store',
     'https://www.charisbilleasy.store',
     'https://admin.charisbilleasy.store',
+    'https://bill-easy-production.up.railway.app',
     'http://localhost:3000',
     'http://localhost:5173',
     'http://localhost:3021'
