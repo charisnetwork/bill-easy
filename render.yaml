@@ -26,7 +26,7 @@ services:
     name: billeasy-backend
     runtime: node
     plan: free
-    region: frankfurt
+    region: ohio
     buildCommand: npm install --force --legacy-peer-deps
     startCommand: npm start
     rootDir: backend
@@ -64,7 +64,7 @@ services:
     name: billeasy-admin-backend
     runtime: node
     plan: free
-    region: frankfurt
+    region: ohio
     buildCommand: npm install --force --legacy-peer-deps
     startCommand: npm start
     rootDir: admin/backend
@@ -100,4 +100,4 @@ services:
 databases:
   - name: billeasy-db
     plan: free
-    region: frankfurt
+    region: ohio
