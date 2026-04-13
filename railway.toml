@@ -1,4 +1,8 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
 [deploy]
-startCommand = "cd backend && NODE_NO_WARNINGS=1 node server.js"
+startCommand = "node backend/server.js"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
