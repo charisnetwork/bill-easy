@@ -15,14 +15,13 @@ envVarGroups:
         sync: false
       - key: VITE_RAZORPAY_KEY_ID
         sync: false
-      # Added for Branding & Google Storage
       - key: COMPANY_MOBILE
         sync: false
       - key: COMPANY_LOGO_URL
         sync: false
 
 services:
-  # 1. Main Backend (Node.js)
+  # 1. Main Backend
   - type: web
     name: billeasy-backend
     runtime: node
@@ -42,14 +41,13 @@ services:
         generateValue: true
       - key: NODE_ENV
         value: production
-      - key: SMTP_PORT
-        value: 587
       - fromGroup: BillEasy-Secrets
 
-  # 2. Main Frontend (Corrected to type: static)
-  - type: static
+  # 2. Main Frontend (FIXED TYPE)
+  - type: static_site
     name: billeasy-frontend
     plan: free
+    region: frankfurt
     buildCommand: npm install --force --legacy-peer-deps && npm run build
     publishDir: dist
     rootDir: frontend
@@ -61,7 +59,7 @@ services:
         source: /*
         destination: /index.html
 
-  # 3. Admin Backend (Node.js)
+  # 3. Admin Backend
   - type: web
     name: billeasy-admin-backend
     runtime: node
@@ -83,14 +81,13 @@ services:
           property: connectionString
       - key: ADMIN_SECRET
         value: developer_secret_key_2026
-      - key: NODE_ENV
-        value: production
       - fromGroup: BillEasy-Secrets
 
-  # 4. Admin Frontend (Corrected to type: static)
-  - type: static
+  # 4. Admin Frontend (FIXED TYPE)
+  - type: static_site
     name: billeasy-admin-frontend
     plan: free
+    region: frankfurt
     buildCommand: npm install --force --legacy-peer-deps && npm run build
     publishDir: dist
     rootDir: admin/frontend
