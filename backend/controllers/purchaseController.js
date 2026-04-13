@@ -522,10 +522,8 @@ const parsePurchasePDF = async (req, res) => {
 
     const dataBuffer = fs.readFileSync(req.file.path);
     
-    // Correct API for pdf-parse v2
-    const parser = new pdf.PDFParse({ data: dataBuffer });
-    const data = await parser.getText();
-    await parser.destroy(); // Always call destroy() to free memory
+    // Parse PDF using pdf-parse
+    const data = await pdf(dataBuffer);
     
     if (!data || !data.text) {
       if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
