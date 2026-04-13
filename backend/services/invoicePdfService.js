@@ -6,16 +6,18 @@
 const PDFDocument = require('pdfkit');
 const path = require('path');
 
-// Professional color scheme
+// Professional color scheme - Orange/Blue branding
 const COLORS = {
-  primary: '#1e3a5f',      // Dark blue for headers
+  primary: '#2563eb',      // Blue for headers
   secondary: '#f97316',    // Orange for accent
-  headerBg: '#1e3a5f',     // Dark blue table header
+  headerBg: '#2563eb',     // Blue table header
   headerText: '#ffffff',   // White text on header
   text: '#1f2937',         // Dark gray for body text
   textLight: '#6b7280',    // Light gray for secondary text
   border: '#d1d5db',       // Border color
-  background: '#f9fafb'    // Light background
+  background: '#f9fafb',   // Light background
+  orange: '#f97316',       // Orange accent
+  blue: '#2563eb'          // Blue primary
 };
 
 const generateInvoicePdf = async (invoice, company) => {
@@ -44,23 +46,28 @@ const generateInvoicePdf = async (invoice, company) => {
     // HEADER SECTION
     // ============================================
     
-    // Company Logo (Top-Left)
-    if (company.logo) {
+    // Orange/Blue Header Bar
+    doc.rect(leftX, currentY, pageWidth, 8).fillColor(COLORS.orange).fill();
+    currentY += 20;
+    
+    // Company Logo (Top-Left) - Use COMPANY_LOGO_URL from env or company.logo
+    const logoUrl = process.env.COMPANY_LOGO_URL || company.logo;
+    if (logoUrl) {
       try {
-        const logoPath = company.logo.startsWith('http') 
-          ? company.logo 
-          : path.join(__dirname, '../uploads', company.logo);
-        doc.image(logoPath, leftX, currentY, { height: 60 });
-        currentY += 70;
+        const logoPath = logoUrl.startsWith('http') 
+          ? logoUrl 
+          : path.join(__dirname, '../uploads', logoUrl);
+        doc.image(logoPath, leftX, currentY, { height: 50 });
+        currentY += 60;
       } catch (e) {
         // Fallback to text if image fails
-        doc.fontSize(24).fillColor(COLORS.primary).font('Helvetica-Bold');
-        doc.text(company.name.substring(0, 20), leftX, currentY);
+        doc.fontSize(22).fillColor(COLORS.blue).font('Helvetica-Bold');
+        doc.text(company.name.substring(0, 25), leftX, currentY);
         currentY += 30;
       }
     } else {
-      // Company name as fallback
-      doc.fontSize(24).fillColor(COLORS.primary).font('Helvetica-Bold');
+      // Company name as fallback with blue color
+      doc.fontSize(22).fillColor(COLORS.blue).font('Helvetica-Bold');
       doc.text(company.name, leftX, currentY, { width: 250 });
       currentY += 35;
     }
@@ -84,8 +91,10 @@ const generateInvoicePdf = async (invoice, company) => {
       addrY += 11;
     }
     
-    if (company.phone) {
-      doc.text(`Mobile: ${company.phone}`, 300, addrY, { align: 'right', width: 250 });
+    // Use COMPANY_MOBILE from env or company.phone
+    const companyMobile = process.env.COMPANY_MOBILE || company.phone;
+    if (companyMobile) {
+      doc.text(`Mobile: ${companyMobile}`, 300, addrY, { align: 'right', width: 250 });
       addrY += 11;
     }
     
@@ -99,9 +108,13 @@ const generateInvoicePdf = async (invoice, company) => {
       doc.text(`GSTIN: ${company.gst_number}`, 300, addrY, { align: 'right', width: 250 });
     }
     
-    // INVOICE Title (Bold, centered/right)
-    doc.fontSize(28).fillColor(COLORS.secondary).font('Helvetica-Bold');
+    // INVOICE Title with Orange/Blue styling
+    doc.fontSize(28).fillColor(COLORS.orange).font('Helvetica-Bold');
     doc.text('INVOICE', leftX, headerRightY + 80, { width: pageWidth, align: 'center' });
+    
+    // Blue underline for title
+    const titleWidth = 100;
+    doc.rect(leftX + (pageWidth - titleWidth) / 2, headerRightY + 112, titleWidth, 3).fillColor(COLORS.blue).fill();
     
     // Invoice Number & Date below title
     doc.fontSize(10).fillColor(COLORS.text).font('Helvetica');
@@ -120,8 +133,8 @@ const generateInvoicePdf = async (invoice, company) => {
     // Draw border for Bill To
     doc.rect(leftX, currentY, colWidth, boxHeight).strokeColor(COLORS.border).lineWidth(1).stroke();
     
-    // Bill To Header Background
-    doc.rect(leftX, currentY, colWidth, 22).fillColor(COLORS.primary).fill();
+    // Bill To Header Background - Blue
+    doc.rect(leftX, currentY, colWidth, 22).fillColor(COLORS.blue).fill();
     doc.fillColor(COLORS.headerText).fontSize(10).font('Helvetica-Bold');
     doc.text('BILL TO', leftX + 8, currentY + 6);
     
@@ -157,8 +170,8 @@ const generateInvoicePdf = async (invoice, company) => {
     const shipX = leftX + colWidth + 20;
     doc.rect(shipX, currentY, colWidth, boxHeight).strokeColor(COLORS.border).lineWidth(1).stroke();
     
-    // Ship To Header Background
-    doc.rect(shipX, currentY, colWidth, 22).fillColor(COLORS.primary).fill();
+    // Ship To Header Background - Blue
+    doc.rect(shipX, currentY, colWidth, 22).fillColor(COLORS.blue).fill();
     doc.fillColor(COLORS.headerText).fontSize(10).font('Helvetica-Bold');
     doc.text('SHIP TO', shipX + 8, currentY + 6);
     
@@ -204,8 +217,8 @@ const generateInvoicePdf = async (invoice, company) => {
       amount: 70
     };
     
-    // Table Header (High-contrast: Dark Blue with White Text)
-    doc.rect(leftX, tableTop, pageWidth, rowHeight).fillColor(COLORS.headerBg).fill();
+    // Table Header (High-contrast: Blue with White Text)
+    doc.rect(leftX, tableTop, pageWidth, rowHeight).fillColor(COLORS.blue).fill();
     doc.fillColor(COLORS.headerText).fontSize(9).font('Helvetica-Bold');
     
     let colX = leftX;
@@ -344,8 +357,8 @@ const generateInvoicePdf = async (invoice, company) => {
     doc.moveTo(calcX, currentY).lineTo(rightX, currentY).strokeColor(COLORS.border).lineWidth(1).stroke();
     currentY += 10;
     
-    // Grand Total (Highlighted)
-    doc.rect(calcX - 5, currentY - 5, calcWidth + 10, 30).fillColor(COLORS.primary).fill();
+    // Grand Total (Highlighted with Blue)
+    doc.rect(calcX - 5, currentY - 5, calcWidth + 10, 30).fillColor(COLORS.blue).fill();
     doc.fillColor(COLORS.headerText).fontSize(11).font('Helvetica-Bold');
     doc.text('Grand Total:', calcX, currentY + 3);
     doc.fontSize(14).text(`₹${parseFloat(invoice.total_amount || 0).toLocaleString()}`, calcX + 100, currentY, { width: 100, align: 'right' });
@@ -363,9 +376,9 @@ const generateInvoicePdf = async (invoice, company) => {
     
     const footerY = doc.page.height - 180; // Fixed position from bottom
     
-    // Terms & Conditions (Bottom-Left)
+    // Terms & Conditions (Bottom-Left) with Blue header
     if (company.terms_conditions || invoice.terms) {
-      doc.fillColor(COLORS.primary).fontSize(9).font('Helvetica-Bold');
+      doc.fillColor(COLORS.blue).fontSize(9).font('Helvetica-Bold');
       doc.text('TERMS & CONDITIONS', leftX, footerY);
       
       doc.fillColor(COLORS.textLight).fontSize(8).font('Helvetica');
@@ -373,10 +386,10 @@ const generateInvoicePdf = async (invoice, company) => {
       doc.text(terms, leftX, footerY + 14, { width: 300, lineGap: 2 });
     }
     
-    // Banking Details (if available, below terms)
+    // Banking Details (if available, below terms) with Blue header
     let bankY = footerY + 60;
     if (company.bank_name) {
-      doc.fillColor(COLORS.primary).fontSize(9).font('Helvetica-Bold');
+      doc.fillColor(COLORS.blue).fontSize(9).font('Helvetica-Bold');
       doc.text('BANK DETAILS', leftX, bankY);
       
       doc.fillColor(COLORS.text).fontSize(8).font('Helvetica');
@@ -387,6 +400,11 @@ const generateInvoicePdf = async (invoice, company) => {
       bankY += 12;
       doc.text(`IFSC: ${company.ifsc_code || '-'}`, leftX, bankY);
     }
+    
+    // Footer Orange/Blue bar
+    const bottomBarY = doc.page.height - 50;
+    doc.rect(leftX, bottomBarY, pageWidth, 4).fillColor(COLORS.blue).fill();
+    doc.rect(leftX, bottomBarY + 4, pageWidth, 3).fillColor(COLORS.orange).fill();
     
     // Authorized Signatory (Bottom-Right)
     const signY = footerY + 20;
@@ -405,14 +423,32 @@ const generateInvoicePdf = async (invoice, company) => {
       }
     }
     
+    // Signature Box with Orange/Blue styling
+    doc.rect(signX, signY - 10, signWidth, 90).strokeColor(COLORS.blue).lineWidth(2).stroke();
+    doc.rect(signX, signY - 10, signWidth, 25).fillColor(COLORS.blue).fill();
+    doc.fillColor(COLORS.headerText).fontSize(9).font('Helvetica-Bold');
+    doc.text('AUTHORIZED SIGNATORY', signX, signY - 3, { width: signWidth, align: 'center' });
+    
+    // Signature Image
+    if (company.signature) {
+      try {
+        const sigPath = company.signature.startsWith('http') 
+          ? company.signature 
+          : path.join(__dirname, '../uploads', company.signature);
+        doc.image(sigPath, signX + 20, signY + 20, { width: 100 });
+      } catch (e) {
+        // Silent fail
+      }
+    }
+    
     // Signature Line
-    doc.moveTo(signX, signY + 50).lineTo(signX + signWidth, signY + 50).strokeColor(COLORS.text).lineWidth(1).stroke();
+    doc.moveTo(signX + 10, signY + 60).lineTo(signX + signWidth - 10, signY + 60).strokeColor(COLORS.orange).lineWidth(2).stroke();
     
-    doc.fillColor(COLORS.text).fontSize(9).font('Helvetica-Bold');
-    doc.text('Authorized Signatory', signX, signY + 55, { width: signWidth, align: 'center' });
+    doc.fillColor(COLORS.blue).fontSize(10).font('Helvetica-Bold');
+    doc.text('Authorized Signatory', signX, signY + 65, { width: signWidth, align: 'center' });
     
-    doc.fillColor(COLORS.textLight).fontSize(8).font('Helvetica');
-    doc.text(`For ${company.name}`, signX, signY + 68, { width: signWidth, align: 'center' });
+    doc.fillColor(COLORS.orange).fontSize(9).font('Helvetica-Bold');
+    doc.text(`For ${company.name}`, signX, signY + 78, { width: signWidth, align: 'center' });
     
     doc.end();
   });

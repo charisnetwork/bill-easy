@@ -39,6 +39,10 @@ services:
         value: production
       - key: SMTP_PORT
         value: 587
+      - key: COMPANY_MOBILE
+        sync: false
+      - key: COMPANY_LOGO_URL
+        sync: false
       - fromGroup: BillEasy-Secrets
 
   # 2. Main Frontend Static Site
@@ -88,9 +92,8 @@ services:
       - fromGroup: BillEasy-Secrets
 
   # 4. Admin Frontend Static Site
-  - type: web
+  - type: static
     name: billeasy-admin-frontend
-    runtime: static
     plan: free
     buildCommand: npm install --force --legacy-peer-deps && npm run build
     publishDir: dist
