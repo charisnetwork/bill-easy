@@ -1,10 +1,28 @@
+envVarGroups:
+  - name: BillEasy-Secrets
+    envVars:
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: VITE_RAZORPAY_KEY_ID
+        sync: false
+
 services:
   # 1. Main Backend Web Service
   - type: web
     name: billeasy-backend
     runtime: node
     plan: free
-    region: oregon
+    region: frankfurt
     buildCommand: npm install --force --legacy-peer-deps
     startCommand: npm start
     rootDir: backend
@@ -19,20 +37,9 @@ services:
         generateValue: true
       - key: NODE_ENV
         value: production
-      - key: RAZORPAY_KEY_ID
-        sync: false
-      - key: RAZORPAY_KEY_SECRET
-        sync: false
-      - key: SMTP_HOST
-        sync: false
       - key: SMTP_PORT
         value: 587
-      - key: SMTP_USER
-        sync: false
-      - key: SMTP_PASS
-        sync: false
-      - key: GEMINI_API_KEY
-        sync: false
+      - fromGroup: BillEasy-Secrets
 
   # 2. Main Frontend Static Site
   - type: static
@@ -47,19 +54,19 @@ services:
         value: https://billeasy-backend.onrender.com
       - key: REACT_APP_BACKEND_URL
         value: https://billeasy-backend.onrender.com
-      - key: VITE_RAZORPAY_KEY_ID
-        sync: false
+      - fromGroup: BillEasy-Secrets
     routes:
       - type: rewrite
         source: /*
         destination: /index.html
         status: 404
+
   # 3. Admin Backend Web Service
   - type: web
     name: billeasy-admin-backend
     runtime: node
     plan: free
-    region: oregon
+    region: frankfurt
     buildCommand: npm install --force --legacy-peer-deps
     startCommand: npm start
     rootDir: admin/backend
@@ -78,6 +85,7 @@ services:
         value: developer_secret_key_2026
       - key: NODE_ENV
         value: production
+      - fromGroup: BillEasy-Secrets
 
   # 4. Admin Frontend Static Site
   - type: static
@@ -102,4 +110,4 @@ databases:
   # Unified Render PostgreSQL Database
   - name: billeasy-db
     plan: free
-    region: oregon
+    region: frankfurt
