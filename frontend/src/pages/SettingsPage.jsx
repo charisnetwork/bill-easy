@@ -137,6 +137,9 @@ const businessSchema = z.object({
   state: z.string().min(2, "State is required"),
   pincode: z.string().length(6, "Pincode must be 6 digits"),
   city: z.string().min(2, "City is required"),
+  company_type: z.string().min(1, "Company type is required"),
+  business_category: z.string().min(1, "Business category is required"),
+  gst_number: z.string().optional(),
   extra_details: z.array(z.object({ label: z.string(), value: z.string() })).default([])
 });
 
@@ -318,7 +321,8 @@ export const SettingsPage = () => {
     resolver: zodResolver(businessSchema),
     defaultValues: {
       name: "", phone: "", email: "", address: "", state: "Karnataka",
-      pincode: "", city: "", extra_details: []
+      pincode: "", city: "", company_type: "Sole Proprietorship",
+      business_category: "Retail", gst_number: "", extra_details: []
     }
   });
 
@@ -409,6 +413,9 @@ export const SettingsPage = () => {
           state: c.state || "Karnataka",
           pincode: c.pincode || "",
           city: c.city || "",
+          company_type: c.company_type || "Sole Proprietorship",
+          business_category: c.business_category || "Retail",
+          gst_number: c.gst_number || "",
           extra_details: c.settings?.extra_details || []
         });
 
@@ -938,30 +945,49 @@ export const SettingsPage = () => {
                         </div>
                       )}
                       
-                      {/* Registration Details (Read-only) */}
+                      {/* Registration Details (Editable) */}
                       <div className="p-6 bg-slate-50 rounded-xl border border-slate-200">
                         <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
                           <Building2 className="w-4 h-4" />
-                          Registration Details 
-                          <span className="text-xs font-normal text-slate-500">(Captured during registration)</span>
+                          Registration Details
                         </h3>
                         <div className="grid grid-cols-3 gap-4">
-                          <div>
-                            <Label className="text-xs text-slate-500">Company Type</Label>
-                            <p className="font-medium text-slate-900">{company?.company_type || 'Not set'}</p>
-                          </div>
-                          <div>
-                            <Label className="text-xs text-slate-500">Business Category</Label>
-                            <p className="font-medium text-slate-900">{company?.business_category || 'Not set'}</p>
-                          </div>
-                          <div>
-                            <Label className="text-xs text-slate-500">GST Number</Label>
-                            <p className="font-medium text-slate-900">{company?.gst_number || 'Not registered'}</p>
-                          </div>
+                          <FormField control={businessForm.control} name="company_type" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Company Type *</FormLabel>
+                              <FormControl>
+                                <select {...field} className="w-full h-10 px-3 rounded-md border border-slate-200 bg-white text-sm">
+                                  {registrationTypes.map(type => (
+                                    <option key={type} value={type}>{type}</option>
+                                  ))}
+                                </select>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                          <FormField control={businessForm.control} name="business_category" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Business Category *</FormLabel>
+                              <FormControl>
+                                <select {...field} className="w-full h-10 px-3 rounded-md border border-slate-200 bg-white text-sm">
+                                  {businessTypes.map(type => (
+                                    <option key={type} value={type}>{type}</option>
+                                  ))}
+                                </select>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                          <FormField control={businessForm.control} name="gst_number" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>GST Number</FormLabel>
+                              <FormControl>
+                                <Input className="h-10" placeholder="22AAAAA0000A1Z5" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
                         </div>
-                        <p className="text-xs text-slate-500 mt-3">
-                          To change these details, you need to create a new business from the dropdown above.
-                        </p>
                       </div>
 
                       <div className="grid grid-cols-2 gap-12">
