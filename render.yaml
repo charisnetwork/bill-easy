@@ -42,7 +42,7 @@ services:
       - fromGroup: BillEasy-Secrets
 
   # 2. Main Frontend Static Site
-  - type: static
+  - type: web
     name: billeasy-frontend
     runtime: static
     plan: free
@@ -88,7 +88,7 @@ services:
       - fromGroup: BillEasy-Secrets
 
   # 4. Admin Frontend Static Site
-  - type: static
+  - type: web
     name: billeasy-admin-frontend
     runtime: static
     plan: free
