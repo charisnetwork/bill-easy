@@ -1,7 +1,16 @@
 const { Sequelize } = require('sequelize');
 
-const sequelize = process.env.DATABASE_URL
-  ? new Sequelize(process.env.DATABASE_URL, {
+// Check if we're in Railway environment
+const isRailway = process.env.RAILWAY_ENVIRONMENT === 'production' || process.env.RAILWAY_PRIVATE_DOMAIN;
+
+// Use DATABASE_URL
+const databaseUrl = process.env.DATABASE_URL;
+
+// Validate databaseUrl is a non-empty string and starts with a valid protocol
+const isValidUrl = databaseUrl && typeof databaseUrl === 'string' && (databaseUrl.startsWith('postgres://') || databaseUrl.startsWith('postgresql://'));
+
+const sequelize = isValidUrl
+  ? new Sequelize(databaseUrl, {
       dialect: 'postgres',
       logging: false,
       define: {
@@ -10,17 +19,23 @@ const sequelize = process.env.DATABASE_URL
         timestamps: true
       },
       quoteIdentifiers: true,
-      dialectOptions: {
-        ssl: {
-          require: true,
-          rejectUnauthorized: false
-        }
-      }
+      dialectOptions: isRailway
+        ? {
+            // For Railway private networking, SSL may not be required
+            ssl: false
+          }
+        : {
+            ssl: {
+              require: true,
+              rejectUnauthorized: false
+            }
+          }
     })
   : new Sequelize(
-      process.env.DB_NAME,
-      process.env.DB_USER,
-      process.env.DB_PASS,      {
+      process.env.DB_NAME || 'mybillbook',
+      process.env.DB_USER || 'postgres',
+      process.env.DB_PASS || 'nishu',
+      {
         host: process.env.DB_HOST || 'localhost',
         port: process.env.DB_PORT || 5432,
         dialect: 'postgres',
