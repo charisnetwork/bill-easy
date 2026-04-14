@@ -182,6 +182,17 @@ if (process.env.NODE_ENV === 'production') {
    ROOT ENDPOINT
 ========================================= */
 
+app.get('/', (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.sendFile(path.resolve(__dirname, '../frontend', 'dist', 'index.html'));
+  }
+  res.json({
+    name: 'Bill Easy API',
+    version: '1.0.0',
+    status: 'running'
+  });
+});
+
 app.get('/api', (req, res) => {
   res.json({
     name: 'Bill Easy API',
@@ -369,39 +380,46 @@ const startServer = async () => {
       }
     }
 
-    const companies = await Company.findAll({
-      include: [{ model: Subscription }, { model: Godown }]
-    });
-    
-    const freePlan = await Plan.findOne({ where: { plan_name: 'Free Account' } });
-
-    for (const company of companies) {
-      // 1. Default Godown
-      if (!company.Godowns || company.Godowns.length === 0) {
-        console.log(`Creating default Godown for: ${company.name}`);
-        await Godown.create({
-          company_id: company.id,
-          name: 'Main Store',
-          address: company.address || 'Main Office',
-          is_default: true,
-          is_active: true
-        });
-      }
+    // Initialize Default Data if needed
+    try {
+      const companies = await Company.findAll({
+        include: [{ model: Subscription }, { model: Godown }]
+      });
       
-      // 2. Default Subscription
-      if (!company.Subscription && freePlan) {
-        console.log(`Creating Free Account sub for: ${company.name}`);
-        const expiry = new Date();
-        expiry.setFullYear(expiry.getFullYear() + 10);
-        await Subscription.create({
-          company_id: company.id,
-          plan_id: freePlan.id,
-          status: 'active',
-          payment_status: 'paid',
-          expiry_date: expiry,
-          usage: { invoices: 0, eway_bills: 0, godowns: 0, products: 0 }
-        });
+      const freePlan = await Plan.findOne({ where: { plan_name: 'Free Account' } });
+
+      if (companies && companies.length > 0) {
+        for (const company of companies) {
+          // 1. Default Godown
+          if (!company.Godowns || company.Godowns.length === 0) {
+            console.log(`Creating default Godown for: ${company.name}`);
+            await Godown.create({
+              company_id: company.id,
+              name: 'Main Store',
+              address: company.address || 'Main Office',
+              is_default: true,
+              is_active: true
+            }).catch(e => console.error("Godown creation failed:", e.message));
+          }
+          
+          // 2. Default Subscription
+          if (!company.Subscription && freePlan) {
+            console.log(`Creating Free Account sub for: ${company.name}`);
+            const expiry = new Date();
+            expiry.setFullYear(expiry.getFullYear() + 10);
+            await Subscription.create({
+              company_id: company.id,
+              plan_id: freePlan.id,
+              status: 'active',
+              payment_status: 'paid',
+              expiry_date: expiry,
+              usage: { invoices: 0, eway_bills: 0, godowns: 0, products: 0 }
+            }).catch(e => console.error("Sub creation failed:", e.message));
+          }
+        }
       }
+    } catch (dbInitError) {
+      console.warn('Database initialization tasks skipped:', dbInitError.message);
     }
 
     app.listen(PORT, '0.0.0.0', () => {
