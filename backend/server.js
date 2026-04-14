@@ -41,10 +41,8 @@ app.set('trust proxy', 1);
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
   ? process.env.ALLOWED_ORIGINS.split(',') 
   : [
-    'https://charisbilleasy.store',
-    'https://www.charisbilleasy.store',
-    'https://admin.charisbilleasy.store',
     'https://bill-easy-production.up.railway.app',
+    'https://www.charisbilleasy.store',
     'http://localhost:3000',
     'http://localhost:5173',
     'http://localhost:3021'

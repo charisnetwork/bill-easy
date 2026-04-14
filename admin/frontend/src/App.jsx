@@ -10,7 +10,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line 
 } from 'recharts';
 
-const API_BASE_URL = import.meta.env.VITE_ADMIN_BACKEND_URL || 'https://bill-easy-admin-production.up.railway.app/api';
+const API_BASE_URL = import.meta.env.VITE_ADMIN_BACKEND_URL || 'https://bill-easy-production.up.railway.app/admin/api';
 const ADMIN_SECRET = import.meta.env.VITE_ADMIN_SECRET || 'developer_secret_key_2026';
 
 const api = axios.create({

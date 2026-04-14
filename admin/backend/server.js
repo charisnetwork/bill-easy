@@ -16,8 +16,8 @@ const PORT = process.env.PORT || 3025;
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',')
   : [
+    'https://bill-easy-production.up.railway.app',
     'https://admin.charisbilleasy.store',
-    'https://bill-easy-admin-production.up.railway.app',
     'http://localhost:3021'
   ];
 
@@ -42,16 +42,6 @@ app.get('/health', (req, res) => {
 
 // Routes
 app.use('/api', adminRoutes);
-
-// Serve Frontend in Production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../frontend/dist')));
-  
-  app.get(/.*/, (req, res, next) => {
-    if (req.path.startsWith('/api')) return next();
-    res.sendFile(path.resolve(__dirname, '../frontend', 'dist', 'index.html'));
-  });
-}
 
 // Database Sync & Server Start
 const startServer = async () => {
