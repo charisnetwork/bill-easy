@@ -3,8 +3,11 @@ const { Sequelize } = require('sequelize');
 // Check if we're in Railway environment
 const isRailway = process.env.RAILWAY_ENVIRONMENT === 'production' || process.env.RAILWAY_PRIVATE_DOMAIN;
 
-const sequelize = process.env.DATABASE_URL
-  ? new Sequelize(process.env.DATABASE_URL, {
+// Use DATABASE_PUBLIC_URL if available (for external connections), otherwise use DATABASE_URL
+const databaseUrl = process.env.DATABASE_PUBLIC_URL || process.env.DATABASE_URL;
+
+const sequelize = databaseUrl
+  ? new Sequelize(databaseUrl, {
       dialect: 'postgres',
       logging: false,
       define: {
