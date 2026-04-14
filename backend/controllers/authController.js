@@ -151,7 +151,7 @@ const register = async (req, res) => {
     // Generate JWT
     const token = jwt.sign(
       { userId: user.id, companyId: company.id },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || 'charis_bill_easy_secret_key_2026',
       {
         expiresIn: process.env.JWT_EXPIRES_IN || '7d'
       }
@@ -204,6 +204,10 @@ const login = async (req, res) => {
       return res.status(401).json({ error: 'Account is deactivated' });
     }
 
+    if (!user.password) {
+      return res.status(401).json({ error: 'Password not set for this account. Please use password reset.' });
+    }
+
     const validPassword = await bcrypt.compare(password, user.password);
 
     if (!validPassword) {
@@ -243,7 +247,7 @@ const login = async (req, res) => {
     // Generate JWT
     const token = jwt.sign(
       { userId: user.id, companyId: user.company_id },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || 'charis_bill_easy_secret_key_2026',
       {
         expiresIn: process.env.JWT_EXPIRES_IN || '7d'
       }
@@ -628,7 +632,7 @@ const sendResetLink = async (req, res) => {
     // Generate JWT reset token (valid for 1 hour)
     const resetToken = jwt.sign(
       { userId: user.id, purpose: 'password-reset' },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || 'charis_bill_easy_secret_key_2026',
       { expiresIn: '1h' }
     );
 
@@ -706,7 +710,7 @@ const resetPassword = async (req, res) => {
     // Verify JWT token
     let decoded;
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
+      decoded = jwt.verify(token, process.env.JWT_SECRET || 'charis_bill_easy_secret_key_2026');
     } catch (jwtError) {
       return res.status(400).json({ error: 'Invalid or expired reset token' });
     }
