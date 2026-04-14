@@ -90,11 +90,12 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", "data:", "blob:", "https:"],
-        connectSrc: ["'self'", "https:"],
-        fontSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://checkout.razorpay.com"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        imgSrc: ["'self'", "data:", "blob:", "https:", "https://storage.googleapis.com", "https://*.razorpay.com"],
+        connectSrc: ["'self'", "https:", "https://api.razorpay.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        frameSrc: ["'self'", "https://checkout.razorpay.com", "https://api.razorpay.com"],
         objectSrc: ["'none'"],
         upgradeInsecureRequests: []
       }
