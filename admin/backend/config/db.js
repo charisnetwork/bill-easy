@@ -30,15 +30,20 @@ if (isRailway) {
   };
 }
 
-// Use environment variables with fallbacks for local development
 // Both DBs use same connection (different schemas/tables)
-const dbUrl = process.env.DATABASE_URL || 'postgres://pachu:nishu@localhost:5432/mybillbook';
+const dbUrlInput = process.env.DATABASE_URL || 'postgres://pachu:nishu@localhost:5432/mybillbook';
+const dbUrl = (typeof dbUrlInput === 'string' && (dbUrlInput.startsWith('postgres://') || dbUrlInput.startsWith('postgresql://')))
+  ? dbUrlInput
+  : 'postgres://pachu:nishu@localhost:5432/mybillbook';
 
 const saasDB = new Sequelize(dbUrl, sequelizeOptions);
 
-// Use DATABASE_URL_ADMIN if provided, otherwise use same as saasDB
-const adminDB = process.env.DATABASE_URL_ADMIN 
-  ? new Sequelize(process.env.DATABASE_URL_ADMIN, sequelizeOptions)
+// Use DATABASE_URL_ADMIN if provided and valid, otherwise use same as saasDB
+const adminUrlInput = process.env.DATABASE_URL_ADMIN;
+const isValidAdminUrl = adminUrlInput && typeof adminUrlInput === 'string' && (adminUrlInput.startsWith('postgres://') || adminUrlInput.startsWith('postgresql://'));
+
+const adminDB = isValidAdminUrl
+  ? new Sequelize(adminUrlInput, sequelizeOptions)
   : saasDB;
 
 module.exports = { saasDB, adminDB };

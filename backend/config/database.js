@@ -4,9 +4,12 @@ const { Sequelize } = require('sequelize');
 const isRailway = process.env.RAILWAY_ENVIRONMENT === 'production' || process.env.RAILWAY_PRIVATE_DOMAIN;
 
 // Use DATABASE_PUBLIC_URL if available (for external connections), otherwise use DATABASE_URL
-const databaseUrl = process.env.DATABASE_PUBLIC_URL || process.env.DATABASE_URL;
+let databaseUrl = process.env.DATABASE_PUBLIC_URL || process.env.DATABASE_URL;
 
-const sequelize = databaseUrl
+// Validate databaseUrl is a non-empty string and starts with a valid protocol
+const isValidUrl = databaseUrl && typeof databaseUrl === 'string' && (databaseUrl.startsWith('postgres://') || databaseUrl.startsWith('postgresql://'));
+
+const sequelize = isValidUrl
   ? new Sequelize(databaseUrl, {
       dialect: 'postgres',
       logging: false,
