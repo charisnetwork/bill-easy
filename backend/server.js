@@ -171,11 +171,7 @@ app.use("/uploads", express.static("uploads"));
 ========================================= */
 
 app.get('/', (req, res) => {
-  res.json({
-    name: 'Bill Easy API',
-    version: '1.0.0',
-    status: 'running'
-  });
+  res.status(200).send('API is Running');
 });
 
 app.get('/api', (req, res) => {
