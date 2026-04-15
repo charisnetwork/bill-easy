@@ -130,6 +130,13 @@ const login = async (req, res) => {
       return res.status(401).json({ error: 'Account is deactivated' });
     }
 
+    // Check if user has a password set
+    if (!user.password) {
+      return res.status(401).json({ 
+        error: 'Password not set. Please use forgot password to set a new password.' 
+      });
+    }
+
     const validPassword = await bcrypt.compare(password, user.password);
 
     if (!validPassword) {
