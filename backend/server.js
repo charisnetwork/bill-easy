@@ -84,8 +84,8 @@ app.use(
   })
 );
 
-// Handle preflight requests
-app.options('*', cors());
+// Handle preflight requests for all routes
+app.options('/*', cors());
 
 /* =========================================
    REQUEST LOGGER
