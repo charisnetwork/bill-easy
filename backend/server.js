@@ -281,6 +281,76 @@ const startServer = async () => {
     await sequelize.authenticate();
     console.log('Database connection established');
 
+    // Run migrations to fix database schema
+    console.log('Running database migrations...');
+    const queryInterface = sequelize.getQueryInterface();
+    const { DataTypes } = require('sequelize');
+    
+    // Migration: Add missing columns to plans table
+    try {
+      const tableInfo = await queryInterface.describeTable('plans');
+      
+      if (!tableInfo.max_users) {
+        console.log('  - Adding max_users column to plans');
+        await queryInterface.addColumn('plans', 'max_users', {
+          type: DataTypes.INTEGER,
+          defaultValue: 1
+        });
+      }
+      
+      if (!tableInfo.max_invoices_per_month) {
+        console.log('  - Adding max_invoices_per_month column to plans');
+        await queryInterface.addColumn('plans', 'max_invoices_per_month', {
+          type: DataTypes.INTEGER,
+          defaultValue: 100
+        });
+      }
+      
+      if (!tableInfo.max_products) {
+        console.log('  - Adding max_products column to plans');
+        await queryInterface.addColumn('plans', 'max_products', {
+          type: DataTypes.INTEGER,
+          defaultValue: 100
+        });
+      }
+      
+      if (!tableInfo.storage_limit) {
+        console.log('  - Adding storage_limit column to plans');
+        await queryInterface.addColumn('plans', 'storage_limit', {
+          type: DataTypes.INTEGER,
+          defaultValue: 100
+        });
+      }
+      
+      if (!tableInfo.features) {
+        console.log('  - Adding features column to plans');
+        await queryInterface.addColumn('plans', 'features', {
+          type: DataTypes.JSON,
+          defaultValue: {}
+        });
+      }
+      
+      if (!tableInfo.is_active) {
+        console.log('  - Adding is_active column to plans');
+        await queryInterface.addColumn('plans', 'is_active', {
+          type: DataTypes.BOOLEAN,
+          defaultValue: true
+        });
+      }
+      
+      if (!tableInfo.billing_cycle) {
+        console.log('  - Adding billing_cycle column to plans');
+        await queryInterface.addColumn('plans', 'billing_cycle', {
+          type: DataTypes.ENUM('monthly', '3month', '6month', 'yearly', 'lifetime'),
+          defaultValue: 'monthly'
+        });
+      }
+      
+      console.log('Plans table migration completed');
+    } catch (migrationError) {
+      console.error('Plans table migration error:', migrationError.message);
+    }
+
     // Only use alter: true in development; in production, use migrations
     const syncOptions = process.env.NODE_ENV === 'production' ? {} : { alter: true };
     await sequelize.sync(syncOptions);
