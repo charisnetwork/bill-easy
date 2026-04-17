@@ -40,6 +40,13 @@ const register = async (req, res) => {
       role: 'owner'
     });
 
+    // Create UserCompany relationship
+    await UserCompany.create({
+      user_id: user.id,
+      company_id: company.id,
+      role: 'owner'
+    });
+
     // Find or create Free plan (match seeded name)
     let freePlan = await Plan.findOne({ where: { plan_name: 'Free Account' } });
 
