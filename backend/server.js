@@ -276,6 +276,7 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('UNHANDLED REJECTION:', reason);
 });
 
+// Migration v2 - Force rebuild 2026-04-17T20:30
 const startServer = async () => {
   try {
     await sequelize.authenticate();
@@ -288,67 +289,75 @@ const startServer = async () => {
     
     // Migration: Add missing columns to plans table
     try {
-      const tableInfo = await queryInterface.describeTable('plans');
-      
-      if (!tableInfo.max_users) {
-        console.log('  - Adding max_users column to plans');
-        await queryInterface.addColumn('plans', 'max_users', {
-          type: DataTypes.INTEGER,
-          defaultValue: 1
-        });
+      // Check if plans table exists first
+      const tables = await queryInterface.showAllTables();
+      if (!tables.includes('plans')) {
+        console.log('  - plans table does not exist, skipping migration');
+      } else {
+        const tableInfo = await queryInterface.describeTable('plans');
+        
+        if (!tableInfo.max_users) {
+          console.log('  - Adding max_users column to plans');
+          await queryInterface.addColumn('plans', 'max_users', {
+            type: DataTypes.INTEGER,
+            defaultValue: 1
+          });
+        }
+        
+        if (!tableInfo.max_invoices_per_month) {
+          console.log('  - Adding max_invoices_per_month column to plans');
+          await queryInterface.addColumn('plans', 'max_invoices_per_month', {
+            type: DataTypes.INTEGER,
+            defaultValue: 100
+          });
+        }
+        
+        if (!tableInfo.max_products) {
+          console.log('  - Adding max_products column to plans');
+          await queryInterface.addColumn('plans', 'max_products', {
+            type: DataTypes.INTEGER,
+            defaultValue: 100
+          });
+        }
+        
+        if (!tableInfo.storage_limit) {
+          console.log('  - Adding storage_limit column to plans');
+          await queryInterface.addColumn('plans', 'storage_limit', {
+            type: DataTypes.INTEGER,
+            defaultValue: 100
+          });
+        }
+        
+        if (!tableInfo.features) {
+          console.log('  - Adding features column to plans');
+          await queryInterface.addColumn('plans', 'features', {
+            type: DataTypes.JSON,
+            defaultValue: {}
+          });
+        }
+        
+        if (!tableInfo.is_active) {
+          console.log('  - Adding is_active column to plans');
+          await queryInterface.addColumn('plans', 'is_active', {
+            type: DataTypes.BOOLEAN,
+            defaultValue: true
+          });
+        }
+        
+        if (!tableInfo.billing_cycle) {
+          console.log('  - Adding billing_cycle column to plans');
+          await queryInterface.addColumn('plans', 'billing_cycle', {
+            type: DataTypes.ENUM('monthly', '3month', '6month', 'yearly', 'lifetime'),
+            defaultValue: 'monthly'
+          });
+        }
+        
+        console.log('Plans table migration completed');
       }
-      
-      if (!tableInfo.max_invoices_per_month) {
-        console.log('  - Adding max_invoices_per_month column to plans');
-        await queryInterface.addColumn('plans', 'max_invoices_per_month', {
-          type: DataTypes.INTEGER,
-          defaultValue: 100
-        });
-      }
-      
-      if (!tableInfo.max_products) {
-        console.log('  - Adding max_products column to plans');
-        await queryInterface.addColumn('plans', 'max_products', {
-          type: DataTypes.INTEGER,
-          defaultValue: 100
-        });
-      }
-      
-      if (!tableInfo.storage_limit) {
-        console.log('  - Adding storage_limit column to plans');
-        await queryInterface.addColumn('plans', 'storage_limit', {
-          type: DataTypes.INTEGER,
-          defaultValue: 100
-        });
-      }
-      
-      if (!tableInfo.features) {
-        console.log('  - Adding features column to plans');
-        await queryInterface.addColumn('plans', 'features', {
-          type: DataTypes.JSON,
-          defaultValue: {}
-        });
-      }
-      
-      if (!tableInfo.is_active) {
-        console.log('  - Adding is_active column to plans');
-        await queryInterface.addColumn('plans', 'is_active', {
-          type: DataTypes.BOOLEAN,
-          defaultValue: true
-        });
-      }
-      
-      if (!tableInfo.billing_cycle) {
-        console.log('  - Adding billing_cycle column to plans');
-        await queryInterface.addColumn('plans', 'billing_cycle', {
-          type: DataTypes.ENUM('monthly', '3month', '6month', 'yearly', 'lifetime'),
-          defaultValue: 'monthly'
-        });
-      }
-      
-      console.log('Plans table migration completed');
     } catch (migrationError) {
       console.error('Plans table migration error:', migrationError.message);
+      console.error(migrationError.stack);
+      // Don't throw - continue startup even if migration fails
     }
 
     // Only use alter: true in development; in production, use migrations
@@ -359,7 +368,7 @@ const startServer = async () => {
     await seedPlans();
 
     // Scan for expired subscriptions and downgrade
-    const checkExpired = async () => {
+    try {
       const { Op } = require('sequelize');
       const freePlan = await Plan.findOne({ where: { plan_name: 'Free Account' } });
       if (freePlan) {
@@ -373,53 +382,68 @@ const startServer = async () => {
           }
         );
       }
-    };
-    await checkExpired();
+    } catch (checkExpiredError) {
+      console.warn('Warning: Could not check expired subscriptions:', checkExpiredError.message);
+      // Continue startup - this might happen if plans table columns are missing
+    }
     
     // Ensure data integrity
-    const allUsers = await User.findAll();
-    for (const user of allUsers) {
-      if (user.company_id) {
-        await UserCompany.findOrCreate({
-          where: { user_id: user.id, company_id: user.company_id },
-          defaults: { role: user.role || 'owner' }
-        });
+    try {
+      const allUsers = await User.findAll();
+      for (const user of allUsers) {
+        if (user.company_id) {
+          await UserCompany.findOrCreate({
+            where: { user_id: user.id, company_id: user.company_id },
+            defaults: { role: user.role || 'owner' }
+          });
+        }
       }
+    } catch (userIntegrityError) {
+      console.warn('Warning: Could not ensure user data integrity:', userIntegrityError.message);
     }
 
-    const companies = await Company.findAll({
-      include: [{ model: Subscription }, { model: Godown }]
-    });
-    
-    const freePlan = await Plan.findOne({ where: { plan_name: 'Free Account' } });
-
-    for (const company of companies) {
-      // 1. Default Godown
-      if (!company.Godowns || company.Godowns.length === 0) {
-        console.log(`Creating default Godown for: ${company.name}`);
-        await Godown.create({
-          company_id: company.id,
-          name: 'Main Store',
-          address: company.address || 'Main Office',
-          is_default: true,
-          is_active: true
-        });
-      }
+    try {
+      const companies = await Company.findAll({
+        include: [{ model: Subscription }, { model: Godown }]
+      });
       
-      // 2. Default Subscription
-      if (!company.Subscription && freePlan) {
-        console.log(`Creating Free Account sub for: ${company.name}`);
-        const expiry = new Date();
-        expiry.setFullYear(expiry.getFullYear() + 10);
-        await Subscription.create({
-          company_id: company.id,
-          plan_id: freePlan.id,
-          status: 'active',
-          payment_status: 'paid',
-          expiry_date: expiry,
-          usage: { invoices: 0, eway_bills: 0, godowns: 0, products: 0 }
-        });
+      let freePlan;
+      try {
+        freePlan = await Plan.findOne({ where: { plan_name: 'Free Account' } });
+      } catch (planError) {
+        console.warn('Warning: Could not fetch Free Account plan:', planError.message);
       }
+
+      for (const company of companies) {
+        // 1. Default Godown
+        if (!company.Godowns || company.Godowns.length === 0) {
+          console.log(`Creating default Godown for: ${company.name}`);
+          await Godown.create({
+            company_id: company.id,
+            name: 'Main Store',
+            address: company.address || 'Main Office',
+            is_default: true,
+            is_active: true
+          });
+        }
+        
+        // 2. Default Subscription
+        if (!company.Subscription && freePlan) {
+          console.log(`Creating Free Account sub for: ${company.name}`);
+          const expiry = new Date();
+          expiry.setFullYear(expiry.getFullYear() + 10);
+          await Subscription.create({
+            company_id: company.id,
+            plan_id: freePlan.id,
+            status: 'active',
+            payment_status: 'paid',
+            expiry_date: expiry,
+            usage: { invoices: 0, eway_bills: 0, godowns: 0, products: 0 }
+          });
+        }
+      }
+    } catch (companySetupError) {
+      console.warn('Warning: Could not setup default company data:', companySetupError.message);
     }
 
     app.listen(PORT, '0.0.0.0', () => {
