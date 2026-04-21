@@ -38,6 +38,7 @@ import {
 import { companyAPI, utilityAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
+import { getErrorMessage } from '../config/api';
 
 const formSchema = z.object({
   name: z.string().min(2, "Business name is required"),
@@ -85,7 +86,7 @@ const AddBusinessPage = () => {
       }
     } catch (error) {
       console.error("GST Lookup Error:", error);
-      toast.error(error.response?.data?.error || "Could not find details for this GSTIN. Please enter manually.");
+      toast.error(getErrorMessage(error, "Could not find details for this GSTIN. Please enter manually."));
     } finally {
       setGstLoading(false);
     }
@@ -113,7 +114,7 @@ const AddBusinessPage = () => {
       await refreshProfile();
       navigate('/dashboard');
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to add business');
+      toast.error(getErrorMessage(error, 'Failed to add business'));
     } finally {
       setLoading(false);
     }

@@ -54,6 +54,11 @@ export const AuthProvider = ({ children }) => {
           setSubscription(null);
         }
         
+        // Handle network errors (backend not running)
+        if (!error.response) {
+          error.message = 'Cannot connect to server. Please make sure the backend is running.';
+        }
+        
         // Normalize error data
         if (error.response?.data) {
           const data = error.response.data;

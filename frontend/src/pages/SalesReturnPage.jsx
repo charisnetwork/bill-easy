@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { invoiceAPI, creditNoteAPI, companyAPI } from '../services/api';
+import { getErrorMessage } from '../config/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -161,7 +162,7 @@ export const SalesReturnPage = () => {
       setSelectedInvoice(null);
       fetchRecentCreditNotes();
     } catch (error) {
-      toast.error(error.response?.data?.error || "Failed to save return");
+      toast.error(getErrorMessage(error, "Failed to save return"));
     } finally {
       setLoading(false);
     }

@@ -17,6 +17,7 @@ import {
 import { Badge } from '../components/ui/badge';
 import { Plus, Search, ShoppingCart, Edit, ReceiptIndianRupee, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { getErrorMessage } from '../config/api';
 
 const formatCurrency = (amount) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount || 0);
 const formatDate = (date) => new Date(date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -51,7 +52,7 @@ export const PurchasesPage = () => {
       setPurchases(purchasesRes.data.purchases);
       setTotalPages(purchasesRes.data.totalPages);
     } catch (error) {
-      toast.error('Failed to load purchases');
+      toast.error(getErrorMessage(error, 'Failed to load purchases'));
     } finally {
       setLoading(false);
     }
@@ -84,7 +85,7 @@ export const PurchasesPage = () => {
       setPaymentDialogOpen(false);
       fetchData(); // Refresh list
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to record payment');
+      toast.error(getErrorMessage(error, 'Failed to record payment'));
     } finally {
       setPaymentLoading(false);
     }

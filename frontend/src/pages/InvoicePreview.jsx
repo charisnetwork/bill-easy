@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { invoiceAPI, companyAPI } from "../services/api";
-import { API_BASE_URL, getAssetUrl } from '../config/api';
+import { API_BASE_URL, getAssetUrl, getErrorMessage } from '../config/api';
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
@@ -84,7 +84,7 @@ const InvoicePreview = () => {
       setPaymentData(prev => ({ ...prev, amount: balance.toString() }));
     } catch (error) {
       console.error("Failed to load data", error);
-      toast.error("Failed to load invoice details");
+      toast.error(getErrorMessage(error, "Failed to load invoice details"));
     } finally {
       setLoading(false);
     }
@@ -120,7 +120,7 @@ const InvoicePreview = () => {
       setPaymentDialogOpen(false);
       fetchData();
     } catch (error) {
-      toast.error(error.response?.data?.error || "Failed to record payment");
+      toast.error(getErrorMessage(error, "Failed to record payment"));
     } finally {
       setSubmittingPayment(false);
     }

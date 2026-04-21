@@ -15,7 +15,7 @@ import {
 } from '../components/ui/table';
 import { Plus, Search, Edit, Trash2, Users, Phone, Mail, IndianRupee, Wallet, FileText, Download, Calendar, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { API_BASE_URL } from '../config/api';
+import { API_BASE_URL, getErrorMessage } from '../config/api';
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-IN', {
@@ -66,7 +66,7 @@ const CustomerForm = ({ customer, onSave, onClose }) => {
       }
     } catch (error) {
       console.error("GST Lookup Error:", error);
-      toast.error(error.response?.data?.error || "Could not find details for this GSTIN. Please enter manually.");
+      toast.error(getErrorMessage(error, "Could not find details for this GSTIN. Please enter manually."));
     } finally {
       setGstLoading(false);
     }
@@ -85,7 +85,7 @@ const CustomerForm = ({ customer, onSave, onClose }) => {
       }
       onSave();
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Operation failed');
+      toast.error(getErrorMessage(error, 'Operation failed'));
     } finally {
       setLoading(false);
     }
@@ -184,7 +184,7 @@ const CustomerDetails = ({ customer, onClose }) => {
         const res = await creditNoteAPI.getAll({ customer_id: customer.id, limit: 100 });
         setCreditNotes(res.data.creditNotes);
       } catch (e) {
-        toast.error("Failed to load credit notes");
+        toast.error(getErrorMessage(e, "Failed to load credit notes"));
       } finally {
         setLoading(false);
       }
@@ -285,7 +285,7 @@ export const CustomersPage = () => {
       setCustomers(response.data.customers);
       setTotalPages(response.data.totalPages);
     } catch (error) {
-      toast.error('Failed to load customers');
+      toast.error(getErrorMessage(error, 'Failed to load customers'));
     } finally {
       setLoading(false);
     }
@@ -302,7 +302,7 @@ export const CustomersPage = () => {
       toast.success('Customer deleted');
       fetchCustomers();
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Delete failed');
+      toast.error(getErrorMessage(error, 'Delete failed'));
     }
   };
 

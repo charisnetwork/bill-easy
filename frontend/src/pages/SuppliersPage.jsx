@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supplierAPI } from '../services/api';
+import { getErrorMessage } from '../config/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -47,7 +48,7 @@ const SupplierForm = ({ supplier, onSave, onClose }) => {
       }
       onSave();
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Operation failed');
+      toast.error(getErrorMessage(error, 'Operation failed'));
     } finally {
       setLoading(false);
     }
@@ -137,7 +138,7 @@ export const SuppliersPage = () => {
       setSuppliers(response.data.suppliers);
       setTotalPages(response.data.totalPages);
     } catch (error) {
-      toast.error('Failed to load suppliers');
+      toast.error(getErrorMessage(error, 'Failed to load suppliers'));
     } finally {
       setLoading(false);
     }
@@ -154,7 +155,7 @@ export const SuppliersPage = () => {
       toast.success('Supplier deleted');
       fetchSuppliers();
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Delete failed');
+      toast.error(getErrorMessage(error, 'Delete failed'));
     }
   };
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { invoiceAPI, customerAPI, productAPI, companyAPI } from '../services/api';
+import { getErrorMessage } from '../config/api';
 import { getIndustryConfig } from '../lib/industryConfig';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -321,7 +322,7 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
         navigate(`/invoices/${res.data.invoice.id}`);
       }
     } catch (error) {
-      toast.error(error.response?.data?.error || `Failed to ${isEdit ? 'update' : 'create'} invoice`);
+      toast.error(getErrorMessage(error, `Failed to ${isEdit ? 'update' : 'create'} invoice`));
     } finally {
       setLoading(false);
     }

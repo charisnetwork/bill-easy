@@ -23,6 +23,7 @@ import {
 import { Plus, Trash2, Camera, FileText, Upload, Save, X, Loader2, ArrowLeft, Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { toast } from 'sonner';
+import { getErrorMessage } from '../config/api';
 
 const CreatePurchasePage = ({ isEdit = false }) => {
   const navigate = useNavigate();
@@ -204,7 +205,7 @@ const CreatePurchasePage = ({ isEdit = false }) => {
       }
       navigate('/purchases');
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to save purchase');
+      toast.error(getErrorMessage(error, 'Failed to save purchase'));
     } finally {
       setLoading(false);
     }

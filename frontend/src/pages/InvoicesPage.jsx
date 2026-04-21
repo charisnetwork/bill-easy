@@ -12,7 +12,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '../components/ui/table';
 import { Badge } from '../components/ui/badge';
-import { API_BASE_URL } from '../config/api';
+import { API_BASE_URL, getErrorMessage } from '../config/api';
 import { 
   Plus, 
   Search, 
@@ -101,7 +101,7 @@ export const InvoicesPage = () => {
       setInvoices(response.data.invoices);
       setTotalPages(response.data.totalPages);
     } catch (error) {
-      toast.error('Failed to load invoices');
+      toast.error(getErrorMessage(error, 'Failed to load invoices'));
     } finally {
       setLoading(false);
     }
@@ -118,7 +118,7 @@ export const InvoicesPage = () => {
       toast.success('Invoice deleted');
       fetchInvoices();
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Delete failed');
+      toast.error(getErrorMessage(error, 'Delete failed'));
     }
   };
 
@@ -149,7 +149,7 @@ export const InvoicesPage = () => {
       setPaymentDialogOpen(false);
       fetchInvoices();
     } catch (error) {
-      toast.error(error.response?.data?.error || "Failed to record payment");
+      toast.error(getErrorMessage(error, "Failed to record payment"));
     } finally {
       setSubmittingPayment(false);
     }

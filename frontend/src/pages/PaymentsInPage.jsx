@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { paymentAPI, customerAPI, invoiceAPI } from '../services/api';
+import { getErrorMessage } from '../config/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -141,7 +142,7 @@ export const PaymentsInPage = () => {
       });
       fetchPayments();
     } catch (error) {
-      toast.error(error.response?.data?.error || "Failed to record payment");
+      toast.error(getErrorMessage(error, "Failed to record payment"));
     } finally {
       setSubmitting(false);
     }

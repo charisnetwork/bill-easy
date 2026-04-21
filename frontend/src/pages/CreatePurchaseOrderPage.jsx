@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supplierAPI, productAPI, purchaseOrderAPI } from '../services/api';
+import { getErrorMessage } from '../config/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -144,7 +145,7 @@ const CreatePurchaseOrderPage = ({ isEdit = false }) => {
       }
       navigate('/purchase/po-list');
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to save PO');
+      toast.error(getErrorMessage(error, 'Failed to save PO'));
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ewayBillAPI, invoiceAPI } from '../services/api';
+import { getErrorMessage } from '../config/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -61,7 +62,7 @@ const CreateEWayBillPage = () => {
       toast.success('E-Way Bill generated successfully!');
       navigate('/eway-bills');
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to generate E-Way bill');
+      toast.error(getErrorMessage(error, 'Failed to generate E-Way bill'));
     } finally {
       setLoading(false);
     }

@@ -14,8 +14,8 @@ import path from 'path';
 // - Set VITE_BACKEND_URL in Vercel dashboard
 // - Example: https://my-app.up.railway.app
 
-// Get backend URL from env or use localhost for development
-const BACKEND_URL = process.env.VITE_BACKEND_URL || 'http://localhost:8001';
+// Get backend URL from env
+const BACKEND_URL = process.env.VITE_BACKEND_URL;
 
 export default defineConfig({
   plugins: [react()],
@@ -31,9 +31,9 @@ export default defineConfig({
   },
   envPrefix: ['VITE_', 'REACT_APP_'],
   define: {
-    // Inject environment variables for production
-    'process.env.REACT_APP_BACKEND_URL': JSON.stringify(BACKEND_URL),
-    'import.meta.env.VITE_BACKEND_URL': JSON.stringify(BACKEND_URL),
+    // Only inject if defined
+    'process.env.REACT_APP_BACKEND_URL': JSON.stringify(BACKEND_URL || ''),
+    'import.meta.env.VITE_BACKEND_URL': JSON.stringify(BACKEND_URL || ''),
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
   },
   resolve: {

@@ -11,6 +11,7 @@ import {
 import { Textarea } from '../components/ui/textarea';
 import { ArrowLeft, RefreshCcw, Save, Package, ArrowRightLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import { getErrorMessage } from '../config/api';
 
 export const StockTransferPage = () => {
   const navigate = useNavigate();
@@ -37,8 +38,8 @@ export const StockTransferPage = () => {
         ]);
         setGodowns(gRes.data);
         setProducts(pRes.data.products);
-      } catch (e) {
-        toast.error("Failed to load data");
+      } catch (error) {
+        toast.error(getErrorMessage(error, "Failed to load data"));
       }
     };
     fetchData();
@@ -76,7 +77,7 @@ export const StockTransferPage = () => {
       toast.success("Stock transferred successfully");
       navigate('/products');
     } catch (error) {
-      toast.error(error.response?.data?.error || "Transfer failed");
+      toast.error(getErrorMessage(error, "Transfer failed"));
     } finally {
       setLoading(false);
     }

@@ -27,6 +27,7 @@ import {
   TooltipTrigger,
 } from "../components/ui/tooltip";
 import { toast } from 'sonner';
+import { getErrorMessage } from '../config/api';
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-IN', {
@@ -76,7 +77,7 @@ export const QuotationsPage = () => {
       setQuotations(response.data.quotations);
       setTotalPages(response.data.totalPages);
     } catch (error) {
-      toast.error('Failed to load quotations');
+      toast.error(getErrorMessage(error, 'Failed to load quotations'));
     } finally {
       setLoading(false);
     }
@@ -93,7 +94,7 @@ export const QuotationsPage = () => {
       toast.success('Quotation deleted');
       fetchQuotations();
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Delete failed');
+      toast.error(getErrorMessage(error, 'Delete failed'));
     }
   };
 
@@ -109,7 +110,7 @@ export const QuotationsPage = () => {
       link.click();
       link.remove();
     } catch (error) {
-      toast.error('Failed to download PDF');
+      toast.error(getErrorMessage(error, 'Failed to download PDF'));
     }
   };
 

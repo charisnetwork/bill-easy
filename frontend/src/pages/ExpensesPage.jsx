@@ -17,6 +17,7 @@ import {
 import { Badge } from '../components/ui/badge';
 import { Plus, Search, Edit, Trash2, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
+import { getErrorMessage } from '../config/api';
 
 const formatCurrency = (amount) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount || 0);
 const formatDate = (date) => new Date(date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -45,7 +46,7 @@ const ExpenseForm = ({ expense, categories, onSave, onClose }) => {
       }
       onSave();
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Operation failed');
+      toast.error(getErrorMessage(error, 'Operation failed'));
     } finally {
       setLoading(false);
     }
@@ -122,7 +123,7 @@ export const ExpensesPage = () => {
       setTotalPages(expensesRes.data.totalPages);
       setCategories(categoriesRes.data);
     } catch (error) {
-      toast.error('Failed to load expenses');
+      toast.error(getErrorMessage(error, 'Failed to load expenses'));
     } finally {
       setLoading(false);
     }
@@ -137,7 +138,7 @@ export const ExpensesPage = () => {
       toast.success('Expense deleted');
       fetchExpenses();
     } catch (error) {
-      toast.error('Delete failed');
+      toast.error(getErrorMessage(error, 'Delete failed'));
     }
   };
 

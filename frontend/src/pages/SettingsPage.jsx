@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api, { companyAPI, authAPI, utilityAPI } from '../services/api';
-import { getAssetUrl, BACKEND_URL } from '../config/api';
+import { getAssetUrl, BACKEND_URL, getErrorMessage } from '../config/api';
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -269,7 +269,7 @@ export const SettingsPage = () => {
       }
     } catch (error) {
       console.error("GST Lookup Error:", error);
-      toast.error(error.response?.data?.error || "Could not find details for this GSTIN. Please enter manually.");
+      toast.error(getErrorMessage(error, "Could not find details for this GSTIN. Please enter manually."));
     } finally {
       setGstLoading(false);
     }
@@ -466,7 +466,7 @@ export const SettingsPage = () => {
       toast.success('Password changed successfully');
       passwordForm.reset();
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to change password');
+      toast.error(getErrorMessage(error, 'Failed to change password'));
     } finally {
       setSubmitting(false);
     }
@@ -618,7 +618,7 @@ export const SettingsPage = () => {
       const res = await companyAPI.getGodowns();
       setGodowns(res.data);
     } catch (error) {
-      toast.error(error.response?.data?.error || "Failed to add godown");
+      toast.error(getErrorMessage(error, "Failed to add godown"));
     } finally {
       setSubmitting(false);
     }
@@ -632,7 +632,7 @@ export const SettingsPage = () => {
       const res = await companyAPI.getGodowns();
       setGodowns(res.data);
     } catch (error) {
-      toast.error(error.response?.data?.error || "Failed to delete godown");
+      toast.error(getErrorMessage(error, "Failed to delete godown"));
     }
   };
 
@@ -648,7 +648,7 @@ export const SettingsPage = () => {
       const res = await companyAPI.getUsers();
       setUsers(res.data);
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to add user');
+      toast.error(getErrorMessage(error, 'Failed to add user'));
     } finally {
       setSubmitting(false);
     }

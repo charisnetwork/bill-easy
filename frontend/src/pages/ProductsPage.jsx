@@ -16,6 +16,7 @@ import {
 import { Badge } from '../components/ui/badge';
 import { Plus, Search, Edit, Trash2, Package, AlertTriangle, Filter, FileUp, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { getErrorMessage } from '../config/api';
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-IN', {
@@ -74,7 +75,7 @@ const ProductForm = ({ product, categories, onSave, fetchCategories, onClose }) 
       setNewCategoryDialogOpen(false);
       setNewCategoryName('');
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to create category');
+      toast.error(getErrorMessage(error, 'Failed to create category'));
     } finally {
       setCreatingCategory(false);
     }
@@ -109,7 +110,7 @@ const ProductForm = ({ product, categories, onSave, fetchCategories, onClose }) 
       }
       onSave();
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Operation failed');
+      toast.error(getErrorMessage(error, 'Operation failed'));
     } finally {
       setLoading(false);
     }
@@ -332,7 +333,7 @@ export const ProductsPage = () => {
       setProducts(response.data.products);
       setTotalPages(response.data.totalPages);
     } catch (error) {
-      toast.error('Failed to load products');
+      toast.error(getErrorMessage(error, 'Failed to load products'));
     } finally {
       setLoading(false);
     }
@@ -362,7 +363,7 @@ export const ProductsPage = () => {
       toast.success('Product deleted');
       fetchProducts();
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Delete failed');
+      toast.error(getErrorMessage(error, 'Delete failed'));
     }
   };
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { quotationAPI, customerAPI, productAPI, companyAPI } from '../services/api';
+import { getErrorMessage } from '../config/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -189,7 +190,7 @@ export const CreateQuotationPage = ({ isEdit = false }) => {
       }
       navigate('/quotations');
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to save quotation');
+      toast.error(getErrorMessage(error, 'Failed to save quotation'));
     } finally {
       setLoading(false);
     }

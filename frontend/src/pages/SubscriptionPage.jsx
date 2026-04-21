@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { subscriptionAPI } from '../services/api';
+import { getErrorMessage } from '../config/api';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -45,7 +46,7 @@ export const SubscriptionPage = () => {
       setUsage(usageRes.data);
     } catch (error) {
       console.error('Error loading subscription data:', error);
-      toast.error('Error loading subscription details');
+      toast.error(getErrorMessage(error, 'Error loading subscription details'));
     } finally {
       setLoading(false);
     }
@@ -59,7 +60,7 @@ export const SubscriptionPage = () => {
       setAppliedCoupon({ ...res.data, planId });
       toast.success('Coupon applied successfully!');
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Invalid coupon code');
+      toast.error(getErrorMessage(error, 'Invalid coupon code'));
       setAppliedCoupon(null);
     } finally {
       setValidatingCoupon(false);
@@ -84,7 +85,7 @@ export const SubscriptionPage = () => {
         setCouponCode('');
         fetchData();
       } catch (error) {
-        toast.error('Failed to switch plan');
+        toast.error(getErrorMessage(error, 'Failed to switch plan'));
       } finally {
         setUpgrading(false);
       }

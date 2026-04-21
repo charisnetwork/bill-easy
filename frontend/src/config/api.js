@@ -8,15 +8,20 @@
 // Railway backend URL - REPLACE THIS WITH YOUR ACTUAL RAILWAY URL
 const RAILWAY_BACKEND_URL = 'https://industrious-harmony-production-6331.up.railway.app';
 
-// Get backend URL from environment or use fallback
-export const BACKEND_URL =
+// Get backend URL from environment
+// In production Vercel, we prefer relative paths to use the proxy in vercel.json
+const envBackendUrl = 
   import.meta.env?.VITE_BACKEND_URL ||
-  process.env.REACT_APP_BACKEND_URL ||
-  RAILWAY_BACKEND_URL;
+  import.meta.env?.REACT_APP_BACKEND_URL ||
+  process.env.REACT_APP_BACKEND_URL;
 
-export const API_BASE_URL = `${BACKEND_URL}/api`;
+export const BACKEND_URL = 
+  envBackendUrl || 
+  (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : RAILWAY_BACKEND_URL);
 
-console.log('[API Config] Backend URL:', BACKEND_URL);
+export const API_BASE_URL = BACKEND_URL ? `${BACKEND_URL}/api` : '/api';
+
+console.log('[API Config] Backend URL:', BACKEND_URL || '(relative)');
 console.log('[API Config] API Base URL:', API_BASE_URL);
 
 // Helper to construct full asset URLs (images, PDFs, etc.)
@@ -31,6 +36,11 @@ export const getAssetUrl = (path) => {
 export const getErrorMessage = (error, defaultMessage = 'An error occurred') => {
   // If it's already a string, return it
   if (typeof error === 'string') return error;
+
+  // Handle network errors (backend not running)
+  if (error?.code === 'ERR_NETWORK' || error?.message?.includes('Network Error')) {
+    return 'Cannot connect to server. Please make sure the backend is running.';
+  }
 
   // If it's an Axios error with response
   if (error?.response?.data) {
@@ -54,7 +64,8 @@ export const getErrorMessage = (error, defaultMessage = 'An error occurred') => 
     if (typeof data === 'object' && data !== null) {
       // If it's { code, message }, return message or stringify
       if (data.message && typeof data.message === 'string') return data.message;
-      return JSON.stringify(data);
+      // Return default message instead of JSON to avoid rendering objects
+      return defaultMessage;
     }
 
     return String(data);
@@ -62,6 +73,11 @@ export const getErrorMessage = (error, defaultMessage = 'An error occurred') => 
 
   // If error has message property
   if (typeof error?.message === 'string') return error.message;
+  
+  // If error is an object, return default message
+  if (typeof error === 'object' && error !== null) {
+    return defaultMessage;
+  }
 
   // Default fallback
   return defaultMessage;
