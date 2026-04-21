@@ -1,32 +1,37 @@
 // =========================================
 // API Configuration for Vercel + Railway Setup
 // =========================================
-//
-// REQUIRED ENV VARIABLE IN VERCEL:
-// VITE_BACKEND_URL=https://your-railway-app.up.railway.app
 
-// Railway backend URL - REPLACE THIS WITH YOUR ACTUAL RAILWAY URL
+// Railway backend URL - Production Backend
 const RAILWAY_BACKEND_URL = 'https://industrious-harmony-production-6331.up.railway.app';
 
-// Get backend URL from environment
-// In production Vercel, we prefer relative paths to use the proxy in vercel.json
+// Get backend URL from environment (for local development override)
 let envBackendUrl = 
   import.meta.env?.VITE_BACKEND_URL ||
-  import.meta.env?.REACT_APP_BACKEND_URL ||
-  process.env.REACT_APP_BACKEND_URL;
+  import.meta.env?.REACT_APP_BACKEND_URL;
 
 // Sanitize: Remove trailing slash if present
 if (envBackendUrl && envBackendUrl.endsWith('/')) {
   envBackendUrl = envBackendUrl.slice(0, -1);
 }
 
-export const BACKEND_URL = 
-  envBackendUrl || 
-  (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : RAILWAY_BACKEND_URL);
+// Determine if we're in production (on Vercel/custom domain)
+const isProduction = typeof window !== 'undefined' && (
+  window.location.hostname === 'charisbilleasy.store' ||
+  window.location.hostname === 'www.charisbilleasy.store' ||
+  window.location.hostname.endsWith('.vercel.app')
+);
 
-export const API_BASE_URL = BACKEND_URL ? `${BACKEND_URL}/api` : '/api';
+// In production, always use the Railway backend directly
+// In development, use env variable or fallback to localhost
+export const BACKEND_URL = isProduction 
+  ? RAILWAY_BACKEND_URL 
+  : (envBackendUrl || RAILWAY_BACKEND_URL);
 
-console.log('[API Config] Backend URL:', BACKEND_URL || '(relative)');
+export const API_BASE_URL = `${BACKEND_URL}/api`;
+
+console.log('[API Config] Environment:', isProduction ? 'production' : 'development');
+console.log('[API Config] Backend URL:', BACKEND_URL);
 console.log('[API Config] API Base URL:', API_BASE_URL);
 
 // Helper to construct full asset URLs (images, PDFs, etc.)
