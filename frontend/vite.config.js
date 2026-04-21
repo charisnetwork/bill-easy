@@ -16,15 +16,15 @@ export default defineConfig({
   },
   envPrefix: ['VITE_', 'REACT_APP_'],
   define: {
-    // Use VITE_BACKEND_URL for production, fallback to Railway URL, then localhost for dev
+    // Use VITE_BACKEND_URL for production, fallback to custom domain, then localhost for dev
     'process.env.REACT_APP_BACKEND_URL': JSON.stringify(
       process.env.VITE_BACKEND_URL || 
       process.env.REACT_APP_BACKEND_URL || 
-      'https://industrious-harmony-production-1525.up.railway.app'
+      'https://charisbilleasy.store'
     ),
     'import.meta.env.VITE_BACKEND_URL': JSON.stringify(
       process.env.VITE_BACKEND_URL || 
-      'https://industrious-harmony-production-1525.up.railway.app'
+      'https://charisbilleasy.store'
     ),
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
   },

@@ -1,12 +1,12 @@
 // Centralized API configuration
-// Uses VITE_BACKEND_URL for Vite environments, with fallback to Railway production URL
+// Uses VITE_BACKEND_URL for Vite environments, with fallback to production URL
 
-const RAILWAY_BACKEND_URL = 'https://industrious-harmony-production-1525.up.railway.app';
+const PRODUCTION_BACKEND_URL = 'https://charisbilleasy.store';
 
 export const BACKEND_URL = 
   import.meta.env?.VITE_BACKEND_URL || 
   process.env.REACT_APP_BACKEND_URL || 
-  RAILWAY_BACKEND_URL;
+  PRODUCTION_BACKEND_URL;
 
 export const API_BASE_URL = `${BACKEND_URL}/api`;
 
