@@ -452,13 +452,20 @@ const startServer = async () => {
     
     // Ensure data integrity
     try {
-      const allUsers = await User.findAll();
-      for (const user of allUsers) {
-        if (user.company_id) {
-          await UserCompany.findOrCreate({
-            where: { user_id: user.id, company_id: user.company_id },
-            defaults: { role: user.role || 'owner' }
-          });
+      // Check if User table has password column before query
+      const tableInfo = await queryInterface.describeTable('users');
+      if (!tableInfo.password) {
+        console.warn('⚠️ WARNING: "password" column is missing in users table. Skipping integrity check.');
+        console.log('Available columns in users:', Object.keys(tableInfo));
+      } else {
+        const allUsers = await User.findAll();
+        for (const user of allUsers) {
+          if (user.company_id) {
+            await UserCompany.findOrCreate({
+              where: { user_id: user.id, company_id: user.company_id },
+              defaults: { role: user.role || 'owner' }
+            });
+          }
         }
       }
     } catch (userIntegrityError) {

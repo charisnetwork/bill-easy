@@ -21,16 +21,34 @@ app.use(cors({
 console.log('🚀 Starting Monorepo Gateway...');
 
 // Start Main Backend
+console.log('📦 Spawning Main Backend on port 8001...');
+const mainBackendEnv = {
+  ...process.env,
+  PORT: '8001',
+  NODE_ENV: process.env.NODE_ENV || 'production'
+};
+
 const mainBackend = spawn('node', ['server.js'], { 
   cwd: path.join(__dirname, 'backend'),
-  env: Object.assign({}, process.env, { PORT: '8001' }),
+  env: mainBackendEnv,
   stdio: 'inherit'
 });
 
 // Start Admin Backend
+console.log('📦 Spawning Admin Backend on port 3025...');
+const adminBackendEnv = {
+  ...process.env,
+  PORT: '3025',
+  NODE_ENV: process.env.NODE_ENV || 'production'
+};
+
+// Log keys of environment variables for debugging
+const dbKeys = Object.keys(process.env).filter(k => k.includes('DATABASE'));
+console.log('ℹ️ Environment variables for DATABASE found in gateway:', dbKeys);
+
 const adminBackend = spawn('node', ['server.js'], { 
   cwd: path.join(__dirname, 'admin/backend'),
-  env: Object.assign({}, process.env, { PORT: '3025' }),
+  env: adminBackendEnv,
   stdio: 'inherit'
 });
 
