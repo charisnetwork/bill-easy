@@ -466,12 +466,29 @@ const GstCache = sequelize.define('GstCache', {
   expires_at: { type: DataTypes.DATE, allowNull: false }
 }, { tableName: 'gst_cache' });
 
+const AIUsage = sequelize.define('AIUsage', {
+  id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+  user_id: { type: DataTypes.UUID, allowNull: false },
+  company_id: { type: DataTypes.UUID, allowNull: false },
+  date: { type: DataTypes.DATEONLY, defaultValue: DataTypes.NOW },
+  count: { type: DataTypes.INTEGER, defaultValue: 0 }
+}, { 
+  tableName: 'ai_usage',
+  indexes: [{ unique: true, fields: ['user_id', 'date'] }]
+});
+
 /* =========================================
    RELATIONSHIPS
 ========================================= */
 
 Company.hasMany(User,{foreignKey:'company_id'});
 User.belongsTo(Company,{foreignKey:'company_id'});
+
+User.hasMany(AIUsage, { foreignKey: 'user_id' });
+AIUsage.belongsTo(User, { foreignKey: 'user_id' });
+
+Company.hasMany(AIUsage, { foreignKey: 'company_id' });
+AIUsage.belongsTo(Company, { foreignKey: 'company_id' });
 
 Company.hasOne(Subscription,{foreignKey:'company_id'});
 Subscription.belongsTo(Company,{foreignKey:'company_id'});
@@ -677,5 +694,6 @@ module.exports = {
   Enquiry,
   Coupon,
   GstCache,
-  TaxSetting
+  TaxSetting,
+  AIUsage
 };

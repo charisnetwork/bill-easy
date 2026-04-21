@@ -496,6 +496,21 @@ const startServer = async () => {
           }
         }
       }
+
+      // Migration: Ensure AIUsage table exists
+      if (!tables.includes('ai_usage')) {
+        console.log('  - Creating ai_usage table');
+        await queryInterface.createTable('ai_usage', {
+          id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+          user_id: { type: DataTypes.UUID, allowNull: false },
+          company_id: { type: DataTypes.UUID, allowNull: false },
+          date: { type: DataTypes.DATEONLY, defaultValue: DataTypes.NOW },
+          count: { type: DataTypes.INTEGER, defaultValue: 0 },
+          created_at: { type: DataTypes.DATE, allowNull: false },
+          updated_at: { type: DataTypes.DATE, allowNull: false }
+        });
+        await queryInterface.addIndex('ai_usage', ['user_id', 'date'], { unique: true });
+      }
     } catch (migrationError) {
       console.error('Plans table migration error:', migrationError.message);
       console.error(migrationError.stack);
