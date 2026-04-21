@@ -417,6 +417,27 @@ const startServer = async () => {
         
         console.log('Plans table migration completed');
       }
+
+      // Migration: Add missing columns to users table
+      if (tables.includes('users')) {
+        const userTableInfo = await queryInterface.describeTable('users');
+        
+        if (!userTableInfo.password) {
+          console.log('  - Adding password column to users');
+          await queryInterface.addColumn('users', 'password', {
+            type: DataTypes.STRING,
+            allowNull: true // Allow null for migration, but it will be populated
+          });
+        }
+        
+        if (!userTableInfo.permissions) {
+          console.log('  - Adding permissions column to users');
+          await queryInterface.addColumn('users', 'permissions', {
+            type: DataTypes.JSON,
+            defaultValue: {}
+          });
+        }
+      }
     } catch (migrationError) {
       console.error('Plans table migration error:', migrationError.message);
       console.error(migrationError.stack);
