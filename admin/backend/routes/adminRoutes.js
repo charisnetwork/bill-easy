@@ -6,7 +6,17 @@ const managementController = require('../controllers/managementController');
 // Developer-only simple auth middleware
 const authMiddleware = (req, res, next) => {
   const adminSecret = process.env.ADMIN_SECRET;
-  const providedSecret = req.headers['x-admin-secret'];
+  let providedSecret = req.headers['x-admin-secret'];
+  
+  // Also check Authorization header for flexibility with different clients
+  if (!providedSecret && req.headers['authorization']) {
+    const authHeader = req.headers['authorization'];
+    if (authHeader.startsWith('Bearer ')) {
+      providedSecret = authHeader.substring(7);
+    } else {
+      providedSecret = authHeader;
+    }
+  }
 
   // Ensure ADMIN_SECRET is set in environment AND matches the header
   if (adminSecret && providedSecret === adminSecret) {
@@ -18,6 +28,19 @@ const authMiddleware = (req, res, next) => {
     message: adminSecret ? "Invalid secret" : "ADMIN_SECRET not configured on server"
   });
 };
+
+router.post('/login', authMiddleware, (req, res) => {
+  res.json({ success: true, message: "Authenticated successfully" });
+});
+
+router.get('/profile', authMiddleware, (req, res) => {
+  res.json({ 
+    id: 'platform_admin',
+    name: 'Platform Administrator',
+    email: 'pachu.mgd@gmail.com',
+    role: 'superadmin'
+  });
+});
 
 router.use(authMiddleware);
 

@@ -10,11 +10,14 @@ import {
 } from 'recharts';
 
 const API_BASE_URL = (import.meta.env.VITE_ADMIN_BACKEND_URL || 'http://localhost:3025') + '/api';
-const ADMIN_SECRET = 'developer_secret_key_2026';
+const ADMIN_SECRET = import.meta.env.VITE_ADMIN_SECRET || 'developer_secret_key_2026';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: { 'x-admin-secret': ADMIN_SECRET }
+  headers: { 
+    'x-admin-secret': ADMIN_SECRET,
+    'Authorization': `Bearer ${ADMIN_SECRET}`
+  }
 });
 
 const AdminApp = () => {
@@ -620,26 +623,26 @@ const AdminApp = () => {
         {/* Coupon Modal */}
         {showCouponModal && (
           <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-             <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl p-8 animate-in zoom-in-95 duration-200">
+             <div className="form-container w-full max-w-md animate-in zoom-in-95 duration-200">
                 <h3 className="text-2xl font-black text-white mb-6 uppercase tracking-tighter">Forge Growth Voucher</h3>
                 <form onSubmit={handleCreateCoupon} className="space-y-4">
-                   <div>
-                      <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block">Voucher Code</label>
+                   <div className="form-group">
+                      <label className="form-label">Voucher Code</label>
                       <input 
                         required
                         type="text" 
                         value={couponForm.code}
                         onChange={e => setCouponForm({...couponForm, code: e.target.value.toUpperCase()})}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white font-bold focus:border-indigo-500 outline-none transition-all"
+                        className="form-input"
                         placeholder="SUMMER50"
                       />
                    </div>
-                   <div>
-                      <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block">Affiliate Partner (Optional)</label>
+                   <div className="form-group">
+                      <label className="form-label">Affiliate Partner (Optional)</label>
                       <select 
                         value={couponForm.company_id}
                         onChange={e => setCouponForm({...couponForm, company_id: e.target.value})}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white font-bold focus:border-indigo-500 outline-none transition-all"
+                        className="form-select"
                       >
                         <option value="">No Affiliate</option>
                         {affiliates.map(af => (
@@ -648,49 +651,49 @@ const AdminApp = () => {
                       </select>
                    </div>
                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block">Type</label>
+                      <div className="form-group">
+                        <label className="form-label">Type</label>
                         <select 
                           value={couponForm.discount_type}
                           onChange={e => setCouponForm({...couponForm, discount_type: e.target.value})}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white font-bold focus:border-indigo-500 outline-none transition-all"
+                          className="form-select"
                         >
                           <option value="percentage">Percentage</option>
                           <option value="flat">Flat Amount</option>
                         </select>
                       </div>
-                      <div>
-                        <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block">Value</label>
+                      <div className="form-group">
+                        <label className="form-label">Value</label>
                         <input 
                           required
                           type="number" 
                           value={couponForm.discount_value}
                           onChange={e => setCouponForm({...couponForm, discount_value: e.target.value})}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white font-bold focus:border-indigo-500 outline-none transition-all"
+                          className="form-input"
                         />
                       </div>
                    </div>
-                   <div>
-                      <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block">Expiry Date</label>
+                   <div className="form-group">
+                      <label className="form-label">Expiry Date</label>
                       <input 
                         type="date" 
                         value={couponForm.expiry_date}
                         onChange={e => setCouponForm({...couponForm, expiry_date: e.target.value})}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white font-bold focus:border-indigo-500 outline-none transition-all"
+                        className="form-input"
                       />
                    </div>
-                   <div>
-                      <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block">Usage Limit</label>
+                   <div className="form-group">
+                      <label className="form-label">Usage Limit</label>
                       <input 
                         type="number" 
                         value={couponForm.usage_limit}
                         onChange={e => setCouponForm({...couponForm, usage_limit: e.target.value})}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white font-bold focus:border-indigo-500 outline-none transition-all"
+                        className="form-input"
                       />
                    </div>
                    <div className="flex gap-4 pt-4">
-                      <button type="button" onClick={() => setShowCouponModal(false)} className="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-black py-3 rounded-xl text-xs transition-all">ABORT</button>
-                      <button type="submit" className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3 rounded-xl text-xs transition-all shadow-lg shadow-indigo-900/50">INITIALIZE</button>
+                      <button type="button" onClick={() => setShowCouponModal(false)} className="btn-secondary flex-1">ABORT</button>
+                      <button type="submit" className="btn-primary flex-1">INITIALIZE</button>
                    </div>
                 </form>
              </div>
@@ -700,25 +703,25 @@ const AdminApp = () => {
           {/* Plan Edit Modal */}
           {showPlanModal && (
           <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-             <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl p-8 animate-in zoom-in-95 duration-200">
+             <div className="form-container w-full max-w-md animate-in zoom-in-95 duration-200">
                 <h3 className="text-2xl font-black text-white mb-6 uppercase tracking-tighter">Edit {planForm.plan_name}</h3>
                 <form onSubmit={handleUpdatePlan} className="space-y-4">
-                   <div>
-                      <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block">Plan Price (INR)</label>
+                   <div className="form-group">
+                      <label className="form-label">Plan Price (INR)</label>
                       <input 
                         required
                         type="number" 
                         value={planForm.price ?? ''}
                         onChange={e => setPlanForm({...planForm, price: e.target.value})}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white font-bold focus:border-indigo-500 outline-none transition-all"
+                        className="form-input"
                       />
                    </div>
-                   <div>
-                      <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block">Billing Cycle</label>
+                   <div className="form-group">
+                      <label className="form-label">Billing Cycle</label>
                       <select 
                         value={planForm.billing_cycle ?? 'monthly'}
                         onChange={e => setPlanForm({...planForm, billing_cycle: e.target.value})}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white font-bold focus:border-indigo-500 outline-none transition-all"
+                        className="form-select"
                       >
                         <option value="monthly">1 Month (Monthly)</option>
                         <option value="3month">3 Months</option>
@@ -727,19 +730,19 @@ const AdminApp = () => {
                         <option value="lifetime">Lifetime</option>
                       </select>
                    </div>
-                   <div className="flex items-center gap-2">
+                   <div className="flex items-center gap-2 py-2">
                       <input 
                         type="checkbox" 
                         id="is_active"
                         checked={planForm.is_active}
                         onChange={e => setPlanForm({...planForm, is_active: e.target.checked})}
-                        className="w-4 h-4 rounded border-slate-800 bg-slate-950 text-indigo-600 focus:ring-indigo-500"
+                        className="form-checkbox"
                       />
                       <label htmlFor="is_active" className="text-xs font-bold text-slate-400 uppercase tracking-widest cursor-pointer">Plan Is Active</label>
                    </div>
                    <div className="flex gap-4 pt-4">
-                      <button type="button" onClick={() => setShowPlanModal(false)} className="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-black py-3 rounded-xl text-xs transition-all">ABORT</button>
-                      <button type="submit" className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3 rounded-xl text-xs transition-all shadow-lg shadow-indigo-900/50">UPDATE PLAN</button>
+                      <button type="button" onClick={() => setShowPlanModal(false)} className="btn-secondary flex-1">ABORT</button>
+                      <button type="submit" className="btn-primary flex-1">UPDATE PLAN</button>
                    </div>
                 </form>
              </div>
@@ -749,52 +752,52 @@ const AdminApp = () => {
           {/* Affiliate Modal */}
         {showAffiliateModal && (
           <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-             <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl p-8 animate-in zoom-in-95 duration-200">
+             <div className="form-container w-full max-w-md animate-in zoom-in-95 duration-200">
                 <h3 className="text-2xl font-black text-white mb-6 uppercase tracking-tighter">Onboard Affiliate</h3>
                 <form onSubmit={handleCreateAffiliate} className="space-y-4">
-                   <div>
-                      <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block">Company Name</label>
+                   <div className="form-group">
+                      <label className="form-label">Company Name</label>
                       <input 
                         required
                         type="text" 
                         value={affiliateForm.company_name}
                         onChange={e => setAffiliateForm({...affiliateForm, company_name: e.target.value})}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white font-bold focus:border-indigo-500 outline-none transition-all"
+                        className="form-input"
                       />
                    </div>
-                   <div>
-                      <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block">Contact Person</label>
+                   <div className="form-group">
+                      <label className="form-label">Contact Person</label>
                       <input 
                         required
                         type="text" 
                         value={affiliateForm.contact_person}
                         onChange={e => setAffiliateForm({...affiliateForm, contact_person: e.target.value})}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white font-bold focus:border-indigo-500 outline-none transition-all"
+                        className="form-input"
                       />
                    </div>
-                   <div>
-                      <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block">Mobile No</label>
+                   <div className="form-group">
+                      <label className="form-label">Mobile No</label>
                       <input 
                         required
                         type="text" 
                         value={affiliateForm.mobile_no}
                         onChange={e => setAffiliateForm({...affiliateForm, mobile_no: e.target.value})}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white font-bold focus:border-indigo-500 outline-none transition-all"
+                        className="form-input"
                       />
                    </div>
-                   <div>
-                      <label className="text-[10px] font-black text-slate-500 uppercase mb-2 block">Email ID</label>
+                   <div className="form-group">
+                      <label className="form-label">Email ID</label>
                       <input 
                         required
                         type="email" 
                         value={affiliateForm.email}
                         onChange={e => setAffiliateForm({...affiliateForm, email: e.target.value})}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white font-bold focus:border-indigo-500 outline-none transition-all"
+                        className="form-input"
                       />
                    </div>
                    <div className="flex gap-4 pt-4">
-                      <button type="button" onClick={() => setShowAffiliateModal(false)} className="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-black py-3 rounded-xl text-xs transition-all">ABORT</button>
-                      <button type="submit" className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3 rounded-xl text-xs transition-all">ONBOARD</button>
+                      <button type="button" onClick={() => setShowAffiliateModal(false)} className="btn-secondary flex-1">ABORT</button>
+                      <button type="submit" className="btn-primary flex-1">ONBOARD</button>
                    </div>
                 </form>
              </div>
