@@ -5,7 +5,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Building2, Mail, Lock, User, Phone, Eye, EyeOff, MapPin } from 'lucide-react';
+import { Building2, Mail, Lock, User, Phone, Eye, EyeOff, MapPin, Hash } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const RegisterPage = () => {
@@ -47,7 +47,7 @@ export const RegisterPage = () => {
             Start Your Business Journey
           </h2>
           <p className="text-slate-300 text-lg">
-            Join thousands of businesses using Bill Easy     to streamline their billing and inventory management.
+            Join thousands of businesses using Bill Easy to streamline their billing and inventory management.
           </p>
           
           <div className="mt-12 space-y-4 text-left">
@@ -83,8 +83,8 @@ export const RegisterPage = () => {
       </div>
 
       {/* Right side - Form */}
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 bg-gradient-to-br from-slate-50 to-slate-100 overflow-y-auto">
-        <div className="w-full max-w-xl py-4 sm:py-8">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-slate-50 to-slate-100 overflow-y-auto">
+        <div className="w-full max-w-2xl py-4 sm:py-6">
           <Link to="/" className="flex items-center gap-2 mb-6 sm:mb-8">
             <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center">
               <Building2 className="w-6 h-6 text-white" />
@@ -93,101 +93,137 @@ export const RegisterPage = () => {
           </Link>
 
           {/* Glassmorphism Card */}
-          <Card className="glass-card p-2 sm:p-4">
-            <CardHeader className="px-4 sm:px-6">
-              <CardTitle className="font-heading text-2xl">Create your account</CardTitle>
-              <CardDescription>Start your 14-day free trial today</CardDescription>
+          <Card className="glass-card border-0 shadow-xl">
+            <CardHeader className="px-5 sm:px-8 pb-4">
+              <CardTitle className="font-heading text-2xl sm:text-3xl">Create your account</CardTitle>
+              <CardDescription className="text-sm sm:text-base mt-1">Start your 14-day free trial today</CardDescription>
             </CardHeader>
-            <CardContent className="px-4 sm:px-6">
+            <CardContent className="px-5 sm:px-8 pb-6 sm:pb-8">
               <form onSubmit={handleSubmit}>
                 {/* 2-Column Grid Layout */}
-                <div className="form-grid">
-                  <div className="form-field form-field-full">
-                    <Label htmlFor="companyName" className="form-label">Company Name *</Label>
-                    <div className="relative">
-                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+                  
+                  {/* Company Name - Full Width */}
+                  <div className="sm:col-span-2 space-y-2">
+                    <Label htmlFor="companyName" className="text-sm font-semibold text-slate-700">
+                      Company Name <span className="text-red-500">*</span>
+                    </Label>
+                    <div className="relative group">
+                      <div className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center pointer-events-none">
+                        <Building2 className="w-[18px] h-[18px] text-slate-400 group-focus-within:text-[#1976D2] transition-colors" />
+                      </div>
                       <Input
                         id="companyName"
                         placeholder="Your Company Pvt Ltd"
                         value={formData.companyName}
                         onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                        className="pl-10"
+                        className="h-12 pl-11 pr-4 text-base border-slate-300 focus:border-[#1976D2] focus:ring-[#1976D2]/20"
                         required
                         data-testid="register-company-input"
                       />
                     </div>
                   </div>
 
-                  <div className="form-field">
-                    <Label htmlFor="name" className="form-label">Your Name *</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  {/* Your Name */}
+                  <div className="space-y-2">
+                    <Label htmlFor="name" className="text-sm font-semibold text-slate-700">
+                      Your Name <span className="text-red-500">*</span>
+                    </Label>
+                    <div className="relative group">
+                      <div className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center pointer-events-none">
+                        <User className="w-[18px] h-[18px] text-slate-400 group-focus-within:text-[#1976D2] transition-colors" />
+                      </div>
                       <Input
                         id="name"
                         placeholder="John Doe"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="pl-10"
+                        className="h-12 pl-11 pr-4 text-base border-slate-300 focus:border-[#1976D2] focus:ring-[#1976D2]/20"
                         required
                         data-testid="register-name-input"
                       />
                     </div>
                   </div>
 
-                  <div className="form-field">
-                    <Label htmlFor="email" className="form-label">Email *</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  {/* Email */}
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-sm font-semibold text-slate-700">
+                      Email <span className="text-red-500">*</span>
+                    </Label>
+                    <div className="relative group">
+                      <div className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center pointer-events-none">
+                        <Mail className="w-[18px] h-[18px] text-slate-400 group-focus-within:text-[#1976D2] transition-colors" />
+                      </div>
                       <Input
                         id="email"
                         type="email"
                         placeholder="you@company.com"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="pl-10"
+                        className="h-12 pl-11 pr-4 text-base border-slate-300 focus:border-[#1976D2] focus:ring-[#1976D2]/20"
                         required
                         data-testid="register-email-input"
                       />
                     </div>
                   </div>
 
-                  <div className="form-field">
-                    <Label htmlFor="phone" className="form-label">Phone</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  {/* Phone */}
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="text-sm font-semibold text-slate-700">
+                      Phone
+                    </Label>
+                    <div className="relative group">
+                      <div className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center pointer-events-none">
+                        <Phone className="w-[18px] h-[18px] text-slate-400 group-focus-within:text-[#1976D2] transition-colors" />
+                      </div>
                       <Input
                         id="phone"
+                        type="tel"
                         placeholder="9876543210"
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="pl-10"
+                        className="h-12 pl-11 pr-4 text-base border-slate-300 focus:border-[#1976D2] focus:ring-[#1976D2]/20"
                         data-testid="register-phone-input"
                       />
                     </div>
                   </div>
 
-                  <div className="form-field">
-                    <Label htmlFor="gstNumber" className="form-label">GST Number (Optional)</Label>
-                    <Input
-                      id="gstNumber"
-                      placeholder="22AAAAA0000A1Z5"
-                      value={formData.gstNumber}
-                      onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value })}
-                      data-testid="register-gst-input"
-                    />
+                  {/* GST Number */}
+                  <div className="space-y-2">
+                    <Label htmlFor="gstNumber" className="text-sm font-semibold text-slate-700">
+                      GST Number <span className="text-slate-400 font-normal">(Optional)</span>
+                    </Label>
+                    <div className="relative group">
+                      <div className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center pointer-events-none">
+                        <Hash className="w-[18px] h-[18px] text-slate-400 group-focus-within:text-[#1976D2] transition-colors" />
+                      </div>
+                      <Input
+                        id="gstNumber"
+                        placeholder="22AAAAA0000A1Z5"
+                        value={formData.gstNumber}
+                        onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value })}
+                        className="h-12 pl-11 pr-4 text-base border-slate-300 focus:border-[#1976D2] focus:ring-[#1976D2]/20 uppercase"
+                        data-testid="register-gst-input"
+                      />
+                    </div>
                   </div>
 
-                  <div className="form-field">
-                    <Label htmlFor="password" className="form-label">Password *</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  {/* Password */}
+                  <div className="space-y-2">
+                    <Label htmlFor="password" className="text-sm font-semibold text-slate-700">
+                      Password <span className="text-red-500">*</span>
+                    </Label>
+                    <div className="relative group">
+                      <div className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center pointer-events-none">
+                        <Lock className="w-[18px] h-[18px] text-slate-400 group-focus-within:text-[#1976D2] transition-colors" />
+                      </div>
                       <Input
                         id="password"
                         type={showPassword ? 'text' : 'password'}
                         placeholder="Min 6 characters"
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="pl-10 pr-10"
+                        className="h-12 pl-11 pr-12 text-base border-slate-300 focus:border-[#1976D2] focus:ring-[#1976D2]/20"
                         required
                         minLength={6}
                         data-testid="register-password-input"
@@ -195,23 +231,29 @@ export const RegisterPage = () => {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all focus:outline-none focus:ring-2 focus:ring-[#1976D2]/20"
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
                       >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                       </button>
                     </div>
                   </div>
 
-                  <div className="form-field form-field-full">
-                    <Label htmlFor="address" className="form-label">Business Address</Label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  {/* Business Address - Full Width */}
+                  <div className="sm:col-span-2 space-y-2">
+                    <Label htmlFor="address" className="text-sm font-semibold text-slate-700">
+                      Business Address
+                    </Label>
+                    <div className="relative group">
+                      <div className="absolute left-3.5 top-3.5 w-5 h-5 flex items-center justify-center pointer-events-none">
+                        <MapPin className="w-[18px] h-[18px] text-slate-400 group-focus-within:text-[#1976D2] transition-colors" />
+                      </div>
                       <Input
                         id="address"
-                        placeholder="123 Business Street, City"
+                        placeholder="123 Business Street, City, State - PIN"
                         value={formData.address}
                         onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                        className="pl-10"
+                        className="h-12 pl-11 pr-4 text-base border-slate-300 focus:border-[#1976D2] focus:ring-[#1976D2]/20"
                         data-testid="register-address-input"
                       />
                     </div>
@@ -220,17 +262,25 @@ export const RegisterPage = () => {
 
                 <Button 
                   type="submit" 
-                  className="w-full btn-primary h-11 mt-6"
+                  className="w-full h-12 mt-8 text-base font-semibold bg-[#1976D2] hover:bg-[#1565C0] hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
                   disabled={loading}
                   data-testid="register-submit-btn"
                 >
-                  {loading ? 'Creating Account...' : 'Create Account'}
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Creating Account...
+                    </span>
+                  ) : 'Create Account'}
                 </Button>
               </form>
 
               <p className="text-center text-sm text-slate-600 mt-6">
                 Already have an account?{' '}
-                <Link to="/login" className="text-[#1976D2] hover:underline font-medium" data-testid="login-link">
+                <Link to="/login" className="text-[#1976D2] hover:text-[#1565C0] font-semibold hover:underline transition-colors" data-testid="login-link">
                   Sign in
                 </Link>
               </p>
