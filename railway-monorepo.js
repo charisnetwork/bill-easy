@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const { spawn } = require('child_process');
 const path = require('path');
@@ -8,6 +9,14 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 app.set('trust proxy', 1);
+
+// Enable CORS for all routes
+app.use(cors({
+  origin: '*',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 console.log('🚀 Starting Monorepo Gateway...');
 
