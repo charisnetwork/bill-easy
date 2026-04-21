@@ -5,7 +5,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Building2, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Building2, Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { getErrorMessage } from '../config/api';
 
@@ -57,14 +57,14 @@ export const LoginPage = () => {
                 <div className="form-field">
                   <Label htmlFor="email" className="form-label">Email</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                     <Input
                       id="email"
                       type="email"
                       placeholder="you@company.com"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="pl-10"
+                      className="pl-11"
                       required
                       data-testid="login-email-input"
                     />
@@ -72,23 +72,24 @@ export const LoginPage = () => {
                 </div>
 
                 <div className="form-field">
-                  <Label htmlFor="password" className="form-label">Password</Label>
+                  <Label htmlFor="password" title="Enter your password" />
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                     <Input
                       id="password"
                       type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="pl-10 pr-10"
+                      className="pl-11 pr-10"
                       required
                       data-testid="login-password-input"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -97,17 +98,22 @@ export const LoginPage = () => {
 
                 <Button 
                   type="submit" 
-                  className="w-full btn-primary h-11 mt-2"
+                  className="w-full btn-primary h-11 mt-2 flex items-center justify-center gap-2"
                   disabled={loading}
                   data-testid="login-submit-btn"
                 >
-                  {loading ? 'Signing in...' : 'Sign In'}
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Signing in...</span>
+                    </>
+                  ) : 'Sign In'}
                 </Button>
               </form>
 
               <p className="text-center text-sm text-slate-600 mt-6">
                 Don't have an account?{' '}
-                <Link to="/register" className="text-[#1976D2] hover:underline font-medium" data-testid="register-link">
+                <Link to="/register" className="text-[#1E40AF] hover:underline font-medium" data-testid="register-link">
                   Create one
                 </Link>
               </p>

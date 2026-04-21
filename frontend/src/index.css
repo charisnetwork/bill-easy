@@ -20,7 +20,7 @@
     --popover-foreground: 222 47% 11%;
 
     /* Brand Colors */
-    --primary: 222 47% 11%;
+    --primary: 224 76% 40%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 160 84% 39%;
@@ -35,13 +35,13 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    /* Brand Blue for form elements */
-    --border: 210 79% 46%;
-    --input: 207 90% 54%;
-    --ring: 207 90% 54%;
-    --brand-blue: #1976D2;
-    --brand-blue-dark: #1565C0;
-    --brand-blue-light: rgba(25, 118, 210, 0.15);
+    /* Brand Blue for form elements - Updated to #1E40AF */
+    --border: 224 76% 40%;
+    --input: 224 76% 48%;
+    --ring: 224 76% 48%;
+    --brand-blue: #1E40AF;
+    --brand-blue-dark: #1E3A8A;
+    --brand-blue-light: rgba(30, 64, 175, 0.15);
 
     /* Standardized border radius */
     --radius: 0.5rem;
@@ -60,7 +60,7 @@
   textarea, 
   select,
   [role="combobox"] {
-    border: 1.5px solid var(--brand-blue) !important;
+    border: 1.5px solid #E2E8F0 !important; /* Lighter default border */
     background-color: #ffffff !important;
     padding: 10px 14px !important;
     min-height: 2.75rem !important;
@@ -74,9 +74,18 @@
   [role="combobox"]:focus,
   [data-state="open"][role="combobox"],
   .focus-visible {
-    border-color: var(--brand-blue-dark) !important;
+    border-color: var(--brand-blue) !important;
     box-shadow: 0 0 0 4px var(--brand-blue-light) !important;
     outline: none !important;
+  }
+
+  /* Fix for icons in inputs: add specific padding-left when an icon is present */
+  .relative > input.pl-10 {
+    padding-left: 2.75rem !important;
+  }
+  
+  .relative > input.pl-11 {
+    padding-left: 3rem !important;
   }
 
   /* Label spacing for better mobile readability */
@@ -265,14 +274,14 @@
 
 /* Glassmorphism card for auth pages */
 .glass-card {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  border-radius: 16px !important;
   box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.08),
-    0 2px 8px rgba(0, 0, 0, 0.04);
+    0 10px 40px rgba(0, 0, 0, 0.06),
+    0 2px 10px rgba(0, 0, 0, 0.02) !important;
 }
 
 /* Dark variant for use on dark backgrounds */
