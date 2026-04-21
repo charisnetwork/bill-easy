@@ -46,9 +46,41 @@ app.use(
   })
 );
 
+/* =========================================
+   CORS CONFIGURATION
+   Allow custom domain, Railway frontend, and localhost for development
+========================================= */
+
+const ALLOWED_ORIGINS = [
+  'https://charisbilleasy.store',
+  'https://www.charisbilleasy.store',
+  'https://bill-easy-production.up.railway.app',
+  'https://industrious-harmony-production-1525.up.railway.app',
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173'
+];
+
+// Add FRONTEND_URL from env if set
+if (process.env.FRONTEND_URL) {
+  const envOrigins = process.env.FRONTEND_URL.split(',').map(o => o.trim());
+  ALLOWED_ORIGINS.push(...envOrigins);
+}
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : '*',
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, curl, etc.)
+      if (!origin) return callback(null, true);
+      
+      if (ALLOWED_ORIGINS.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.warn(`CORS blocked request from: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-company-id'],
     credentials: true

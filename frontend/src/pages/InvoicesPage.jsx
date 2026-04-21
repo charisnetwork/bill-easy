@@ -12,6 +12,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '../components/ui/table';
 import { Badge } from '../components/ui/badge';
+import { API_BASE_URL } from '../config/api';
 import { 
   Plus, 
   Search, 
@@ -314,7 +315,7 @@ export const InvoicesPage = () => {
                                 className="h-8 w-8 text-indigo-600 hover:bg-indigo-50"
                                 onClick={() => {
                                   const token = localStorage.getItem('token');
-                                  window.open(`${process.env.REACT_APP_BACKEND_URL}/api/invoices/${invoice.id}/pdf?token=${token}`, "_blank");
+                                  window.open(`${API_BASE_URL}/invoices/${invoice.id}/pdf?token=${token}`, "_blank");
                                 }}
                               >
                                 <Download className="w-4 h-4" />

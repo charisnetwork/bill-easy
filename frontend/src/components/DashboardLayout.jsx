@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import { cn } from '../lib/utils';
+import { getAssetUrl } from '../config/api';
 import Footer from './Footer';
 
 export const DashboardLayout = ({ children }) => {
@@ -346,7 +347,7 @@ export const DashboardLayout = ({ children }) => {
               <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden shadow-sm">
                 {company?.logo ? (
                   <img 
-                    src={company.logo.startsWith('http') ? company.logo : `${process.env.REACT_APP_BACKEND_URL}/uploads${company.logo.startsWith('/') ? '' : '/'}${company.logo}`} 
+                    src={getAssetUrl(company.logo)} 
                     alt="Logo" 
                     className="w-full h-full object-contain p-1"
                   />

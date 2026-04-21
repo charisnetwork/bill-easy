@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api, { companyAPI, authAPI, utilityAPI } from '../services/api';
+import { getAssetUrl, BACKEND_URL } from '../config/api';
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -424,9 +425,9 @@ export const SettingsPage = () => {
           template_id: c.settings?.template_id || c.settings?.invoice_template || "modern"
         });
 
-        if (c.logo) setLogoPreview(c.logo.startsWith('http') ? c.logo : `${process.env.REACT_APP_BACKEND_URL}/uploads${c.logo.startsWith('/') ? '' : '/'}${c.logo}`);
-        if (c.signature) setSignaturePreview(c.signature.startsWith('http') ? c.signature : `${process.env.REACT_APP_BACKEND_URL}/uploads${c.signature.startsWith('/') ? '' : '/'}${c.signature}`);
-        if (c.qr_code) setQrPreview(c.qr_code.startsWith('http') ? c.qr_code : `${process.env.REACT_APP_BACKEND_URL}/uploads${c.qr_code.startsWith('/') ? '' : '/'}${c.qr_code}`);
+        if (c.logo) setLogoPreview(getAssetUrl(c.logo));
+        if (c.signature) setSignaturePreview(getAssetUrl(c.signature));
+        if (c.qr_code) setQrPreview(getAssetUrl(c.qr_code));
         
         if (user) {
           profileForm.reset({ name: user.name || '', phone: user.phone || '' });
@@ -590,7 +591,7 @@ export const SettingsPage = () => {
 
       const res = await api.post(endpoint, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       const filePath = res.data.logo || res.data.signature || res.data.qr_code;
-      const previewUrl = `${process.env.REACT_APP_BACKEND_URL}/uploads${filePath.startsWith('/') ? '' : '/'}${filePath}`;
+      const previewUrl = getAssetUrl(filePath);
       
       if (type === 'logo') setLogoPreview(previewUrl);
       else if (type === 'signature') setSignaturePreview(previewUrl);

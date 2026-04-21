@@ -15,6 +15,7 @@ import {
 } from '../components/ui/table';
 import { Plus, Search, Edit, Trash2, Users, Phone, Mail, IndianRupee, Wallet, FileText, Download, Calendar, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { API_BASE_URL } from '../config/api';
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-IN', {
@@ -193,7 +194,7 @@ const CustomerDetails = ({ customer, onClose }) => {
 
   const downloadCN = (id) => {
     const token = localStorage.getItem('token');
-    window.open(`${process.env.REACT_APP_BACKEND_URL}/api/credit-notes/${id}/pdf?token=${token}`, "_blank");
+    window.open(`${API_BASE_URL}/credit-notes/${id}/pdf?token=${token}`, "_blank");
   };
 
   return (

@@ -14,10 +14,18 @@ export default defineConfig({
       }
     }
   },
-  envPrefix: 'REACT_APP_',
+  envPrefix: ['VITE_', 'REACT_APP_'],
   define: {
-    // Security fix: map specific required variables
-    'process.env.REACT_APP_BACKEND_URL': JSON.stringify(process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001'),
+    // Use VITE_BACKEND_URL for production, fallback to Railway URL, then localhost for dev
+    'process.env.REACT_APP_BACKEND_URL': JSON.stringify(
+      process.env.VITE_BACKEND_URL || 
+      process.env.REACT_APP_BACKEND_URL || 
+      'https://industrious-harmony-production-1525.up.railway.app'
+    ),
+    'import.meta.env.VITE_BACKEND_URL': JSON.stringify(
+      process.env.VITE_BACKEND_URL || 
+      'https://industrious-harmony-production-1525.up.railway.app'
+    ),
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
   },
   resolve: {

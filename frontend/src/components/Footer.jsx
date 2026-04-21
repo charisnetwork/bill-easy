@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../config/api';
 import { 
   Facebook, 
   Twitter, 
@@ -75,7 +76,7 @@ const Footer = () => {
                   message: 'Quick callback request from footer'
                 };
                 try {
-                  const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/enquiries`, {
+                  const response = await fetch(`${API_BASE_URL}/enquiries`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)

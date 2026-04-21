@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { invoiceAPI, companyAPI } from "../services/api";
+import { API_BASE_URL, getAssetUrl } from '../config/api';
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
@@ -95,12 +96,12 @@ const InvoicePreview = () => {
 
   const downloadPdf = () => {
     const token = localStorage.getItem('token');
-    window.open(`${process.env.REACT_APP_BACKEND_URL}/api/invoices/${id}/pdf?token=${token}`, "_blank");
+    window.open(`${API_BASE_URL}/invoices/${id}/pdf?token=${token}`, "_blank");
   };
 
   const shareWhatsapp = () => {
     const token = localStorage.getItem('token');
-    const message = `Invoice ${invoice.invoice_number} from ${company.name}\n\nAmount: ₹${invoice.total_amount}\n\nView/Download: ${process.env.REACT_APP_BACKEND_URL}/api/invoices/${id}/pdf?token=${token}`;
+    const message = `Invoice ${invoice.invoice_number} from ${company.name}\n\nAmount: ₹${invoice.total_amount}\n\nView/Download: ${API_BASE_URL}/invoices/${id}/pdf?token=${token}`;
     const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank");
   };
@@ -319,7 +320,7 @@ const InvoicePreview = () => {
                 <div className="flex flex-row items-start justify-between border-b border-slate-100 pb-10">
                   <div className="flex items-start gap-6">
                     {company?.logo ? (
-                      <img src={`${process.env.REACT_APP_BACKEND_URL}/uploads${company.logo.startsWith('/') ? '' : '/'}${company.logo}`} alt="Logo" className="h-20 w-auto object-contain" />
+                      <img src={getAssetUrl(company.logo)} alt="Logo" className="h-20 w-auto object-contain" />
                     ) : (
                       <div className="h-20 w-20 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 shadow-inner">
                         <Building2 className="w-10 h-10 text-slate-300" />
@@ -473,7 +474,7 @@ const InvoicePreview = () => {
                          {company?.qr_code && (
                            <div className="flex flex-col items-start gap-2">
                               <div className="p-2 bg-white border border-slate-200 rounded-2xl shadow-xl">
-                                <img src={`${process.env.REACT_APP_BACKEND_URL}/uploads${company.qr_code.startsWith('/') ? '' : '/'}${company.qr_code}`} alt="QR Code" className="w-28 h-24 object-contain" />
+                                <img src={getAssetUrl(company.qr_code)} alt="QR Code" className="w-28 h-24 object-contain" />
                               </div>
                               <p className="text-[9px] text-slate-400 font-black uppercase tracking-[0.2em]">Scan to Pay</p>
                            </div>
@@ -513,7 +514,7 @@ const InvoicePreview = () => {
                          <div className="w-full text-center space-y-4 pt-4">
                            <p className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">Authorized Signatory</p>
                            {company?.signature ? (
-                             <img src={`${process.env.REACT_APP_BACKEND_URL}/uploads${company.signature.startsWith('/') ? '' : '/'}${company.signature}`} alt="Signature" className="h-16 w-auto mx-auto object-contain mix-blend-multiply" />
+                             <img src={getAssetUrl(company.signature)} alt="Signature" className="h-16 w-auto mx-auto object-contain mix-blend-multiply" />
                            ) : (
                              <div className="h-16"></div>
                            )}

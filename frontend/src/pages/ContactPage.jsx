@@ -6,6 +6,7 @@ import { Card } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { useToast } from '../hooks/use-toast';
+import { API_BASE_URL } from '../config/api';
 
 const ContactPage = () => {
   const { toast } = useToast();
@@ -25,7 +26,7 @@ const ContactPage = () => {
     };
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/enquiries`, {
+      const response = await fetch(`${API_BASE_URL}/enquiries`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
