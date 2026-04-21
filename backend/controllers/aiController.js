@@ -148,20 +148,35 @@ Rules:
     const contextStr = (financialContext || inventoryContext) ? `\nContextual Data:${financialContext}${inventoryContext}` : "";
     const fullPrompt = `${systemInstruction}${contextStr}\n\nUser Question: ${question}`;
 
-    // 6. Gemini Call
+    // 6. Gemini Call with Fallback
     let text;
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    
-    try {
-      const result = await model.generateContent(fullPrompt);
-      const response = await result.response;
-      text = response.text();
-      
-      // Increment Usage Count on success
-      await usage.increment('count');
-    } catch (apiError) {
-      console.error(">>> Charis API Error:", apiError.message);
-      return res.status(500).json({ error: "Charis is currently offline. Please try again later." });
+    const modelNames = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+    let lastError = null;
+
+    for (const modelName of modelNames) {
+      try {
+        console.log(`>>> Charis: Attempting to call ${modelName}...`);
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent(fullPrompt);
+        const response = await result.response;
+        text = response.text();
+        
+        if (text) {
+          // Increment Usage Count on success
+          await usage.increment('count');
+          break; // Success!
+        }
+      } catch (apiError) {
+        console.error(`>>> Charis API Error with ${modelName}:`, apiError.message);
+        lastError = apiError;
+        continue; // Try next model
+      }
+    }
+
+    if (!text) {
+      return res.status(200).json({ 
+        answer: "I'm having a bit of trouble connecting to my brain right now. Please try asking me again in a few seconds." 
+      });
     }
 
     console.log(">>> Charis successfully generated a response. New usage count:", usage.count + 1);
