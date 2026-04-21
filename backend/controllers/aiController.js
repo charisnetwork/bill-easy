@@ -150,8 +150,8 @@ Rules:
 
     // 6. Gemini Call with Fallback
     let text;
-    // In 2026, we prioritize newer models but keep 1.5 as fallback
-    const modelNames = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
+    // In 2026, we prioritize Gemini 3.0 Flash as requested
+    const modelNames = ["gemini-3.0-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
     let lastError = null;
 
     for (const modelName of modelNames) {

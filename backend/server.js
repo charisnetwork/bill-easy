@@ -612,7 +612,7 @@ const startServer = async () => {
 
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${PORT}`);
-      console.log('Charis is now powered by Gemini 1.5 Flash');
+      console.log('Charis is now powered by Gemini 3.0 Flash');
     });
   } catch (error) {
     console.error('Server startup failed:', error);
