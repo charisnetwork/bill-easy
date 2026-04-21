@@ -10,6 +10,14 @@ const PORT = process.env.PORT || 8080;
 
 app.set('trust proxy', 1);
 
+// Normalize URLs (fix double slashes like //api)
+app.use((req, res, next) => {
+  if (req.url.includes('//')) {
+    req.url = req.url.replace(/\/+/g, '/');
+  }
+  next();
+});
+
 // Enable CORS for all routes
 app.use(cors({
   origin: '*',

@@ -10,10 +10,15 @@ const RAILWAY_BACKEND_URL = 'https://industrious-harmony-production-6331.up.rail
 
 // Get backend URL from environment
 // In production Vercel, we prefer relative paths to use the proxy in vercel.json
-const envBackendUrl = 
+let envBackendUrl = 
   import.meta.env?.VITE_BACKEND_URL ||
   import.meta.env?.REACT_APP_BACKEND_URL ||
   process.env.REACT_APP_BACKEND_URL;
+
+// Sanitize: Remove trailing slash if present
+if (envBackendUrl && envBackendUrl.endsWith('/')) {
+  envBackendUrl = envBackendUrl.slice(0, -1);
+}
 
 export const BACKEND_URL = 
   envBackendUrl || 
