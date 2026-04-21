@@ -30,9 +30,14 @@ export const BACKEND_URL = isProduction
 
 export const API_BASE_URL = `${BACKEND_URL}/api`;
 
+// Debug logging
+console.log('[API Config] ========================================');
 console.log('[API Config] Environment:', isProduction ? 'production' : 'development');
-console.log('[API Config] Backend URL:', BACKEND_URL);
-console.log('[API Config] API Base URL:', API_BASE_URL);
+console.log('[API Config] Hostname:', typeof window !== 'undefined' ? window.location.hostname : 'server');
+console.log('[API Config] VITE_BACKEND_URL:', import.meta.env?.VITE_BACKEND_URL || '(not set)');
+console.log('[API Config] BACKEND_URL:', BACKEND_URL);
+console.log('[API Config] API_BASE_URL:', API_BASE_URL);
+console.log('[API Config] ========================================');
 
 // Helper to construct full asset URLs (images, PDFs, etc.)
 export const getAssetUrl = (path) => {
@@ -44,12 +49,25 @@ export const getAssetUrl = (path) => {
 
 // Helper to normalize API errors to strings
 export const getErrorMessage = (error, defaultMessage = 'An error occurred') => {
+  // Debug logging for errors
+  if (error?.config) {
+    console.error('[API Error] Request URL:', error.config.url);
+    console.error('[API Error] Base URL:', error.config.baseURL);
+    console.error('[API Error] Full URL:', error.config.baseURL + error.config.url);
+  }
+
   // If it's already a string, return it
   if (typeof error === 'string') return error;
 
   // Handle network errors (backend not running)
   if (error?.code === 'ERR_NETWORK' || error?.message?.includes('Network Error')) {
     return 'Cannot connect to server. Please make sure the backend is running.';
+  }
+
+  // Handle 404 errors specifically
+  if (error?.response?.status === 404) {
+    const url = error.config?.url || 'unknown endpoint';
+    return `API endpoint not found: ${url}. Please check the backend URL configuration.`;
   }
 
   // If it's an Axios error with response
