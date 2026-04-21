@@ -518,13 +518,12 @@ const parsePurchasePDF = async (req, res) => {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const dataBuffer = fs.readFileSync(req.file.path);
+    const dataBuffer = req.file.buffer;
     
     // Use pdf-parse v1 API
     const data = await pdfParse(dataBuffer);
     
     if (!data || !data.text) {
-      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
       return res.status(422).json({ error: 'Failed to extract text from PDF.' });
     }
 
@@ -620,8 +619,6 @@ const parsePurchasePDF = async (req, res) => {
       }
     });
 
-    if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-
     res.json({ 
       items: uniqueItems,
       bill_number,
@@ -630,7 +627,6 @@ const parsePurchasePDF = async (req, res) => {
     });
   } catch (error) {
     console.error('[parsePurchasePDF] Error:', error);
-    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
     res.status(500).json({ error: 'Failed to parse PDF: ' + error.message });
   }
 };

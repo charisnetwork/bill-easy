@@ -151,38 +151,36 @@ const updateSettings = async (req, res) => {
 };
 
 
+const { uploadToGCS } = require("../utils/gcs");
+const path = require("path");
+
 /* =========================================================
    UPLOAD COMPANY LOGO
 ========================================================= */
 
 const uploadLogo = async (req, res) => {
-
   try {
-
     const companyId = req.companyId;
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 
-    const logoPath = `/company/logos/${req.file.filename}`;
+    const ext = path.extname(req.file.originalname);
+    const destination = `company/logos/${companyId}_logo_${Date.now()}${ext}`;
+    
+    const publicUrl = await uploadToGCS(req.file.buffer, destination, req.file.mimetype);
 
     await Company.update(
-      { logo: logoPath },
+      { logo: publicUrl },
       { where: { id: companyId } }
     );
 
     res.json({
       success: true,
-      logo: logoPath
+      logo: publicUrl
     });
-
   } catch (err) {
-
     console.error(err);
-
-    res.status(500).json({
-      error: "Logo upload failed"
-    });
-
+    res.status(500).json({ error: "Logo upload failed: " + err.message });
   }
-
 };
 
 
@@ -191,33 +189,28 @@ const uploadLogo = async (req, res) => {
 ========================================================= */
 
 const uploadSignature = async (req, res) => {
-
   try {
-
     const companyId = req.companyId;
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 
-    const signaturePath = `/company/signatures/${req.file.filename}`;
+    const ext = path.extname(req.file.originalname);
+    const destination = `company/signatures/${companyId}_signature_${Date.now()}${ext}`;
+    
+    const publicUrl = await uploadToGCS(req.file.buffer, destination, req.file.mimetype);
 
     await Company.update(
-      { signature: signaturePath },
+      { signature: publicUrl },
       { where: { id: companyId } }
     );
 
     res.json({
       success: true,
-      signature: signaturePath
+      signature: publicUrl
     });
-
   } catch (err) {
-
     console.error(err);
-
-    res.status(500).json({
-      error: "Signature upload failed"
-    });
-
+    res.status(500).json({ error: "Signature upload failed: " + err.message });
   }
-
 };
 
 
@@ -228,20 +221,25 @@ const uploadSignature = async (req, res) => {
 const uploadQRCode = async (req, res) => {
   try {
     const companyId = req.companyId;
-    const qrCodePath = `/company/qrcodes/${req.file.filename}`;
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+
+    const ext = path.extname(req.file.originalname);
+    const destination = `company/qrcodes/${companyId}_qrcode_${Date.now()}${ext}`;
+    
+    const publicUrl = await uploadToGCS(req.file.buffer, destination, req.file.mimetype);
+
     await Company.update(
-      { qr_code: qrCodePath },
+      { qr_code: publicUrl },
       { where: { id: companyId } }
     );
+
     res.json({
       success: true,
-      qr_code: qrCodePath
+      qr_code: publicUrl
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({
-      error: "QR Code upload failed"
-    });
+    res.status(500).json({ error: "QR Code upload failed: " + err.message });
   }
 };
 
