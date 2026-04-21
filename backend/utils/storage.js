@@ -9,7 +9,16 @@ const path = require('path');
 // Configuration from environment variables
 const GCS_PROJECT_ID = process.env.GCS_PROJECT_ID;
 const GCS_CLIENT_EMAIL = process.env.GCS_CLIENT_EMAIL;
-const GCS_PRIVATE_KEY = process.env.GCS_PRIVATE_KEY?.replace(/\\n/g, '\n');
+// Handle private key with proper formatting
+// 1. Replace escaped newlines (\n) with actual newlines
+// 2. Remove surrounding quotes if present
+const GCS_PRIVATE_KEY = process.env.GCS_PRIVATE_KEY
+  ? process.env.GCS_PRIVATE_KEY
+      .replace(/\\n/g, '\n')      // Replace \\n with actual newlines
+      .replace(/^"+|"+$/g, '')     // Remove surrounding double quotes
+      .replace(/^'+|'+$/g, '')     // Remove surrounding single quotes
+      .trim()                      // Trim any whitespace
+  : undefined;
 const GCS_BUCKET_NAME = process.env.GCS_BUCKET_NAME || 'bill-easy-assets';
 
 // Check if GCS is configured with all required credentials

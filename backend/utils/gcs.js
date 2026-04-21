@@ -2,11 +2,21 @@ const { Storage } = require('@google-cloud/storage');
 const path = require('path');
 
 // Initialize GCS
+// Helper to format private key properly
+const formatPrivateKey = (key) => {
+  if (!key) return undefined;
+  return key
+    .replace(/\\n/g, '\n')      // Replace \\n with actual newlines
+    .replace(/^"+|"+$/g, '')     // Remove surrounding double quotes
+    .replace(/^'+|'+$/g, '')     // Remove surrounding single quotes
+    .trim();                      // Trim any whitespace
+};
+
 const storage = new Storage({
   projectId: process.env.GCS_PROJECT_ID,
   credentials: {
     client_email: process.env.GCS_CLIENT_EMAIL,
-    private_key: process.env.GCS_PRIVATE_KEY ? process.env.GCS_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined,
+    private_key: formatPrivateKey(process.env.GCS_PRIVATE_KEY),
   },
 });
 
