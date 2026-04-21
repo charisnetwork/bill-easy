@@ -437,6 +437,64 @@ const startServer = async () => {
             defaultValue: {}
           });
         }
+
+        if (!userTableInfo.is_active) {
+          console.log('  - Adding is_active column to users');
+          await queryInterface.addColumn('users', 'is_active', {
+            type: DataTypes.BOOLEAN,
+            defaultValue: true
+          });
+        }
+
+        if (!userTableInfo.email_verified) {
+          console.log('  - Adding email_verified column to users');
+          await queryInterface.addColumn('users', 'email_verified', {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false
+          });
+        }
+
+        if (!userTableInfo.last_login) {
+          console.log('  - Adding last_login column to users');
+          await queryInterface.addColumn('users', 'last_login', {
+            type: DataTypes.DATE,
+            allowNull: true
+          });
+        }
+
+        if (!userTableInfo.role) {
+          console.log('  - Adding role column to users');
+          await queryInterface.addColumn('users', 'role', {
+            type: DataTypes.ENUM('owner', 'admin', 'staff'),
+            defaultValue: 'staff'
+          });
+        }
+      }
+
+      // Migration: Add missing columns to companies table
+      if (tables.includes('companies')) {
+        const compTableInfo = await queryInterface.describeTable('companies');
+        const columnsToAdd = [
+          { name: 'gst_registered', type: DataTypes.BOOLEAN, default: false },
+          { name: 'enable_tds', type: DataTypes.BOOLEAN, default: false },
+          { name: 'enable_tcs', type: DataTypes.BOOLEAN, default: false },
+          { name: 'bank_name', type: DataTypes.STRING },
+          { name: 'account_number', type: DataTypes.STRING },
+          { name: 'ifsc_code', type: DataTypes.STRING },
+          { name: 'branch_name', type: DataTypes.STRING },
+          { name: 'qr_code', type: DataTypes.STRING },
+          { name: 'terms_conditions', type: DataTypes.TEXT }
+        ];
+
+        for (const col of columnsToAdd) {
+          if (!compTableInfo[col.name]) {
+            console.log(`  - Adding ${col.name} column to companies`);
+            await queryInterface.addColumn('companies', col.name, {
+              type: col.type,
+              defaultValue: col.default
+            });
+          }
+        }
       }
     } catch (migrationError) {
       console.error('Plans table migration error:', migrationError.message);
