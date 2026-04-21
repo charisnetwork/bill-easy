@@ -71,13 +71,20 @@ if (process.env.FRONTEND_URL) {
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, curl, etc.)
+      // Allow requests with no origin (mobile apps, curl, server-to-server)
       if (!origin) return callback(null, true);
+      
+      // Allow same-origin requests (when frontend and backend share domain)
+      const backendUrl = process.env.BACKEND_URL || 'https://charisbilleasy.store';
+      if (origin === backendUrl || origin === 'https://charisbilleasy.store') {
+        return callback(null, true);
+      }
       
       if (ALLOWED_ORIGINS.includes(origin)) {
         callback(null, true);
       } else {
         console.warn(`CORS blocked request from: ${origin}`);
+        console.warn(`Allowed origins: ${ALLOWED_ORIGINS.join(', ')}`);
         callback(new Error('Not allowed by CORS'));
       }
     },
@@ -174,6 +181,18 @@ app.get('/api', (req, res) => {
 ========================================= */
 
 app.use((err, req, res, next) => {
+  // Handle CORS errors specifically
+  if (err.message === 'Not allowed by CORS') {
+    console.error(`CORS ERROR: Request from ${req.headers.origin} blocked`);
+    console.error(`Request URL: ${req.url}`);
+    console.error(`Request Method: ${req.method}`);
+    return res.status(403).json({
+      error: 'CORS error: Origin not allowed',
+      origin: req.headers.origin,
+      allowedOrigins: ALLOWED_ORIGINS
+    });
+  }
+  
   console.error('ERROR:', err);
   res.status(err.status || 500).json({
     error: err.message || 'Internal server error'
