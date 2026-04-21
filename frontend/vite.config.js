@@ -2,30 +2,38 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
+// =========================================
+// Vercel + Railway Deployment Config
+// =========================================
+// 
+// LOCAL DEVELOPMENT:
+// - Frontend runs on http://localhost:3000
+// - Backend runs on http://localhost:8001 (proxied)
+//
+// PRODUCTION (Vercel):
+// - Set VITE_BACKEND_URL in Vercel dashboard
+// - Example: https://my-app.up.railway.app
+
+// Get backend URL from env or use localhost for development
+const BACKEND_URL = process.env.VITE_BACKEND_URL || 'http://localhost:8001';
+
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: true,      // This enables network access (equivalent to --host)
-    port: 3000,      // Keeps your app running on port 3000
+    host: true,      // Enable network access
+    port: 3000,      // Frontend port
     proxy: {
       '/api': {
-        target: 'http://localhost:8001',
+        target: 'http://localhost:8001',  // Local backend
         changeOrigin: true,
       }
     }
   },
   envPrefix: ['VITE_', 'REACT_APP_'],
   define: {
-    // Use VITE_BACKEND_URL for production, fallback to custom domain, then localhost for dev
-    'process.env.REACT_APP_BACKEND_URL': JSON.stringify(
-      process.env.VITE_BACKEND_URL || 
-      process.env.REACT_APP_BACKEND_URL || 
-      'https://charisbilleasy.store'
-    ),
-    'import.meta.env.VITE_BACKEND_URL': JSON.stringify(
-      process.env.VITE_BACKEND_URL || 
-      'https://charisbilleasy.store'
-    ),
+    // Inject environment variables for production
+    'process.env.REACT_APP_BACKEND_URL': JSON.stringify(BACKEND_URL),
+    'import.meta.env.VITE_BACKEND_URL': JSON.stringify(BACKEND_URL),
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
   },
   resolve: {

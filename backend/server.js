@@ -48,25 +48,41 @@ app.use(
 
 /* =========================================
    CORS CONFIGURATION
-   Allow custom domain, Railway frontend, and localhost for development
+   Vercel Frontend + Railway Backend Setup
 ========================================= */
 
+// Default allowed origins
 const ALLOWED_ORIGINS = [
+  // Production custom domain (if using)
   'https://charisbilleasy.store',
   'https://www.charisbilleasy.store',
-  'https://bill-easy-production.up.railway.app',
-  'https://industrious-harmony-production-1525.up.railway.app',
+  // Local development
   'http://localhost:3000',
   'http://localhost:5173',
   'http://127.0.0.1:3000',
   'http://127.0.0.1:5173'
 ];
 
-// Add FRONTEND_URL from env if set
+// Add FRONTEND_URL from env (comma-separated for multiple origins)
 if (process.env.FRONTEND_URL) {
   const envOrigins = process.env.FRONTEND_URL.split(',').map(o => o.trim());
   ALLOWED_ORIGINS.push(...envOrigins);
+  console.log('CORS: Added FRONTEND_URL origins:', envOrigins);
 }
+
+// Helper to check if origin matches allowed patterns
+const isOriginAllowed = (origin) => {
+  // Exact match
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  
+  // Allow all Vercel preview deployments (xxx.vercel.app)
+  if (origin && origin.endsWith('.vercel.app')) return true;
+  
+  // Allow Railway app domains
+  if (origin && origin.includes('.up.railway.app')) return true;
+  
+  return false;
+};
 
 app.use(
   cors({
@@ -74,17 +90,13 @@ app.use(
       // Allow requests with no origin (mobile apps, curl, server-to-server)
       if (!origin) return callback(null, true);
       
-      // Allow same-origin requests (when frontend and backend share domain)
-      const backendUrl = process.env.BACKEND_URL || 'https://charisbilleasy.store';
-      if (origin === backendUrl || origin === 'https://charisbilleasy.store') {
-        return callback(null, true);
-      }
-      
-      if (ALLOWED_ORIGINS.includes(origin)) {
+      // Check if origin is allowed
+      if (isOriginAllowed(origin)) {
         callback(null, true);
       } else {
         console.warn(`CORS blocked request from: ${origin}`);
         console.warn(`Allowed origins: ${ALLOWED_ORIGINS.join(', ')}`);
+        console.warn(`Pattern matches: *.vercel.app, *.up.railway.app`);
         callback(new Error('Not allowed by CORS'));
       }
     },
