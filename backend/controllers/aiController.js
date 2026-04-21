@@ -150,13 +150,15 @@ Rules:
 
     // 6. Gemini Call with Fallback
     let text;
-    const modelNames = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+    // In 2026, we prioritize newer models but keep 1.5 as fallback
+    const modelNames = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
     let lastError = null;
 
     for (const modelName of modelNames) {
       try {
-        console.log(`>>> Charis: Attempting to call ${modelName}...`);
-        const model = genAI.getGenerativeModel({ model: modelName });
+        console.log(`>>> Charis: Attempting to call ${modelName} (v1)...`);
+        // Explicitly use v1 API which is more stable for production models
+        const model = genAI.getGenerativeModel({ model: modelName }, { apiVersion: 'v1' });
         const result = await model.generateContent(fullPrompt);
         const response = await result.response;
         text = response.text();
@@ -169,7 +171,12 @@ Rules:
       } catch (apiError) {
         console.error(`>>> Charis API Error with ${modelName}:`, apiError.message);
         lastError = apiError;
-        continue; // Try next model
+        
+        // If it's a 404, we immediately try the next one
+        if (apiError.message.includes('404')) continue;
+        
+        // For other errors (like rate limits), we still try the next model
+        continue;
       }
     }
 
