@@ -7,6 +7,7 @@ import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Building2, Mail, Lock, User, Phone, Eye, EyeOff, MapPin, Hash } from 'lucide-react';
 import { toast } from 'sonner';
+import { getErrorMessage } from '../config/api';
 
 export const RegisterPage = () => {
   const navigate = useNavigate();
@@ -32,7 +33,9 @@ export const RegisterPage = () => {
       toast.success('Account created successfully!');
       navigate('/settings?firstTime=true');
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Registration failed');
+      const message = getErrorMessage(error, 'Registration failed');
+      toast.error(message);
+      console.error('Registration error:', error);
     } finally {
       setLoading(false);
     }

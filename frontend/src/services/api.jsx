@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_BASE_URL, BACKEND_URL } from '../config/api';
+import { API_BASE_URL, BACKEND_URL, getErrorMessage } from '../config/api';
 
 const API_URL = API_BASE_URL;
 
@@ -14,6 +14,13 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  
+  // Fix for Axios baseURL path stripping
+  // If baseURL ends with /api and url starts with /, axios may strip /api
+  if (config.url && config.url.startsWith('/') && API_URL.endsWith('/api')) {
+    config.url = config.url.substring(1);
+  }
+  
   return config;
 });
 
@@ -24,6 +31,18 @@ api.interceptors.response.use(
       localStorage.removeItem('token');
       window.location.href = '/login';
     }
+    
+    // Normalize error data to ensure .error is always a string
+    if (error.response?.data) {
+      const data = error.response.data;
+      if (data.error && typeof data.error !== 'string') {
+        data.error = getErrorMessage(error);
+      } else if (!data.error) {
+        // Fallback if there is no .error property but we have other data
+        data.error = getErrorMessage(error);
+      }
+    }
+    
     return Promise.reject(error);
   }
 );

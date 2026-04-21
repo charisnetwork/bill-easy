@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
-import { API_BASE_URL } from '../config/api';
+import { API_BASE_URL, getErrorMessage } from '../config/api';
 
 const API_URL = API_BASE_URL;
 
@@ -34,6 +34,12 @@ export const AuthProvider = ({ children }) => {
       if (currentToken) {
         config.headers.Authorization = `Bearer ${currentToken}`;
       }
+      
+      // Fix for Axios baseURL path stripping
+      if (config.url && config.url.startsWith('/') && API_URL.endsWith('/api')) {
+        config.url = config.url.substring(1);
+      }
+      
       return config;
     });
 
@@ -47,6 +53,17 @@ export const AuthProvider = ({ children }) => {
           setCompany(null);
           setSubscription(null);
         }
+        
+        // Normalize error data
+        if (error.response?.data) {
+          const data = error.response.data;
+          if (data.error && typeof data.error !== 'string') {
+            data.error = getErrorMessage(error);
+          } else if (!data.error) {
+            data.error = getErrorMessage(error);
+          }
+        }
+        
         return Promise.reject(error);
       }
     );

@@ -7,6 +7,7 @@ import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Building2, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
+import { getErrorMessage } from '../config/api';
 
 export const LoginPage = () => {
   const navigate = useNavigate();
@@ -27,7 +28,7 @@ export const LoginPage = () => {
       toast.success('Welcome back!');
       navigate('/dashboard');
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Login failed');
+      toast.error(getErrorMessage(error, 'Login failed'));
     } finally {
       setLoading(false);
     }
