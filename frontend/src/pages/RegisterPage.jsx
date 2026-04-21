@@ -83,140 +83,144 @@ export const RegisterPage = () => {
       </div>
 
       {/* Right side - Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-white overflow-y-auto">
-        <div className="w-full max-w-md py-8">
-          <Link to="/" className="flex items-center gap-2 mb-8">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 bg-gradient-to-br from-slate-50 to-slate-100 overflow-y-auto">
+        <div className="w-full max-w-xl py-4 sm:py-8">
+          <Link to="/" className="flex items-center gap-2 mb-6 sm:mb-8">
             <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center">
               <Building2 className="w-6 h-6 text-white" />
             </div>
             <span className="font-heading font-bold text-2xl text-slate-900">Bill Easy</span>
           </Link>
 
-          <Card className="border-0 shadow-none">
-            <CardHeader className="px-0">
+          {/* Glassmorphism Card */}
+          <Card className="glass-card p-2 sm:p-4">
+            <CardHeader className="px-4 sm:px-6">
               <CardTitle className="font-heading text-2xl">Create your account</CardTitle>
               <CardDescription>Start your 14-day free trial today</CardDescription>
             </CardHeader>
-            <CardContent className="px-0">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="companyName">Company Name *</Label>
-                  <div className="relative">
-                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <CardContent className="px-4 sm:px-6">
+              <form onSubmit={handleSubmit}>
+                {/* 2-Column Grid Layout */}
+                <div className="form-grid">
+                  <div className="form-field form-field-full">
+                    <Label htmlFor="companyName" className="form-label">Company Name *</Label>
+                    <div className="relative">
+                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                      <Input
+                        id="companyName"
+                        placeholder="Your Company Pvt Ltd"
+                        value={formData.companyName}
+                        onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                        className="pl-10"
+                        required
+                        data-testid="register-company-input"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-field">
+                    <Label htmlFor="name" className="form-label">Your Name *</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                      <Input
+                        id="name"
+                        placeholder="John Doe"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        className="pl-10"
+                        required
+                        data-testid="register-name-input"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-field">
+                    <Label htmlFor="email" className="form-label">Email *</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="you@company.com"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        className="pl-10"
+                        required
+                        data-testid="register-email-input"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-field">
+                    <Label htmlFor="phone" className="form-label">Phone</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                      <Input
+                        id="phone"
+                        placeholder="9876543210"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        className="pl-10"
+                        data-testid="register-phone-input"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-field">
+                    <Label htmlFor="gstNumber" className="form-label">GST Number (Optional)</Label>
                     <Input
-                      id="companyName"
-                      placeholder="Your Company Pvt Ltd"
-                      value={formData.companyName}
-                      onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                      className="pl-10"
-                      required
-                      data-testid="register-company-input"
+                      id="gstNumber"
+                      placeholder="22AAAAA0000A1Z5"
+                      value={formData.gstNumber}
+                      onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value })}
+                      data-testid="register-gst-input"
                     />
                   </div>
-                </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="name">Your Name *</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <Input
-                      id="name"
-                      placeholder="John Doe"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="pl-10"
-                      required
-                      data-testid="register-name-input"
-                    />
+                  <div className="form-field">
+                    <Label htmlFor="password" className="form-label">Password *</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                      <Input
+                        id="password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Min 6 characters"
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        className="pl-10 pr-10"
+                        required
+                        minLength={6}
+                        data-testid="register-password-input"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </div>
-                </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email *</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="you@company.com"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="pl-10"
-                      required
-                      data-testid="register-email-input"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <Input
-                      id="phone"
-                      placeholder="9876543210"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="pl-10"
-                      data-testid="register-phone-input"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="gstNumber">GST Number (Optional)</Label>
-                  <Input
-                    id="gstNumber"
-                    placeholder="22AAAAA0000A1Z5"
-                    value={formData.gstNumber}
-                    onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value })}
-                    data-testid="register-gst-input"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="address">Business Address</Label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-                    <Input
-                      id="address"
-                      placeholder="123 Business Street, City"
-                      value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      className="pl-10"
-                      data-testid="register-address-input"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password *</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <Input
-                      id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="Min 6 characters"
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="pl-10 pr-10"
-                      required
-                      minLength={6}
-                      data-testid="register-password-input"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
+                  <div className="form-field form-field-full">
+                    <Label htmlFor="address" className="form-label">Business Address</Label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                      <Input
+                        id="address"
+                        placeholder="123 Business Street, City"
+                        value={formData.address}
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                        className="pl-10"
+                        data-testid="register-address-input"
+                      />
+                    </div>
                   </div>
                 </div>
 
                 <Button 
                   type="submit" 
-                  className="w-full bg-emerald-600 hover:bg-emerald-700"
+                  className="w-full btn-primary h-11 mt-6"
                   disabled={loading}
                   data-testid="register-submit-btn"
                 >
@@ -226,7 +230,7 @@ export const RegisterPage = () => {
 
               <p className="text-center text-sm text-slate-600 mt-6">
                 Already have an account?{' '}
-                <Link to="/login" className="text-emerald-600 hover:underline font-medium" data-testid="login-link">
+                <Link to="/login" className="text-[#1976D2] hover:underline font-medium" data-testid="login-link">
                   Sign in
                 </Link>
               </p>

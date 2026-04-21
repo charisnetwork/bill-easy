@@ -347,10 +347,10 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
             <CardHeader>
               <CardTitle>Invoice Details</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Customer *</Label>
+            <CardContent>
+              <div className="form-grid">
+                <div className="form-field form-field-full">
+                  <Label className="form-label">Customer *</Label>
                   <Select
                     value={formData.customer_id}
                     onValueChange={(value) => setFormData({ ...formData, customer_id: value })}
@@ -377,7 +377,7 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Label htmlFor="use-wallet" className="text-xs cursor-pointer">Use Wallet?</Label>
+                        <Label htmlFor="use-wallet" className="text-xs cursor-pointer mb-0">Use Wallet?</Label>
                         <Switch 
                           id="use-wallet"
                           checked={formData.use_wallet_balance}
@@ -391,8 +391,8 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                     </div>
                   )}
                 </div>
-                <div className="space-y-2">
-                  <Label>Invoice Date</Label>
+                <div className="form-field">
+                  <Label className="form-label">Invoice Date</Label>
                   <Input
                     type="date"
                     value={formData.invoice_date}
@@ -400,8 +400,8 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                     data-testid="invoice-date-input"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Due Date</Label>
+                <div className="form-field">
+                  <Label className="form-label">Due Date</Label>
                   <Input
                     type="date"
                     value={formData.due_date}
@@ -409,8 +409,8 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                     data-testid="due-date-input"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>E-Way Bill Number</Label>
+                <div className="form-field">
+                  <Label className="form-label">E-Way Bill Number</Label>
                   <Input
                     type="text"
                     placeholder="Enter E-Way Bill Number"
@@ -430,10 +430,10 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                 <CardTitle>{industry} Details</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="form-grid">
                   {industryConfig.extraFields.map((field) => (
-                    <div key={field.name} className="space-y-2">
-                      <Label>{field.label}</Label>
+                    <div key={field.name} className="form-field">
+                      <Label className="form-label">{field.label}</Label>
                       {field.type === 'textarea' ? (
                         <Textarea
                           value={formData.industry_metadata[field.name] || ''}
@@ -695,8 +695,9 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
               <CardTitle>Discount</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex gap-4">
-                <div className="flex-1">
+              <div className="form-grid" style={{gridTemplateColumns: '1fr auto'}}>
+                <div className="form-field">
+                  <Label className="form-label sr-only">Discount Amount</Label>
                   <Input
                     type="number"
                     min="0"
@@ -711,7 +712,7 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                   value={formData.discount_type}
                   onValueChange={(value) => setFormData({ ...formData, discount_type: value })}
                 >
-                  <SelectTrigger className="w-32">
+                  <SelectTrigger className="w-32 mt-auto">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -779,13 +780,16 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
               <CardTitle>Notes</CardTitle>
             </CardHeader>
             <CardContent>
-              <Textarea
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="Add any notes for the customer..."
-                rows={3}
-                data-testid="notes-input"
-              />
+              <div className="form-field">
+                <Label className="form-label sr-only">Notes</Label>
+                <Textarea
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  placeholder="Add any notes for the customer..."
+                  rows={3}
+                  data-testid="notes-input"
+                />
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -797,7 +801,6 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
           </Button>
           <Button 
             type="submit" 
-            className="bg-emerald-600 hover:bg-emerald-700" 
             disabled={loading}
             data-testid="save-invoice-btn"
           >

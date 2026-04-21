@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { productAPI } from '../services/api';
+import { productAPI, companyAPI } from '../services/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -116,10 +116,10 @@ const ProductForm = ({ product, categories, onSave, fetchCategories, onClose }) 
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="col-span-2 space-y-2">
-          <Label>Product Name *</Label>
+    <form onSubmit={handleSubmit} className="max-h-[70vh] overflow-y-auto pr-2">
+      <div className="form-grid">
+        <div className="form-field form-field-full">
+          <Label className="form-label">Product Name *</Label>
           <Input
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -127,24 +127,24 @@ const ProductForm = ({ product, categories, onSave, fetchCategories, onClose }) 
             data-testid="product-name-input"
           />
         </div>
-        <div className="space-y-2">
-          <Label>SKU</Label>
+        <div className="form-field">
+          <Label className="form-label">SKU</Label>
           <Input
             value={formData.sku}
             onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
             data-testid="product-sku-input"
           />
         </div>
-        <div className="space-y-2">
-          <Label>HSN Code</Label>
+        <div className="form-field">
+          <Label className="form-label">HSN Code</Label>
           <Input
             value={formData.hsn_code}
             onChange={(e) => setFormData({ ...formData, hsn_code: e.target.value })}
             data-testid="product-hsn-input"
           />
         </div>
-        <div className="space-y-2">
-          <Label>Category</Label>
+        <div className="form-field">
+          <Label className="form-label">Category</Label>
           <Select
             value={formData.category_id}
             onValueChange={handleCategoryChange}
@@ -217,8 +217,8 @@ const ProductForm = ({ product, categories, onSave, fetchCategories, onClose }) 
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2">
-          <Label>GST Rate (%)</Label>
+        <div className="form-field">
+          <Label className="form-label">GST Rate (%)</Label>
           <Select
             value={String(formData.gst_rate)}
             onValueChange={(value) => setFormData({ ...formData, gst_rate: value })}
@@ -236,8 +236,8 @@ const ProductForm = ({ product, categories, onSave, fetchCategories, onClose }) 
           </Select>
         </div>
         {!product?.id && (
-          <div className="space-y-2">
-            <Label>Initial Godown</Label>
+          <div className="form-field">
+            <Label className="form-label">Initial Godown</Label>
             <Select
               value={formData.godown_id}
               onValueChange={(value) => setFormData({ ...formData, godown_id: value })}
@@ -253,15 +253,15 @@ const ProductForm = ({ product, categories, onSave, fetchCategories, onClose }) 
             </Select>
           </div>
         )}
-        <div className="space-y-2">
-          <Label>Barcode</Label>
+        <div className="form-field">
+          <Label className="form-label">Barcode</Label>
           <Input
             value={formData.barcode}
             onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
           />
         </div>
-        <div className="space-y-2">
-          <Label>Purchase Price *</Label>
+        <div className="form-field">
+          <Label className="form-label">Purchase Price *</Label>
           <Input
             type="number"
             step="0.01"
@@ -271,8 +271,8 @@ const ProductForm = ({ product, categories, onSave, fetchCategories, onClose }) 
             data-testid="product-purchase-price-input"
           />
         </div>
-        <div className="space-y-2">
-          <Label>Sale Price *</Label>
+        <div className="form-field">
+          <Label className="form-label">Sale Price *</Label>
           <Input
             type="number"
             step="0.01"
@@ -283,8 +283,8 @@ const ProductForm = ({ product, categories, onSave, fetchCategories, onClose }) 
           />
         </div>
         {!product?.id && (
-          <div className="space-y-2">
-            <Label>Opening Stock</Label>
+          <div className="form-field">
+            <Label className="form-label">Opening Stock</Label>
             <Input
               type="number"
               step="0.01"
@@ -304,9 +304,9 @@ const ProductForm = ({ product, categories, onSave, fetchCategories, onClose }) 
           />
         </div>
       </div>
-      <DialogFooter>
+      <DialogFooter className="mt-6">
         <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-        <Button type="submit" disabled={loading} className="bg-emerald-600 hover:bg-emerald-700" data-testid="save-product-btn">
+        <Button type="submit" disabled={loading} data-testid="save-product-btn">
           {loading ? 'Saving...' : 'Save'}
         </Button>
       </DialogFooter>
