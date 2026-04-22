@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { productAPI, companyAPI } from '../services/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { InputGroup } from '../components/ui/input-group';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardHeader } from '../components/ui/card';
 import {
@@ -461,13 +462,12 @@ export const ProductsPage = () => {
     <Card>
         <CardHeader className="pb-4">
           <div className="flex flex-col md:flex-row md:items-center gap-4">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <Input
+            <div className="flex-1 max-w-sm">
+              <InputGroup
                 placeholder="Search products..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-10"
+                leftIcon={<Search className="w-4 h-4" />}
                 data-testid="search-products"
               />
             </div>

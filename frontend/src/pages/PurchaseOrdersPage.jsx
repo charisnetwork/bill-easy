@@ -72,11 +72,10 @@ const PurchaseOrdersPage = () => {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <Input 
+            <div className="flex-1 max-w-sm">
+              <InputGroup 
                 placeholder="Search PO number or supplier..." 
-                className="pl-9"
+                leftIcon={<Search className="w-4 h-4" />}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />

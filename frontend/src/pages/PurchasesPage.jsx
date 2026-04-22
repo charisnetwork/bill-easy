@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { purchaseAPI } from '../services/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { InputGroup } from '../components/ui/input-group';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardHeader } from '../components/ui/card';
 import {
@@ -109,9 +110,14 @@ export const PurchasesPage = () => {
 
       <Card>
         <CardHeader className="pb-4">
-          <div className="relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <Input placeholder="Search purchases..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" data-testid="search-purchases" />
+          <div className="max-w-sm">
+            <InputGroup 
+              placeholder="Search purchases..." 
+              value={search} 
+              onChange={(e) => setSearch(e.target.value)} 
+              leftIcon={<Search className="w-4 h-4" />}
+              data-testid="search-purchases" 
+            />
           </div>
         </CardHeader>
         <CardContent className="p-0">

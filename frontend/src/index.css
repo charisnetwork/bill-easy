@@ -60,13 +60,12 @@
   textarea, 
   select,
   [role="combobox"] {
-    border: 1.5px solid #E2E8F0 !important; /* Lighter default border */
-    background-color: #ffffff !important;
-    padding: 10px 14px !important;
-    min-height: 2.75rem !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: var(--input-radius) !important;
-    text-indent: 0 !important;
+    border: 1.5px solid #E2E8F0;
+    background-color: #ffffff;
+    padding: 10px 14px;
+    min-height: 2.75rem;
+    transition: all 0.2s ease-in-out;
+    border-radius: var(--input-radius);
   }
 
   input:focus, 
@@ -75,41 +74,9 @@
   [role="combobox"]:focus,
   [data-state="open"][role="combobox"],
   .focus-visible {
-    border-color: var(--brand-blue) !important;
-    box-shadow: 0 0 0 4px var(--brand-blue-light) !important;
-    outline: none !important;
-  }
-
-  /* Fix for icons in inputs: add specific padding-left when an icon is present */
-  /* Increased padding to prevent icon and text overlap */
-  .relative > input.pl-10,
-  .relative input.pl-10,
-  .relative > .pl-10,
-  .relative .pl-10 {
-    padding-left: 3rem !important;
-  }
-  
-  .relative > input.pl-11,
-  .relative input.pl-11,
-  .relative > .pl-11,
-  .relative .pl-11 {
-    padding-left: 3.25rem !important;
-  }
-  
-  /* Extra padding for inputs with both left and right icons */
-  .relative > input.pl-10.pr-10,
-  .relative input.pl-10.pr-10,
-  .relative > .pl-10.pr-10,
-  .relative .pl-10.pr-10 {
-    padding-left: 3rem !important;
-    padding-right: 3rem !important;
-  }
-  
-  /* Icon positioning - ensure icons don't overlap text */
-  .relative > svg.absolute.left-3,
-  .relative svg.absolute.left-3 {
-    left: 0.75rem !important;
-    z-index: 1;
+    border-color: var(--brand-blue);
+    box-shadow: 0 0 0 4px var(--brand-blue-light);
+    outline: none;
   }
 
   /* Label spacing for better mobile readability */
@@ -126,8 +93,8 @@
     textarea, 
     select,
     [role="combobox"] {
-      padding: 12px 16px !important;
-      min-height: 3rem !important;
+      padding: 12px 16px;
+      min-height: 3rem;
     }
     
     label, .form-label {
