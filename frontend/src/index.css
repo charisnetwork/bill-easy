@@ -66,6 +66,7 @@
     min-height: 2.75rem !important;
     transition: all 0.2s ease-in-out !important;
     border-radius: var(--input-radius) !important;
+    text-indent: 0 !important;
   }
 
   input:focus, 
@@ -80,12 +81,35 @@
   }
 
   /* Fix for icons in inputs: add specific padding-left when an icon is present */
-  .relative > input.pl-10 {
-    padding-left: 2.75rem !important;
+  /* Increased padding to prevent icon and text overlap */
+  .relative > input.pl-10,
+  .relative input.pl-10,
+  .relative > .pl-10,
+  .relative .pl-10 {
+    padding-left: 3rem !important;
   }
   
-  .relative > input.pl-11 {
+  .relative > input.pl-11,
+  .relative input.pl-11,
+  .relative > .pl-11,
+  .relative .pl-11 {
+    padding-left: 3.25rem !important;
+  }
+  
+  /* Extra padding for inputs with both left and right icons */
+  .relative > input.pl-10.pr-10,
+  .relative input.pl-10.pr-10,
+  .relative > .pl-10.pr-10,
+  .relative .pl-10.pr-10 {
     padding-left: 3rem !important;
+    padding-right: 3rem !important;
+  }
+  
+  /* Icon positioning - ensure icons don't overlap text */
+  .relative > svg.absolute.left-3,
+  .relative svg.absolute.left-3 {
+    left: 0.75rem !important;
+    z-index: 1;
   }
 
   /* Label spacing for better mobile readability */
