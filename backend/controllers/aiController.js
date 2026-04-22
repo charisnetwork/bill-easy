@@ -1,6 +1,6 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { Invoice, Product, Company, Expense, Subscription, Plan, AIUsage } = require("../models");
-const { Op } = require("sequelize");
+const { Op, sequelize } = require("sequelize");
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
