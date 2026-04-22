@@ -16,14 +16,14 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   
-  // Debug logging
-  console.log('[API Request]', config.method?.toUpperCase(), config.baseURL + config.url);
-  
-  // Fix for Axios baseURL path stripping
-  // If baseURL ends with /api and url starts with /, axios may strip /api
-  if (config.url && config.url.startsWith('/') && API_URL.endsWith('/api')) {
-    config.url = config.url.substring(1);
+  // Ensure URL starts with / for proper concatenation
+  if (config.url && !config.url.startsWith('/')) {
+    config.url = '/' + config.url;
   }
+  
+  // Debug logging
+  const fullUrl = config.baseURL + config.url;
+  console.log('[API Request]', config.method?.toUpperCase(), fullUrl);
   
   return config;
 }, (error) => {

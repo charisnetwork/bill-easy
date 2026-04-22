@@ -35,9 +35,9 @@ export const AuthProvider = ({ children }) => {
         config.headers.Authorization = `Bearer ${currentToken}`;
       }
       
-      // Fix for Axios baseURL path stripping
-      if (config.url && config.url.startsWith('/') && API_URL.endsWith('/api')) {
-        config.url = config.url.substring(1);
+      // Ensure URL starts with / for proper concatenation
+      if (config.url && !config.url.startsWith('/')) {
+        config.url = '/' + config.url;
       }
       
       return config;
