@@ -223,7 +223,8 @@ if (fs.existsSync(frontendPath)) {
   app.use(express.static(frontendPath));
   
   // SPA fallback - serve index.html for all non-API routes
-  app.get('*', (req, res) => {
+  // Use regex pattern /.*/ instead of '*' for compatibility with newer Express
+  app.get(/.*/, (req, res) => {
     // Don't interfere with API routes
     if (req.url.startsWith('/api') || req.url.startsWith('/uploads')) {
       return res.status(404).json({ error: 'Route not found' });
