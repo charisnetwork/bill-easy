@@ -30,17 +30,13 @@ const CharisAssistant = () => {
     setIsLoading(true);
 
     try {
-      console.log(">>> Sending to Charis:", input);
       const response = await api.post('/ai/chat', {
         question: input,
         history: messages.slice(-6)
       });
 
-      console.log(">>> Charis Response:", response.data);
       setMessages(prev => [...prev, { role: 'assistant', content: response.data.answer }]);
     } catch (error) {
-      console.error(">>> Charis Connection Error:", error);
-      console.error(">>> Error Response:", error.response?.data);
       setMessages(prev => [...prev, { role: 'assistant', content: "I'm sorry, I'm having trouble connecting right now. Please try again later." }]);
     } finally {
       setIsLoading(false);

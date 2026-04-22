@@ -21,10 +21,6 @@ api.interceptors.request.use((config) => {
     config.url = '/' + config.url;
   }
   
-  // Debug logging
-  const fullUrl = config.baseURL + config.url;
-  console.log('[API Request]', config.method?.toUpperCase(), fullUrl);
-  
   return config;
 }, (error) => {
   console.error('[API Request Error]', error);
@@ -33,19 +29,12 @@ api.interceptors.request.use((config) => {
 
 // Response interceptor - logs responses and handles errors
 api.interceptors.response.use(
-  (response) => {
-    console.log('[API Response]', response.status, response.config.url);
-    return response;
-  },
+  (response) => response,
   (error) => {
-    console.error('[API Response Error]', {
-      status: error.response?.status,
-      url: error.config?.url,
-      baseURL: error.config?.baseURL,
-      fullURL: error.config?.baseURL + error.config?.url,
-      data: error.response?.data,
-      message: error.message
-    });
+    // Log API errors only in development
+    if (import.meta.env?.DEV) {
+      console.error('[API Error]', error.response?.status, error.config?.url);
+    }
     
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
