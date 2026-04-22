@@ -212,14 +212,34 @@ app.use((err, req, res, next) => {
 });
 
 /* =========================================
-   404 HANDLER
+   SERVE FRONTEND (Production)
 ========================================= */
 
-app.use((req, res) => {
-  res.status(404).json({
-    error: 'Route not found'
+const frontendPath = path.join(__dirname, '../frontend/dist');
+if (fs.existsSync(frontendPath)) {
+  console.log('[Server] Serving frontend from:', frontendPath);
+  
+  // Serve static files
+  app.use(express.static(frontendPath));
+  
+  // SPA fallback - serve index.html for all non-API routes
+  app.get('*', (req, res) => {
+    // Don't interfere with API routes
+    if (req.url.startsWith('/api') || req.url.startsWith('/uploads')) {
+      return res.status(404).json({ error: 'Route not found' });
+    }
+    res.sendFile(path.join(frontendPath, 'index.html'));
   });
-});
+} else {
+  console.log('[Server] Frontend build not found at:', frontendPath);
+  
+  // 404 handler for API only
+  app.use((req, res) => {
+    res.status(404).json({
+      error: 'Route not found'
+    });
+  });
+}
 
 /* =========================================
    SEED DEFAULT PLANS
