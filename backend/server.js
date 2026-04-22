@@ -4,8 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const path = require('path');
-const fs = require('fs');
+
 const { rateLimit } = require('express-rate-limit');
 
 const { sequelize, Plan, Company, Subscription, Godown, User, UserCompany } = require('./models');
@@ -253,35 +252,18 @@ app.use((err, req, res, next) => {
 });
 
 /* =========================================
-   SERVE FRONTEND (Production)
+   404 HANDLER
 ========================================= */
 
-const frontendPath = path.join(__dirname, '../frontend/dist');
-if (fs.existsSync(frontendPath)) {
-  console.log('[Server] Serving frontend from:', frontendPath);
-  
-  // Serve static files
-  app.use(express.static(frontendPath));
-  
-  // SPA fallback - serve index.html for all non-API routes
-  // This must be AFTER all API routes are defined
-  app.get('*', (req, res) => {
-    // Don't interfere with API or upload routes
-    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
-      return res.status(404).json({ error: 'API route not found' });
-    }
-    res.sendFile(path.join(frontendPath, 'index.html'));
+// 404 handler for unmatched routes
+app.use((req, res) => {
+  console.log(`[404] Route not found: ${req.method} ${req.url}`);
+  res.status(404).json({
+    error: 'Route not found',
+    path: req.url,
+    method: req.method
   });
-} else {
-  console.log('[Server] Frontend build not found at:', frontendPath);
-  
-  // 404 handler for API only
-  app.use((req, res) => {
-    res.status(404).json({
-      error: 'Route not found'
-    });
-  });
-}
+});
 
 /* =========================================
    SEED DEFAULT PLANS
