@@ -137,6 +137,7 @@ app.use(express.urlencoded({ extended: true }));
    HEALTH CHECK
 ========================================= */
 
+// Health check (both /api/health and /health)
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
@@ -144,11 +145,10 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-app.get('/', (req, res) => {
+app.get('/health', (req, res) => {
   res.json({
-    message: "Bill Easy Backend is running.",
-    port: process.env.PORT || 8001,
-    status: "isolated"
+    status: 'ok',
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -156,6 +156,7 @@ app.get('/', (req, res) => {
    API ROUTES
 ========================================= */
 
+// Standard /api/* routes (for Vercel proxy)
 app.use('/api/auth', authRoutes);
 app.use('/api/company', companyRoutes);
 app.use('/api/customers', customerRoutes);
@@ -175,13 +176,53 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/enquiries', enquiryRoutes);
 app.use('/api/staff', require('./routes/staff'));
 app.use("/api/utilities", require("./routes/utilities"));
+
+// Direct routes without /api prefix (for Railway direct access)
+// These handle cases where Railway strips the /api prefix
+app.use('/auth', authRoutes);
+app.use('/company', companyRoutes);
+app.use('/customers', customerRoutes);
+app.use('/suppliers', supplierRoutes);
+app.use("/products", productRoutes);
+app.use("/invoices", invoiceRoutes);
+app.use("/quotations", quotationRoutes);
+app.use("/purchases", purchaseRoutes);
+app.use("/purchase-orders", purchaseOrderRoutes);
+app.use("/expenses", expenseRoutes);
+app.use('/payments', paymentRoutes);
+app.use('/reports', reportRoutes);
+app.use('/subscription', subscriptionRoutes);
+app.use('/eway-bills', ewayBillRoutes);
+app.use('/credit-notes', creditNoteRoutes);
+app.use('/ai', aiRoutes);
+app.use('/enquiries', enquiryRoutes);
+app.use('/staff', require('./routes/staff'));
+app.use("/utilities", require("./routes/utilities"));
+
 app.use("/uploads", express.static("uploads"));
 
 /* =========================================
    ROOT ENDPOINT
 ========================================= */
 
+// Root endpoint for basic health check
+app.get('/', (req, res) => {
+  res.json({
+    message: "Bill Easy Backend is running.",
+    port: process.env.PORT || 8001,
+    status: "active"
+  });
+});
+
+// API info endpoint (both /api and direct)
 app.get('/api', (req, res) => {
+  res.json({
+    name: 'Bill Easy API',
+    version: '1.0.0'
+  });
+});
+
+app.get('/api-info', (req, res) => {
   res.json({
     name: 'Bill Easy API',
     version: '1.0.0'
@@ -223,11 +264,11 @@ if (fs.existsSync(frontendPath)) {
   app.use(express.static(frontendPath));
   
   // SPA fallback - serve index.html for all non-API routes
-  // Use regex pattern /.*/ instead of '*' for compatibility with newer Express
-  app.get(/.*/, (req, res) => {
-    // Don't interfere with API routes
-    if (req.url.startsWith('/api') || req.url.startsWith('/uploads')) {
-      return res.status(404).json({ error: 'Route not found' });
+  // This must be AFTER all API routes are defined
+  app.get('*', (req, res) => {
+    // Don't interfere with API or upload routes
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+      return res.status(404).json({ error: 'API route not found' });
     }
     res.sendFile(path.join(frontendPath, 'index.html'));
   });
