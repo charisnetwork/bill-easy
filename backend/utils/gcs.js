@@ -21,7 +21,13 @@ const storage = new Storage({
 });
 
 const bucketName = process.env.GCS_BUCKET_NAME;
-const bucket = storage.bucket(bucketName);
+let bucket;
+
+if (bucketName) {
+  bucket = storage.bucket(bucketName);
+} else {
+  console.warn('⚠️ GCS_BUCKET_NAME is not set. Google Cloud Storage uploads will fail.');
+}
 
 /**
  * Uploads a buffer to GCS
@@ -32,6 +38,9 @@ const bucket = storage.bucket(bucketName);
  */
 const uploadToGCS = (buffer, destination, mimetype) => {
   return new Promise((resolve, reject) => {
+    if (!bucket) {
+      return reject(new Error('Cloud Storage is not configured. GCS_BUCKET_NAME is missing.'));
+    }
     const file = bucket.file(destination);
     const stream = file.createWriteStream({
       metadata: {

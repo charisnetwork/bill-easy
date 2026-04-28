@@ -27,7 +27,6 @@ app.use(cors({
 }));
 
 console.log('🚀 Starting Monorepo Gateway...');
-console.log('📂 __dirname:', __dirname);
 
 // Start Main Backend
 console.log('📦 Spawning Main Backend on port 8001...');
@@ -51,10 +50,6 @@ const adminBackendEnv = {
   NODE_ENV: process.env.NODE_ENV || 'production'
 };
 
-// Log keys of environment variables for debugging
-const dbKeys = Object.keys(process.env).filter(k => k.includes('DATABASE'));
-console.log('ℹ️ Environment variables for DATABASE found in gateway:', dbKeys);
-
 const adminBackend = spawn('node', ['server.js'], { 
   cwd: path.join(__dirname, 'admin/backend'),
   env: adminBackendEnv,
@@ -63,23 +58,6 @@ const adminBackend = spawn('node', ['server.js'], {
 
 // 1. Serve Main Frontend Static Files (HIGHEST PRIORITY)
 const mainFrontendPath = path.join(__dirname, 'frontend/dist');
-console.log(`🔍 Checking for main frontend at: ${mainFrontendPath}`);
-
-// Detailed debugging for Railway
-console.log('📂 Current Directory Contents:', fs.readdirSync(__dirname));
-
-if (fs.existsSync(path.join(__dirname, 'frontend'))) {
-  console.log('📂 Frontend folder exists');
-  const frontendContents = fs.readdirSync(path.join(__dirname, 'frontend'));
-  console.log('📂 Frontend Contents:', frontendContents);
-  
-  if (frontendContents.includes('dist')) {
-    const distContents = fs.readdirSync(path.join(__dirname, 'frontend/dist'));
-    console.log('📂 Frontend/dist Contents:', distContents);
-  }
-} else {
-  console.log('⚠️ Frontend folder NOT found!');
-}
 
 if (fs.existsSync(mainFrontendPath) && fs.existsSync(path.join(mainFrontendPath, 'index.html'))) {
   console.log('✅ Main frontend found, serving static files.');
@@ -91,7 +69,7 @@ if (fs.existsSync(mainFrontendPath) && fs.existsSync(path.join(mainFrontendPath,
     lastModified: true
   }));
 } else {
-  console.log('⚠️ Main frontend NOT found or index.html missing.');
+  console.log('⚠️ Main frontend NOT found in frontend/dist.');
 }
 
 // 2. Proxy API routes (Use specific matching)
