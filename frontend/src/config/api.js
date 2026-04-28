@@ -2,8 +2,8 @@
 // API Configuration for Vercel + Railway Setup
 // =========================================
 
-// Railway backend URL - Production Backend
-const RAILWAY_BACKEND_URL = 'https://industrious-harmony-production-6331.up.railway.app';
+// Railway backend URL - Production Backend (bill-easy service)
+const RAILWAY_BACKEND_URL = 'https://bill-easy-production.up.railway.app';
 
 // Get backend URL from environment (for local development override)
 let envBackendUrl = 
@@ -15,11 +15,12 @@ if (envBackendUrl && envBackendUrl.endsWith('/')) {
   envBackendUrl = envBackendUrl.slice(0, -1);
 }
 
-// Determine if we're in production (on Vercel/custom domain)
+// Determine if we're in production (on custom domain or Railway)
 const isProduction = typeof window !== 'undefined' && (
   window.location.hostname === 'charisbilleasy.store' ||
   window.location.hostname === 'www.charisbilleasy.store' ||
-  window.location.hostname.endsWith('.vercel.app')
+  window.location.hostname.endsWith('.vercel.app') ||
+  window.location.hostname.endsWith('.up.railway.app')
 );
 
 // In production, always use the Railway backend directly
