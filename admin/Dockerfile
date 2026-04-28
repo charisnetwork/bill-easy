@@ -1,9 +1,9 @@
 # Build stage for admin frontend
 FROM node:20-alpine AS frontend-build
 WORKDIR /app/admin/frontend
-COPY admin/frontend/package*.json ./
+COPY frontend/package*.json ./
 RUN npm install --force --legacy-peer-deps
-COPY admin/frontend/ ./
+COPY frontend/ ./
 RUN npm run build
 
 # Production stage
@@ -11,12 +11,12 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copy admin backend
-COPY admin/backend/package*.json ./admin/backend/
-RUN cd admin/backend && npm install --force --legacy-peer-deps
-COPY admin/backend/ ./admin/backend/
+COPY backend/package*.json ./backend/
+RUN cd backend && npm install --force --legacy-peer-deps
+COPY backend/ ./backend/
 
 # Copy built frontend from build stage
-COPY --from=frontend-build /app/admin/frontend/dist ./admin/frontend/dist
+COPY --from=frontend-build /app/admin/frontend/dist ./frontend/dist
 
 # Set environment
 ENV NODE_ENV=production
@@ -24,4 +24,4 @@ ENV PORT=3025
 
 EXPOSE 3025
 
-CMD ["node", "admin/backend/server.js"]
+CMD ["node", "backend/server.js"]
