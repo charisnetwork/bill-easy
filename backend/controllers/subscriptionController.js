@@ -9,6 +9,7 @@ try {
       key_id: process.env.RAZORPAY_KEY_ID,
       key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
+    console.log('✅ Razorpay initialized successfully');
   } else {
     console.warn('⚠️ RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET is not set. Razorpay integration will be disabled.');
   }

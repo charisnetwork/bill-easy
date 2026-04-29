@@ -25,8 +25,9 @@ let bucket;
 
 if (bucketName) {
   bucket = storage.bucket(bucketName);
+  console.log('✅ Google Cloud Storage initialized with bucket:', bucketName);
 } else {
-  console.warn('⚠️ GCS_BUCKET_NAME is not set. Google Cloud Storage uploads will fail.');
+  console.warn('⚠️ GCS_BUCKET_NAME is not set. Falling back to local storage is not implemented.');
 }
 
 /**
@@ -34,12 +35,12 @@ if (bucketName) {
  * @param {Buffer} buffer - File buffer
  * @param {string} destination - Path in bucket
  * @param {string} mimetype - Content type
- * @returns {Promise<string>} - Public URL or GCS path
+ * @returns {Promise<string>} - Public URL
  */
 const uploadToGCS = (buffer, destination, mimetype) => {
   return new Promise((resolve, reject) => {
     if (!bucket) {
-      return reject(new Error('Cloud Storage is not configured. GCS_BUCKET_NAME is missing.'));
+      return reject(new Error('Cloud Storage is not configured. Please check GCS_BUCKET_NAME environment variable.'));
     }
     const file = bucket.file(destination);
     const stream = file.createWriteStream({
