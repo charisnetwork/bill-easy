@@ -23,11 +23,8 @@ const isProduction = typeof window !== 'undefined' && (
   window.location.hostname.endsWith('.up.railway.app')
 );
 
-// In production, always use the Railway backend directly
-// In development, use env variable or fallback to localhost
-export const BACKEND_URL = isProduction 
-  ? RAILWAY_BACKEND_URL 
-  : (envBackendUrl || RAILWAY_BACKEND_URL);
+// In production, prioritize environment variable, then fallback to hardcoded URL
+export const BACKEND_URL = envBackendUrl || RAILWAY_BACKEND_URL;
 
 export const API_BASE_URL = `${BACKEND_URL}/api`;
 

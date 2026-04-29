@@ -94,16 +94,18 @@ app.use(
         callback(null, true);
       } else {
         console.warn(`CORS blocked request from: ${origin}`);
-        console.warn(`Allowed origins: ${ALLOWED_ORIGINS.join(', ')}`);
-        console.warn(`Pattern matches: *.vercel.app, *.up.railway.app`);
         callback(new Error('Not allowed by CORS'));
       }
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-company-id'],
-    credentials: true
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-company-id', 'x-admin-secret'],
+    credentials: true,
+    optionsSuccessStatus: 200
   })
 );
+
+// Explicit Pre-flight handler (MUST be after cors middleware)
+app.options('*', cors());
 
 /* =========================================
    REQUEST LOGGER
