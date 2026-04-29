@@ -88,7 +88,11 @@ const isOriginAllowed = (origin) => {
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (isOriginAllowed(origin)) {
+      // Allow requests with no origin (mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true);
+      
+      const allowed = isOriginAllowed(origin);
+      if (allowed) {
         callback(null, true);
       } else {
         console.warn(`CORS blocked request from: ${origin}`);
@@ -96,14 +100,11 @@ app.use(
       }
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-company-id', 'x-admin-secret'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-company-id', 'x-admin-secret', 'x-admin-token'],
     credentials: true,
     optionsSuccessStatus: 200
   })
 );
-
-// Explicit Pre-flight handler (MUST be after cors middleware)
-app.options('(.*)', cors());
 
 /* =========================================
    REQUEST LOGGER

@@ -50,6 +50,9 @@ export const getErrorMessage = (error, defaultMessage = 'An error occurred') => 
 
   // Handle network errors (backend not running)
   if (error?.code === 'ERR_NETWORK' || error?.message?.includes('Network Error')) {
+    if (isProduction) {
+      return 'Server connection failed. Please check your internet or contact support.';
+    }
     return 'Cannot connect to server. Please make sure the backend is running.';
   }
 

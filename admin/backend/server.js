@@ -9,22 +9,35 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3025;
 
-// Robust CORS Configuration
 app.use(cors({
-  origin: [
-    'https://admin.charisbilleasy.store',
-    'http://localhost:5173',
-    'http://localhost:3000',
-    ...(process.env.ADMIN_FRONTEND_URL ? process.env.ADMIN_FRONTEND_URL.split(',') : [])
-  ],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, server-to-server)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is allowed
+    const allowedOrigins = [
+      'https://admin.charisbilleasy.store',
+      'http://localhost:5173',
+      'http://localhost:3000',
+      ...(process.env.ADMIN_FRONTEND_URL ? process.env.ADMIN_FRONTEND_URL.split(',') : [])
+    ];
+    
+    const isAllowed = allowedOrigins.includes(origin) || 
+                     origin.endsWith('.vercel.app') || 
+                     origin.includes('.up.railway.app');
+                     
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS blocked request from: ${origin}`);
+      callback(null, false);
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-secret'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-secret', 'x-admin-token'],
   credentials: true,
   optionsSuccessStatus: 200
 }));
-
-// Explicit Pre-flight handler
-app.options('(.*)', cors());
 
 app.use(express.json());
 app.use(morgan('dev'));
