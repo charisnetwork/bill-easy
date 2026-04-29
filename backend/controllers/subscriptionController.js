@@ -1,10 +1,20 @@
 const { Plan, Subscription, Company, Coupon, PlanFeature } = require('../models');
 const Razorpay = require('razorpay');
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+// Initialize Razorpay safely
+let razorpay;
+try {
+  if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+    razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+  } else {
+    console.warn('⚠️ RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET is not set. Razorpay integration will be disabled.');
+  }
+} catch (error) {
+  console.error('❌ Failed to initialize Razorpay:', error.message);
+}
 
 const validateCoupon = async (req, res) => {
   try {
@@ -267,6 +277,13 @@ const processPayment = async (req, res) => {
       return res.json({
         message: 'Free or discounted to zero, no payment needed',
         is_free: true
+      });
+    }
+
+    if (!razorpay) {
+      return res.status(503).json({ 
+        error: 'Payment gateway is currently not configured. Please contact support.',
+        is_configured: false
       });
     }
 
