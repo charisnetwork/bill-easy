@@ -103,7 +103,7 @@ app.use(
 );
 
 // Explicit Pre-flight handler (MUST be after cors middleware)
-app.options('*', cors());
+app.options('(.*)', cors());
 
 /* =========================================
    REQUEST LOGGER
