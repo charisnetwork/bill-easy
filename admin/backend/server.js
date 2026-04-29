@@ -37,6 +37,20 @@ app.get('/health', (req, res) => {
 // Routes
 app.use('/api', adminRoutes);
 
+// Error Handler
+app.use((err, req, res, next) => {
+  console.error('ADMIN ERROR:', err);
+  const status = err.status || 500;
+  const message = (process.env.NODE_ENV === 'production' && status === 500) 
+    ? 'Internal admin server error' 
+    : err.message;
+
+  res.status(status).json({
+    error: message,
+    stack: process.env.NODE_ENV === 'production' ? undefined : err.stack
+  });
+});
+
 // Database Sync & Server Start
 const startServer = async () => {
   try {

@@ -55,6 +55,9 @@ export const getErrorMessage = (error, defaultMessage = 'An error occurred') => 
 
   // Handle 404 errors specifically
   if (error?.response?.status === 404) {
+    if (isProduction) {
+      return 'Requested resource not found. Please contact support if the issue persists.';
+    }
     const url = error.config?.url || 'unknown endpoint';
     return `API endpoint not found: ${url}. Please check the backend URL configuration.`;
   }

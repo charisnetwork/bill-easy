@@ -237,19 +237,27 @@ app.get('/api-info', (req, res) => {
 app.use((err, req, res, next) => {
   // Handle CORS errors specifically
   if (err.message === 'Not allowed by CORS') {
+    const isProd = process.env.NODE_ENV === 'production';
     console.error(`CORS ERROR: Request from ${req.headers.origin} blocked`);
-    console.error(`Request URL: ${req.url}`);
-    console.error(`Request Method: ${req.method}`);
+    
     return res.status(403).json({
       error: 'CORS error: Origin not allowed',
-      origin: req.headers.origin,
-      allowedOrigins: ALLOWED_ORIGINS
+      origin: isProd ? 'HIDDEN' : req.headers.origin,
+      allowedOrigins: isProd ? [] : ALLOWED_ORIGINS
     });
   }
   
   console.error('ERROR:', err);
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal server error'
+  
+  // Mask internal errors in production
+  const status = err.status || 500;
+  const message = (process.env.NODE_ENV === 'production' && status === 500) 
+    ? 'Internal server error' 
+    : err.message;
+
+  res.status(status).json({
+    error: message,
+    stack: process.env.NODE_ENV === 'production' ? undefined : err.stack
   });
 });
 
