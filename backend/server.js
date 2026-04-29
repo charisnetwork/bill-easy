@@ -55,6 +55,7 @@ const ALLOWED_ORIGINS = [
   // Production custom domain (if using)
   'https://charisbilleasy.store',
   'https://www.charisbilleasy.store',
+  'https://bill-easy-production.up.railway.app',
   // Local development
   'http://localhost:3000',
   'http://localhost:5173',
@@ -71,14 +72,15 @@ if (process.env.FRONTEND_URL) {
 
 // Helper to check if origin matches allowed patterns
 const isOriginAllowed = (origin) => {
+  if (!origin) return true;
   // Exact match
   if (ALLOWED_ORIGINS.includes(origin)) return true;
   
   // Allow all Vercel preview deployments (xxx.vercel.app)
-  if (origin && origin.endsWith('.vercel.app')) return true;
+  if (origin.endsWith('.vercel.app')) return true;
   
   // Allow Railway app domains
-  if (origin && origin.includes('.up.railway.app')) return true;
+  if (origin.includes('.up.railway.app')) return true;
   
   return false;
 };
@@ -86,15 +88,11 @@ const isOriginAllowed = (origin) => {
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, curl, server-to-server)
-      if (!origin) return callback(null, true);
-      
-      // Check if origin is allowed
       if (isOriginAllowed(origin)) {
         callback(null, true);
       } else {
         console.warn(`CORS blocked request from: ${origin}`);
-        callback(new Error('Not allowed by CORS'));
+        callback(null, false);
       }
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
