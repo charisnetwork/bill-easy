@@ -88,19 +88,14 @@ const isOriginAllowed = (origin) => {
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, curl, server-to-server)
-      if (!origin) return callback(null, true);
-      
-      const allowed = isOriginAllowed(origin);
-      if (allowed) {
+      if (!origin || isOriginAllowed(origin)) {
         callback(null, true);
       } else {
-        console.warn(`CORS blocked request from: ${origin}`);
         callback(null, false);
       }
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-company-id', 'x-admin-secret', 'x-admin-token'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-company-id'],
     credentials: true,
     optionsSuccessStatus: 200
   })
