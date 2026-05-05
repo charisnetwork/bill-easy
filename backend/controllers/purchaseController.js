@@ -1,7 +1,10 @@
 const { Purchase, PurchaseItem, Supplier, Product, Payment, StockMovement, StockLevel, Godown, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const fs = require('fs');
+const path = require('path');
+const { spawn } = require('child_process');
 const pdfParse = require('pdf-parse');
+const stringSimilarity = require('string-similarity');
 
 const generateBillNumber = async (companyId) => {
   const currentYear = new Date().getFullYear();
@@ -154,9 +157,37 @@ const createPurchase = async (req, res) => {
 
       // Create items and update stock
       for (const item of calculatedItems) {
+        let productId = item.product_id;
+
+        // If product_id is missing, try to find by name or create new
+        if (!productId && item.name) {
+          let product = await Product.findOne({
+            where: {
+              company_id: req.companyId,
+              name: { [Op.iLike]: item.name.trim() }
+            },
+            transaction: t
+          });
+
+          if (!product) {
+            product = await Product.create({
+              company_id: req.companyId,
+              name: item.name.trim(),
+              purchase_price: item.unit_price,
+              gst_rate: item.tax_rate || 18,
+              stock_quantity: 0 // Will be updated by purchase
+            }, { transaction: t });
+          }
+          productId = product.id;
+        }
+
+        if (!productId) {
+          throw new Error(`Product not found or could not be created for item: ${item.name || 'Unknown'}`);
+        }
+
         await PurchaseItem.create({
           purchase_id: purchase.id,
-          product_id: item.product_id,
+          product_id: productId,
           quantity: item.quantity,
           unit_price: item.unit_price,
           tax_rate: item.tax_rate || 0,
@@ -165,7 +196,7 @@ const createPurchase = async (req, res) => {
         }, { transaction: t });
 
         // Update product stock
-        const product = await Product.findByPk(item.product_id, { transaction: t });
+        const product = await Product.findByPk(productId, { transaction: t });
         if (product) {
           const previousStock = parseFloat(product.stock_quantity);
           const newStock = previousStock + parseFloat(item.quantity);
@@ -175,7 +206,7 @@ const createPurchase = async (req, res) => {
           // Update Godown specific stock
           if (finalGodownId) {
             const [stockLevel, created] = await StockLevel.findOrCreate({
-              where: { product_id: item.product_id, godown_id: finalGodownId, company_id: req.companyId },
+              where: { product_id: productId, godown_id: finalGodownId, company_id: req.companyId },
               defaults: { quantity: 0 },
               transaction: t
             });
@@ -188,7 +219,7 @@ const createPurchase = async (req, res) => {
 
           await StockMovement.create({
             company_id: req.companyId,
-            product_id: item.product_id,
+            product_id: productId,
             godown_id: finalGodownId || null,
             type: 'in',
             quantity: item.quantity,
@@ -512,6 +543,7 @@ const updatePurchase = async (req, res) => {
 const stringSimilarity = require('string-similarity');
 
 const parsePurchasePDF = async (req, res) => {
+  let tempFilePath = null;
   try {
     console.log('[parsePurchasePDF] Start');
     if (!req.file) {
@@ -519,99 +551,176 @@ const parsePurchasePDF = async (req, res) => {
     }
 
     const dataBuffer = req.file.buffer;
-    
-    // Use pdf-parse v1 API
-    const data = await pdfParse(dataBuffer);
-    
-    if (!data || !data.text) {
-      return res.status(422).json({ error: 'Failed to extract text from PDF.' });
-    }
-
-    const text = data.text;
-    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-    
     const products = await Product.findAll({ where: { company_id: req.companyId } });
     
-    let bill_number = '';
-    const billMatch = text.match(/(?:Bill|Invoice|No|Number)[:.\s#]+([A-Z0-9\-\/]+)/i);
-    if (billMatch) bill_number = billMatch[1];
+    let extractedData = null;
 
-    let bill_date = '';
-    const dateMatch = text.match(/(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4})/);
-    if (dateMatch) bill_date = dateMatch[1];
-
-    const extractedItems = [];
-    
-    // Improved Line Processing
-    for (const line of lines) {
-      const cleanLine = line.toLowerCase();
+    // Try Python Extraction First (More robust for tables)
+    try {
+      const tempDir = path.join(__dirname, '../uploads/temp');
+      if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
       
-      // Try to find numbers (Qty, Rate, Total)
-      const numbers = line.match(/(\d+(?:\.\d+)?)/g);
-      if (!numbers || numbers.length < 2) continue;
+      tempFilePath = path.join(tempDir, `purchase_${Date.now()}.pdf`);
+      fs.writeFileSync(tempFilePath, dataBuffer);
 
-      let matchedProduct = null;
-      let matchType = 'none';
+      const pythonScript = path.join(__dirname, '../scripts/parse_purchase_pdf.py');
+      
+      extractedData = await new Promise((resolve, reject) => {
+        const pythonProcess = spawn('python', [pythonScript, tempFilePath]);
+        let output = '';
+        let errorOutput = '';
 
-      // 1. Try HSN Match first
-      const hsnCandidate = numbers.find(n => n.length >= 4 && n.length <= 8);
-      if (hsnCandidate) {
-        matchedProduct = products.find(p => p.hsn_code === hsnCandidate);
-        if (matchedProduct) matchType = 'hsn';
-      }
+        pythonProcess.stdout.on('data', (data) => {
+          output += data.toString();
+        });
 
-      // 2. Try Fuzzy Name Match if no HSN match
-      if (!matchedProduct) {
-        const nameCandidates = products.map(p => p.name.toLowerCase());
-        if (nameCandidates.length > 0) {
-          const { bestMatch } = stringSimilarity.findBestMatch(cleanLine, nameCandidates);
-          if (bestMatch.rating > 0.85) {
-            matchedProduct = products.find(p => p.name.toLowerCase() === bestMatch.target);
-            matchType = 'fuzzy';
+        pythonProcess.stderr.on('data', (data) => {
+          errorOutput += data.toString();
+        });
+
+        pythonProcess.on('close', (code) => {
+          if (code !== 0) {
+            console.error('[Python PDF Parser] Error code:', code, errorOutput);
+            reject(new Error(errorOutput || 'Python process exited with non-zero code'));
+          } else {
+            try {
+              resolve(JSON.parse(output));
+            } catch (e) {
+              reject(new Error('Failed to parse Python output as JSON: ' + output));
+            }
+          }
+        });
+      });
+      
+      console.log('[parsePurchasePDF] Python extraction successful');
+    } catch (pyError) {
+      console.warn('[parsePurchasePDF] Python extraction failed, falling back to basic extraction:', pyError.message);
+    }
+
+    let finalItems = [];
+    let bill_number = '';
+    let bill_date = '';
+
+    if (extractedData && extractedData.items && extractedData.items.length > 0) {
+      bill_number = extractedData.bill_number;
+      bill_date = extractedData.bill_date;
+      
+      // Match Python extracted items with existing products
+      for (const item of extractedData.items) {
+        let matchedProduct = null;
+        let matchType = 'none';
+
+        // Try exact match
+        matchedProduct = products.find(p => p.name.toLowerCase() === item.name.toLowerCase());
+        if (matchedProduct) {
+          matchType = 'exact';
+        } else {
+          // Try fuzzy match
+          const nameCandidates = products.map(p => p.name.toLowerCase());
+          if (nameCandidates.length > 0) {
+            const { bestMatch } = stringSimilarity.findBestMatch(item.name.toLowerCase(), nameCandidates);
+            if (bestMatch.rating > 0.8) {
+              matchedProduct = products.find(p => p.name.toLowerCase() === bestMatch.target);
+              matchType = 'fuzzy';
+            }
           }
         }
-      }
 
-      if (matchedProduct || numbers.length >= 3) {
-        // Simple heuristic: Qty is usually smaller than Rate
-        // This is a very basic extraction and would ideally be improved with layout awareness
-        let quantity = parseFloat(numbers[0]);
-        let unit_price = parseFloat(numbers[1]);
-        
         if (matchedProduct) {
-          // If match found, check if price changed
-          if (parseFloat(matchedProduct.purchase_price) !== unit_price) {
-            await matchedProduct.update({ new_price: unit_price });
-          }
-
-          extractedItems.push({
+          finalItems.push({
             product_id: matchedProduct.id,
             name: matchedProduct.name,
-            quantity,
-            unit_price,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
             tax_rate: matchedProduct.gst_rate,
-            total: quantity * unit_price * (1 + (matchedProduct.gst_rate / 100)),
+            total: item.quantity * item.unit_price * (1 + (matchedProduct.gst_rate / 100)),
             match_type: matchType
           });
         } else {
-          // Flag for manual creation
-          extractedItems.push({
+          finalItems.push({
             product_id: null,
-            name: line.replace(/[\d.,]+/g, '').trim(), // Rough name extraction
-            quantity,
-            unit_price,
-            tax_rate: 18, // Default
-            total: quantity * unit_price * 1.18,
+            name: item.name,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            tax_rate: item.tax_rate || 18,
+            total: item.quantity * item.unit_price * 1.18,
             is_new: true
           });
         }
       }
+    } else {
+      // Basic Fallback Logic (The original code)
+      const data = await pdfParse(dataBuffer);
+      if (!data || !data.text) {
+        return res.status(422).json({ error: 'Failed to extract text from PDF.' });
+      }
+
+      const text = data.text;
+      const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      
+      const billMatch = text.match(/(?:Bill|Invoice|No|Number)[:.\s#]+([A-Z0-9\-\/]+)/i);
+      if (billMatch) bill_number = billMatch[1];
+
+      const dateMatch = text.match(/(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4})/);
+      if (dateMatch) bill_date = dateMatch[1];
+
+      for (const line of lines) {
+        const numbers = line.match(/(\d+(?:\.\d+)?)/g);
+        if (!numbers || numbers.length < 2) continue;
+
+        let matchedProduct = null;
+        let matchType = 'none';
+
+        const hsnCandidate = numbers.find(n => n.length >= 4 && n.length <= 8);
+        if (hsnCandidate) {
+          matchedProduct = products.find(p => p.hsn_code === hsnCandidate);
+          if (matchedProduct) matchType = 'hsn';
+        }
+
+        if (!matchedProduct) {
+          const nameCandidates = products.map(p => p.name.toLowerCase());
+          if (nameCandidates.length > 0) {
+            const { bestMatch } = stringSimilarity.findBestMatch(line.toLowerCase(), nameCandidates);
+            if (bestMatch.rating > 0.85) {
+              matchedProduct = products.find(p => p.name.toLowerCase() === bestMatch.target);
+              matchType = 'fuzzy';
+            }
+          }
+        }
+
+        if (matchedProduct || numbers.length >= 3) {
+          let quantity = parseFloat(numbers[0]);
+          let unit_price = parseFloat(numbers[1]);
+          
+          if (matchedProduct) {
+            finalItems.push({
+              product_id: matchedProduct.id,
+              name: matchedProduct.name,
+              quantity,
+              unit_price,
+              tax_rate: matchedProduct.gst_rate,
+              total: quantity * unit_price * (1 + (matchedProduct.gst_rate / 100)),
+              match_type: matchType
+            });
+          } else {
+            finalItems.push({
+              product_id: null,
+              name: line.replace(/[\d.,]+/g, '').trim(),
+              quantity,
+              unit_price,
+              tax_rate: 18,
+              total: quantity * unit_price * 1.18,
+              is_new: true
+            });
+          }
+        }
+      }
     }
 
-    // Deduplicate items extracted from the same line or similar lines
+    // Deduplicate
     const uniqueItems = [];
     const seen = new Set();
-    extractedItems.forEach(item => {
+    finalItems.forEach(item => {
       const key = `${item.product_id}-${item.name}-${item.quantity}-${item.unit_price}`;
       if (!seen.has(key)) {
         uniqueItems.push(item);
@@ -628,6 +737,10 @@ const parsePurchasePDF = async (req, res) => {
   } catch (error) {
     console.error('[parsePurchasePDF] Error:', error);
     res.status(500).json({ error: 'Failed to parse PDF: ' + error.message });
+  } finally {
+    if (tempFilePath && fs.existsSync(tempFilePath)) {
+      try { fs.unlinkSync(tempFilePath); } catch (e) {}
+    }
   }
 };
 

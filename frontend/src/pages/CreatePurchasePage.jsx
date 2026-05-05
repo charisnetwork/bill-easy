@@ -431,7 +431,7 @@ const CreatePurchasePage = ({ isEdit = false }) => {
                                 <span className="truncate">
                                   {item.product_id 
                                     ? products.find(p => p.id === item.product_id)?.name 
-                                    : "Search product..."}
+                                    : (item.name || "Search product...")}
                                 </span>
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                               </Button>
