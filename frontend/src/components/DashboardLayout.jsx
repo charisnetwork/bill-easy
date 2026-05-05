@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard, Users, Package, FileText, ShoppingCart,
   Wallet, BarChart3, Settings, LogOut, Menu, X, CreditCard,
-  Building2, ChevronDown, Bell, Search, Truck, Plus
+  Building2, ChevronDown, Bell, Search, Truck, Plus, Shield
 } from 'lucide-react';
 import { Button } from './ui/button';
 import {
@@ -394,6 +394,19 @@ export const DashboardLayout = ({ children }) => {
                       <span className="text-[10px] text-slate-400">Account & Preferences</span>
                     </div>
                   </DropdownMenuItem>
+
+                  {user?.email === 'pachu.mgd@gmail.com' && (
+                    <DropdownMenuItem 
+                      onClick={() => window.open(import.meta.env.VITE_ADMIN_PORTAL_URL || 'http://localhost:3021/admin-portal/', '_blank')}
+                      className="rounded-lg py-2.5 cursor-pointer text-indigo-600 focus:text-indigo-700"
+                    >
+                      <Shield className="w-4 h-4 mr-3" />
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold">Platform Admin</span>
+                        <span className="text-[10px] opacity-70">Developer Control Center</span>
+                      </div>
+                    </DropdownMenuItem>
+                  )}
 
                   <DropdownMenuSeparator className="my-2" />
 

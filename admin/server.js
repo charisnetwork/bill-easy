@@ -81,6 +81,10 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'admin-gateway-ok',
     backend: `http://localhost:${ADMIN_BACKEND_PORT}`,
+    saas_links: {
+      railway: process.env.RAILWAY_SAAS_LINK || 'not_set',
+      vercel: process.env.VERCEL_SAAS_LINK || 'not_set'
+    },
     timestamp: new Date().toISOString()
   });
 });

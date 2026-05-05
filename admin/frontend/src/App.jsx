@@ -3,7 +3,7 @@ import axios from 'axios';
 import { 
   LayoutDashboard, Globe, Tag, Megaphone, DollarSign, 
   TrendingUp, TrendingDown, Shield, LogOut, Search, Filter,
-  Users, CreditCard, Calendar, BarChart3, Plus, Trash2, Edit, ChevronRight
+  Users, CreditCard, Calendar, BarChart3, Plus, Trash2, Edit, ChevronRight, ExternalLink
 } from 'lucide-react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line 
@@ -11,6 +11,7 @@ import {
 
 const API_BASE_URL = (import.meta.env.VITE_ADMIN_BACKEND_URL || 'http://localhost:3025') + '/api';
 const ADMIN_SECRET = import.meta.env.VITE_ADMIN_SECRET || 'developer_secret_key_2026';
+const SAAS_URL = import.meta.env.VITE_SAAS_URL || 'http://localhost:3000';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -243,6 +244,18 @@ const AdminApp = () => {
               {item.label}
             </button>
           ))}
+          
+          <div className="pt-4 border-t border-slate-800 mt-4">
+            <a 
+              href={SAAS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:text-white hover:bg-slate-900 transition-all duration-200 text-sm font-bold"
+            >
+              <ExternalLink className="w-5 h-5" />
+              Go to SaaS
+            </a>
+          </div>
         </nav>
       </aside>
 
