@@ -7,6 +7,8 @@ const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
+const MAIN_BACKEND_PORT = process.env.MAIN_BACKEND_PORT || '8001';
+const ADMIN_BACKEND_PORT = process.env.ADMIN_BACKEND_PORT || '3025';
 
 app.set('trust proxy', 1);
 
@@ -29,10 +31,10 @@ app.use(cors({
 console.log('🚀 Starting Monorepo Gateway...');
 
 // Start Main Backend
-console.log('📦 Spawning Main Backend on port 8001...');
+console.log(`📦 Spawning Main Backend on port ${MAIN_BACKEND_PORT}...`);
 const mainBackendEnv = {
   ...process.env,
-  PORT: '8001',
+  PORT: MAIN_BACKEND_PORT,
   NODE_ENV: process.env.NODE_ENV || 'production'
 };
 
@@ -43,10 +45,10 @@ const mainBackend = spawn('node', ['server.js'], {
 });
 
 // Start Admin Backend
-console.log('📦 Spawning Admin Backend on port 3025...');
+console.log(`📦 Spawning Admin Backend on port ${ADMIN_BACKEND_PORT}...`);
 const adminBackendEnv = {
   ...process.env,
-  PORT: '3025',
+  PORT: ADMIN_BACKEND_PORT,
   NODE_ENV: process.env.NODE_ENV || 'production'
 };
 
@@ -74,7 +76,7 @@ if (fs.existsSync(mainFrontendPath) && fs.existsSync(path.join(mainFrontendPath,
 
 // 2. Proxy API routes (Use specific matching)
 app.use('/admin/api', createProxyMiddleware({ 
-  target: 'http://localhost:3025', 
+  target: `http://localhost:${ADMIN_BACKEND_PORT}`, 
   pathRewrite: { '^/admin/api': '/api' },
   changeOrigin: true,
   logLevel: 'debug',
@@ -83,7 +85,7 @@ app.use('/admin/api', createProxyMiddleware({
 }));
 
 app.use('/api', createProxyMiddleware({ 
-  target: 'http://localhost:8001', 
+  target: `http://localhost:${MAIN_BACKEND_PORT}`, 
   changeOrigin: true,
   logLevel: 'debug',
   proxyTimeout: 60000,
