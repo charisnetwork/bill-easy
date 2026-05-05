@@ -17,28 +17,59 @@ const envKeys = Object.keys(process.env);
 console.log('[DB Config] Environment Keys found:', envKeys.filter(k => k.includes('DATABASE') || k === 'PORT' || k === 'NODE_ENV'));
 
 // Primary DB URL (Main SaaS DB)
-let saasUrl = (process.env.DATABASE_URL_SaaS || process.env.DATABASE_URL || '').trim();
+// Railway provides multiple URL formats, prefer the standard one
+let saasUrl = (
+  process.env.DATABASE_URL || 
+  process.env.DATABASE_URL_SaaS || 
+  process.env.DATABASE_PUBLIC_URL || 
+  ''
+).trim();
+
 // Admin DB URL (Specific Admin DB or fallback to SaaS DB)
-let adminUrl = (process.env.DATABASE_URL_ADMIN || process.env.DATABASE_URL || '').trim();
+let adminUrl = (
+  process.env.DATABASE_URL || 
+  process.env.DATABASE_URL_ADMIN || 
+  process.env.DATABASE_PUBLIC_URL || 
+  ''
+).trim();
 
 if (!saasUrl) {
-  console.error('[DB Config] CRITICAL: DATABASE_URL_SaaS or DATABASE_URL is missing!');
-  throw new Error('DATABASE_URL is missing in environment variables');
+  console.error('[DB Config] CRITICAL: DATABASE_URL or DATABASE_URL_SaaS is missing!');
+  throw new Error('No DATABASE_URL found in environment variables');
 }
 
 if (!adminUrl) {
-  console.error('[DB Config] CRITICAL: DATABASE_URL_ADMIN or DATABASE_URL is missing!');
-  throw new Error('DATABASE_URL_ADMIN is missing in environment variables');
+  console.error('[DB Config] CRITICAL: DATABASE_URL or DATABASE_URL_ADMIN is missing!');
+  throw new Error('No DATABASE_URL found for Admin DB');
 }
 
-// Ensure URLs have protocol
-if (saasUrl && !saasUrl.includes('://')) {
-  console.warn('[DB Config] SaaS URL missing protocol, prepending postgres://');
-  saasUrl = `postgres://${saasUrl}`;
+// Validate and clean URLs
+const isValidUrl = (url) => {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+// Log for debugging
+console.log('[DB Config] SaaS URL Valid:', isValidUrl(saasUrl) ? '✅' : '❌ (may have protocol issue)');
+console.log('[DB Config] Admin URL Valid:', isValidUrl(adminUrl) ? '✅' : '❌ (may have protocol issue)');
+
+// Ensure URLs have proper protocol - only add if missing
+if (saasUrl && !saasUrl.startsWith('postgres://') && !saasUrl.startsWith('postgresql://')) {
+  if (!saasUrl.includes('://')) {
+    console.warn('[DB Config] SaaS URL missing protocol, prepending postgresql://');
+    saasUrl = `postgresql://${saasUrl}`;
+  }
 }
-if (adminUrl && !adminUrl.includes('://')) {
-  console.warn('[DB Config] Admin URL missing protocol, prepending postgres://');
-  adminUrl = `postgres://${adminUrl}`;
+
+if (adminUrl && !adminUrl.startsWith('postgres://') && !adminUrl.startsWith('postgresql://')) {
+  if (!adminUrl.includes('://')) {
+    console.warn('[DB Config] Admin URL missing protocol, prepending postgresql://');
+    adminUrl = `postgresql://${adminUrl}`;
+  }
 }
 
 // Add SSL for cloud hosting (Railway, Render, etc.)
@@ -53,9 +84,25 @@ if (saasUrl.includes('railway.app') || saasUrl.includes('render.com') || process
 }
 
 console.log('[DB Config] Initializing Sequelize for SaaS DB (URL length:', saasUrl.length, ')');
-const saasDB = new Sequelize(saasUrl, sequelizeOptions);
+let saasDB;
+try {
+  saasDB = new Sequelize(saasUrl, sequelizeOptions);
+  console.log('[DB Config] ✅ SaaS DB Sequelize initialized');
+} catch (error) {
+  console.error('[DB Config] ❌ Failed to initialize SaaS DB:', error.message);
+  console.error('[DB Config] URL starts with:', saasUrl.substring(0, 30) + '...');
+  throw error;
+}
 
 console.log('[DB Config] Initializing Sequelize for Admin DB (URL length:', adminUrl.length, ')');
-const adminDB = new Sequelize(adminUrl, sequelizeOptions);
+let adminDB;
+try {
+  adminDB = new Sequelize(adminUrl, sequelizeOptions);
+  console.log('[DB Config] ✅ Admin DB Sequelize initialized');
+} catch (error) {
+  console.error('[DB Config] ❌ Failed to initialize Admin DB:', error.message);
+  console.error('[DB Config] URL starts with:', adminUrl.substring(0, 30) + '...');
+  throw error;
+}
 
 module.exports = { saasDB, adminDB };
