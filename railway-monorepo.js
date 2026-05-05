@@ -7,8 +7,8 @@ const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
-const MAIN_BACKEND_PORT = process.env.MAIN_BACKEND_PORT || '8001';
-const ADMIN_BACKEND_PORT = process.env.ADMIN_BACKEND_PORT || '3025';
+const MAIN_BACKEND_PORT = process.env.MAIN_BACKEND_PORT || '8080';
+const ADMIN_BACKEND_PORT = process.env.ADMIN_BACKEND_PORT || '3000';
 
 app.set('trust proxy', 1);
 
