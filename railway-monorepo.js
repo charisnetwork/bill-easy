@@ -7,8 +7,7 @@ const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
-const MAIN_BACKEND_PORT = process.env.MAIN_BACKEND_PORT || '8080';
-const ADMIN_BACKEND_PORT = process.env.ADMIN_BACKEND_PORT || '3000';
+const MAIN_BACKEND_PORT = process.env.MAIN_BACKEND_PORT || '8001';
 
 app.set('trust proxy', 1);
 
@@ -44,20 +43,6 @@ const mainBackend = spawn('node', ['server.js'], {
   stdio: 'inherit'
 });
 
-// Start Admin Backend
-console.log(`📦 Spawning Admin Backend on port ${ADMIN_BACKEND_PORT}...`);
-const adminBackendEnv = {
-  ...process.env,
-  PORT: ADMIN_BACKEND_PORT,
-  NODE_ENV: process.env.NODE_ENV || 'production'
-};
-
-const adminBackend = spawn('node', ['server.js'], { 
-  cwd: path.join(__dirname, 'admin/backend'),
-  env: adminBackendEnv,
-  stdio: 'inherit'
-});
-
 // 1. Serve Main Frontend Static Files (HIGHEST PRIORITY)
 const mainFrontendPath = path.join(__dirname, 'frontend/dist');
 
@@ -75,15 +60,6 @@ if (fs.existsSync(mainFrontendPath) && fs.existsSync(path.join(mainFrontendPath,
 }
 
 // 2. Proxy API routes (Use specific matching)
-app.use('/admin/api', createProxyMiddleware({ 
-  target: `http://localhost:${ADMIN_BACKEND_PORT}`, 
-  pathRewrite: { '^/admin/api': '/api' },
-  changeOrigin: true,
-  logLevel: 'debug',
-  proxyTimeout: 60000,
-  timeout: 60000
-}));
-
 app.use('/api', createProxyMiddleware({ 
   target: `http://localhost:${MAIN_BACKEND_PORT}`, 
   changeOrigin: true,
@@ -95,15 +71,7 @@ app.use('/api', createProxyMiddleware({
 // 3. Serve Uploads
 app.use('/uploads', express.static(path.join(__dirname, 'backend/uploads')));
 
-// 4. Serve Admin Frontend
-const adminFrontendPath = path.join(__dirname, 'admin/frontend/dist');
-if (fs.existsSync(adminFrontendPath)) {
-  console.log('✅ Admin frontend found');
-  app.use('/admin-portal', express.static(adminFrontendPath));
-  app.get('/admin-portal/*', (req, res) => {
-    res.sendFile(path.join(adminFrontendPath, 'index.html'));
-  });
-}
+// 4. Admin frontend and API are handled by a separate Railway service at bill-easy/admin/
 
 // 5. Fallback for Main SPA (must be after /api and static)
 if (fs.existsSync(mainFrontendPath)) {
