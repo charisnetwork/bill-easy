@@ -10,7 +10,7 @@ require('dotenv').config();
 require('../backend/utils/storage');
 
 const app = express();
-const PORT = process.env.PORT || 3025;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors({
   origin: (origin, callback) => {
