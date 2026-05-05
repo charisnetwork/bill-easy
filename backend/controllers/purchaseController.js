@@ -540,8 +540,6 @@ const updatePurchase = async (req, res) => {
   }
 };
 
-const stringSimilarity = require('string-similarity');
-
 const parsePurchasePDF = async (req, res) => {
   let tempFilePath = null;
   try {
