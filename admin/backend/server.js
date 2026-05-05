@@ -7,7 +7,7 @@ const adminRoutes = require('./routes/adminRoutes');
 require('dotenv').config();
 
 // Initialize GCS storage
-require('../backend/utils/storage');
+require('../../backend/utils/storage');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
