@@ -9,6 +9,9 @@ const { rateLimit } = require('express-rate-limit');
 
 const { sequelize, Plan, Company, Subscription, Godown, User, UserCompany } = require('./models');
 
+// Initialize GCS storage
+require('./utils/storage');
+
 // Routes
 const authRoutes = require('./routes/auth');
 const companyRoutes = require('./routes/company');
