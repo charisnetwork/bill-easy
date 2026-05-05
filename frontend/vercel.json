@@ -3,20 +3,6 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "https://bill-easy-production.up.railway.app/api/$1"
-    },
-    {
-      "source": "/uploads/(.*)",
-      "destination": "https://bill-easy-production.up.railway.app/uploads/$1"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",
