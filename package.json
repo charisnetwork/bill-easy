@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "railway-monorepo.js",
   "scripts": {
-    "start": "cd backend && node server.js",
+    "start": "node railway-monorepo.js",
     "start:gateway": "node railway-monorepo.js",
     "start:main": "cd backend && node server.js",
     "start:admin": "cd admin/backend && node server.js",
