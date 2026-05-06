@@ -61,7 +61,7 @@ if (fs.existsSync(mainFrontendPath) && fs.existsSync(path.join(mainFrontendPath,
 
 // 2. Proxy API routes (Use specific matching)
 app.use('/api', createProxyMiddleware({ 
-  target: `http://localhost:${MAIN_BACKEND_PORT}`, 
+  target: `http://127.0.0.1:${MAIN_BACKEND_PORT}`, 
   changeOrigin: true,
   logLevel: 'debug',
   proxyTimeout: 60000,
