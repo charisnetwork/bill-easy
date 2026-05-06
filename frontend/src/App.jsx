@@ -38,6 +38,7 @@ import BillPrivacy from "./pages/BillPrivacy";
 import BillTerms from "./pages/BillTerms";
 import ContactPage from "./pages/ContactPage";
 import CharisAssistant from "./components/CharisAssistant";
+import WattVisionPage from "./pages/dashboards/WattVisionPage";
 
 import './App.css';
 
@@ -271,6 +272,16 @@ function App() {
               <ProtectedRoute>
                 <DashboardLayout>
                   <ReportsPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wattvision"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <WattVisionPage />
                 </DashboardLayout>
               </ProtectedRoute>
             }

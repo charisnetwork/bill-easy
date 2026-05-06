@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard, Users, Package, FileText, ShoppingCart,
   Wallet, BarChart3, Settings, LogOut, Menu, X, CreditCard,
-  Building2, ChevronDown, Bell, Search, Truck, Plus, Shield
+  Building2, ChevronDown, Bell, Search, Truck, Plus, Shield, Zap
 } from 'lucide-react';
 import { Button } from './ui/button';
 import {
@@ -88,6 +88,7 @@ export const DashboardLayout = ({ children }) => {
     },
     { path: '/expenses', icon: Wallet, label: 'Expenses' },
     { path: '/reports', icon: BarChart3, label: 'Reports' },
+    { path: '/wattvision', icon: Zap, label: 'WattVision' },
     { path: '/subscription', icon: CreditCard, label: 'Subscription' },
     { path: '/settings', icon: Settings, label: 'Settings' },
   ].filter(item => !item.hidden);
