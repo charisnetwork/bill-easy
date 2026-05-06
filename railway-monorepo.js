@@ -7,7 +7,10 @@ const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
-const MAIN_BACKEND_PORT = process.env.MAIN_BACKEND_PORT || '8080';
+
+// Determine which service to run based on environment variable
+const SERVICE_TYPE = process.env.SERVICE_TYPE || 'main'; // 'main' or 'admin'
+const BACKEND_PORT = process.env.BACKEND_PORT || '8081';
 
 app.set('trust proxy', 1);
 
@@ -19,114 +22,107 @@ app.use((req, res, next) => {
   next();
 });
 
-// Enable CORS for all routes
+// Enable CORS for all routes (Backend services also have their own CORS setup)
 app.use(cors({
   origin: '*',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-secret', 'x-admin-token', 'x-company-id']
 }));
 
-console.log('🚀 Starting Monorepo Gateway...');
+console.log(`🚀 Starting Monorepo Gateway for ${SERVICE_TYPE.toUpperCase()} service...`);
 
-// Start Main Backend
-console.log(`📦 Spawning Main Backend on port ${MAIN_BACKEND_PORT}...`);
-const mainBackendEnv = {
+// Configure environment for the spawned backend
+const backendEnv = {
   ...process.env,
-  PORT: MAIN_BACKEND_PORT,
+  PORT: BACKEND_PORT,
   NODE_ENV: process.env.NODE_ENV || 'production'
 };
 
-const mainBackend = spawn('node', ['server.js'], { 
-  cwd: path.join(__dirname, 'backend'),
-  env: mainBackendEnv,
-  stdio: 'inherit'
-});
+if (SERVICE_TYPE === 'admin') {
+  console.log(`📦 Spawning Admin Backend on port ${BACKEND_PORT}...`);
+  spawn('node', ['server.js'], { 
+    cwd: path.join(__dirname, 'admin/backend'),
+    env: backendEnv,
+    stdio: 'inherit'
+  });
 
-// 1. Serve Main Frontend Static Files (HIGHEST PRIORITY)
-const mainFrontendPath = path.join(__dirname, 'frontend/dist');
-
-if (fs.existsSync(mainFrontendPath) && fs.existsSync(path.join(mainFrontendPath, 'index.html'))) {
-  console.log('✅ Main frontend found, serving static files.');
-  
-  // Serve static files with proper caching
-  app.use(express.static(mainFrontendPath, {
-    maxAge: '1d',
-    etag: true,
-    lastModified: true
+  // Proxy /admin/api traffic to the admin backend (which expects /api)
+  app.use('/admin/api', createProxyMiddleware({ 
+    target: `http://127.0.0.1:${BACKEND_PORT}`, 
+    changeOrigin: true,
+    pathRewrite: { '^/admin/api': '/api' },
+    logLevel: 'debug',
+    proxyTimeout: 60000,
+    timeout: 60000
   }));
-} else {
-  console.log('⚠️ Main frontend NOT found in frontend/dist.');
-}
-
-// 2. Proxy API routes (Use specific matching)
-app.use('/api', createProxyMiddleware({ 
-  target: `http://127.0.0.1:${MAIN_BACKEND_PORT}`, 
-  changeOrigin: true,
-  logLevel: 'debug',
-  proxyTimeout: 60000,
-  timeout: 60000
-}));
-
-// 3. Serve Uploads
-app.use('/uploads', express.static(path.join(__dirname, 'backend/uploads')));
-
-// 4. Admin frontend and API are handled by a separate Railway service at bill-easy/admin/
-
-// 5. Fallback for Main SPA (must be after /api and static)
-if (fs.existsSync(mainFrontendPath)) {
-  console.log('✅ SPA Fallback enabled for routes like /purchases/new');
   
-  // Catch-all route for SPA - MUST be last
-  app.get('*', (req, res, next) => {
-    // Skip API and uploads routes
-    if (req.url.startsWith('/api') || req.url.startsWith('/admin/api') || req.url.startsWith('/uploads') || req.url.startsWith('/health')) {
-      return next();
-    }
-    
-    console.log(`[SPA Fallback] Serving index.html for: ${req.url}`);
-    res.sendFile(path.join(mainFrontendPath, 'index.html'), (err) => {
-      if (err) {
-        console.error('[SPA Fallback] Error sending index.html:', err);
-        next(err);
-      }
-    });
-  });
+  // Also proxy direct /api requests to the admin backend
+  app.use('/api', createProxyMiddleware({ 
+    target: `http://127.0.0.1:${BACKEND_PORT}`, 
+    changeOrigin: true,
+    logLevel: 'debug',
+    proxyTimeout: 60000,
+    timeout: 60000
+  }));
+
 } else {
-  console.log('⚠️ SPA Fallback disabled - frontend/dist not found');
-  app.get('/', (req, res) => {
-    res.send(`
-      <div style="font-family: sans-serif; padding: 2rem; text-align: center;">
-        <h1 style="color: #2563eb;">🚀 Bill Easy Monorepo Gateway is ACTIVE</h1>
-        <p>This is the gateway server. The main frontend (React) build was not found in <code>frontend/dist</code>.</p>
-        <div style="margin-top: 2rem; padding: 1rem; background: #f3f4f6; border-radius: 8px; display: inline-block;">
-          <strong>API Status:</strong> <a href="/api">Main API</a> | <a href="/admin/api">Admin API</a> | <a href="/health">Health Check</a>
-        </div>
-      </div>
-    `);
+  console.log(`📦 Spawning Main SaaS Backend on port ${BACKEND_PORT}...`);
+  spawn('node', ['server.js'], { 
+    cwd: path.join(__dirname, 'backend'),
+    env: backendEnv,
+    stdio: 'inherit'
   });
+
+  // Proxy /api traffic to the main backend
+  app.use('/api', createProxyMiddleware({ 
+    target: `http://127.0.0.1:${BACKEND_PORT}`, 
+    changeOrigin: true,
+    logLevel: 'debug',
+    proxyTimeout: 60000,
+    timeout: 60000
+  }));
+
+  // Serve Uploads from the Main Backend
+  app.use('/uploads', express.static(path.join(__dirname, 'backend/uploads')));
 }
 
-// 404 handler for API routes
-app.use((req, res) => {
-  console.log(`[404] Route not found: ${req.method} ${req.url}`);
-  res.status(404).json({ error: 'Route not found' });
-});
-
-// Health Check
+// Health Check for the Gateway itself
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'gateway-ok',
-    frontend: fs.existsSync(mainFrontendPath) ? 'available' : 'not-found',
+    serviceType: SERVICE_TYPE,
     timestamp: new Date().toISOString()
   });
 });
 
+// Root Route Fallback (Since frontends are on Vercel)
+app.get('/', (req, res) => {
+  res.send(`
+    <div style="font-family: sans-serif; padding: 2rem; text-align: center;">
+      <h1 style="color: #2563eb;">🚀 Bill Easy ${SERVICE_TYPE.toUpperCase()} API Gateway is ACTIVE</h1>
+      <p>This is the gateway server routing to the <strong>${SERVICE_TYPE}</strong> backend.</p>
+      <p><em>The frontend application is hosted separately.</em></p>
+      <div style="margin-top: 2rem; padding: 1rem; background: #f3f4f6; border-radius: 8px; display: inline-block;">
+        <strong>API Status:</strong> <a href="/api/health">Backend Health Check</a> | <a href="/health">Gateway Health Check</a>
+      </div>
+    </div>
+  `);
+});
+
+// 404 handler for any unmatched routes
+app.use((req, res) => {
+  console.log(`[404] Route not found: ${req.method} ${req.url}`);
+  res.status(404).json({ error: 'Route not found in gateway' });
+});
+
 app.listen(PORT, () => {
-  console.log(`✅ Monorepo Gateway running on port ${PORT}`);
-  console.log(`🔗 Main API: /api`);
-  console.log(`🔗 Admin API: /admin/api`);
-  console.log(`🔗 Admin Portal: /admin-portal`);
-  console.log(`🔗 Uploads: /uploads`);
-  console.log(`🔗 Health: /health`);
+  console.log(`✅ ${SERVICE_TYPE.toUpperCase()} Gateway running on port ${PORT}`);
+  if (SERVICE_TYPE === 'admin') {
+    console.log(`🔗 Admin API Proxied: /admin/api -> /api (and /api -> /api)`);
+  } else {
+    console.log(`🔗 Main API Proxied: /api -> /api`);
+    console.log(`🔗 Uploads: /uploads`);
+  }
+  console.log(`🔗 Gateway Health: /health`);
 });
