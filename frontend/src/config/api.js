@@ -15,8 +15,22 @@ if (envBackendUrl && envBackendUrl.endsWith('/')) {
   envBackendUrl = envBackendUrl.slice(0, -1);
 }
 
-// In production, use environment variable or fallback to Railway URL
-export const BACKEND_URL = envBackendUrl || RAILWAY_BACKEND_URL;
+// Ensure URL has protocol (https://)
+if (envBackendUrl && !envBackendUrl.startsWith('http')) {
+  envBackendUrl = 'https://' + envBackendUrl;
+}
+
+// In production on Vercel, use relative URL for API calls (Vercel rewrites handle proxying)
+// Otherwise use the configured backend URL
+const isProduction = typeof window !== 'undefined' && (
+  window.location.hostname === 'charisbilleasy.store' ||
+  window.location.hostname === 'www.charisbilleasy.store' ||
+  window.location.hostname.endsWith('.vercel.app')
+);
+
+// For API calls from Vercel, use empty string (relative) so Vercel rewrites work
+// For direct Railway access or local dev, use the full backend URL
+export const BACKEND_URL = isProduction ? '' : (envBackendUrl || RAILWAY_BACKEND_URL);
 export const API_BASE_URL = `${BACKEND_URL}/api`;
 
 // Helper to construct full asset URLs (images, PDFs, etc.)
