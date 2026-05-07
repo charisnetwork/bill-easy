@@ -6,7 +6,7 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
-const BACKEND_PORT = process.env.BACKEND_PORT || '8081';
+const BACKEND_PORT = process.env.BACKEND_PORT || '8080';
 
 app.set('trust proxy', 1);
 
@@ -36,7 +36,7 @@ const backendEnv = {
 };
 
 console.log(`📦 Spawning Main SaaS Backend on port ${BACKEND_PORT}...`);
-const mainBackend = spawn('node', ['server.js'], { 
+const mainBackend = spawn('node', ['server.js'], {
   cwd: path.join(__dirname, 'backend'),
   env: backendEnv,
   stdio: 'inherit'
@@ -51,8 +51,8 @@ mainBackend.on('error', (err) => {
 });
 
 // Proxy /api traffic to the main backend
-app.use('/api', createProxyMiddleware({ 
-  target: `http://127.0.0.1:${BACKEND_PORT}`, 
+app.use('/api', createProxyMiddleware({
+  target: `http://127.0.0.1:${BACKEND_PORT}`,
   changeOrigin: true,
   logLevel: 'debug',
   proxyTimeout: 60000,
@@ -64,7 +64,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'backend/uploads')));
 
 // Health Check for the Gateway itself
 app.get('/health', (req, res) => {
-  res.json({ 
+  res.json({
     status: 'saas-gateway-ok',
     timestamp: new Date().toISOString()
   });
