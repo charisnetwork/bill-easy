@@ -26,11 +26,10 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-console.log('🚀 Starting Monorepo Gateway...');
-console.log('📂 __dirname:', __dirname);
+// Monorepo Gateway starting
 
 // Start Main Backend
-console.log('📦 Spawning Main Backend on port 8001...');
+// Main Backend spawning on port 8001
 const mainBackendEnv = {
   ...process.env,
   PORT: '8001',
@@ -44,16 +43,14 @@ const mainBackend = spawn('node', ['server.js'], {
 });
 
 // Start Admin Backend
-console.log('📦 Spawning Admin Backend on port 3025...');
+// Admin Backend spawning on port 3025
 const adminBackendEnv = {
   ...process.env,
   PORT: '3025',
   NODE_ENV: process.env.NODE_ENV || 'production'
 };
 
-// Log keys of environment variables for debugging
-const dbKeys = Object.keys(process.env).filter(k => k.includes('DATABASE'));
-console.log('ℹ️ Environment variables for DATABASE found in gateway:', dbKeys);
+
 
 const adminBackend = spawn('node', ['server.js'], { 
   cwd: path.join(__dirname, 'admin/backend'),
@@ -63,26 +60,12 @@ const adminBackend = spawn('node', ['server.js'], {
 
 // 1. Serve Main Frontend Static Files (HIGHEST PRIORITY)
 const mainFrontendPath = path.join(__dirname, 'frontend/dist');
-console.log(`🔍 Checking for main frontend at: ${mainFrontendPath}`);
+// Checking main frontend
 
-// Detailed debugging for Railway
-console.log('📂 Current Directory Contents:', fs.readdirSync(__dirname));
-
-if (fs.existsSync(path.join(__dirname, 'frontend'))) {
-  console.log('📂 Frontend folder exists');
-  const frontendContents = fs.readdirSync(path.join(__dirname, 'frontend'));
-  console.log('📂 Frontend Contents:', frontendContents);
-  
-  if (frontendContents.includes('dist')) {
-    const distContents = fs.readdirSync(path.join(__dirname, 'frontend/dist'));
-    console.log('📂 Frontend/dist Contents:', distContents);
-  }
-} else {
-  console.log('⚠️ Frontend folder NOT found!');
-}
+// Frontend folder check done
 
 if (fs.existsSync(mainFrontendPath) && fs.existsSync(path.join(mainFrontendPath, 'index.html'))) {
-  console.log('✅ Main frontend found, serving static files.');
+  // Main frontend found
   
   // Serve static files with proper caching
   app.use(express.static(mainFrontendPath, {
@@ -91,7 +74,7 @@ if (fs.existsSync(mainFrontendPath) && fs.existsSync(path.join(mainFrontendPath,
     lastModified: true
   }));
 } else {
-  console.log('⚠️ Main frontend NOT found or index.html missing.');
+  // Main frontend not found
 }
 
 // 2. Proxy API routes (Use specific matching)
@@ -118,7 +101,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'backend/uploads')));
 // 4. Serve Admin Frontend
 const adminFrontendPath = path.join(__dirname, 'admin/frontend/dist');
 if (fs.existsSync(adminFrontendPath)) {
-  console.log('✅ Admin frontend found');
+  // Admin frontend found
   app.use('/admin-portal', express.static(adminFrontendPath));
   app.get('/admin-portal/*', (req, res) => {
     res.sendFile(path.join(adminFrontendPath, 'index.html'));
@@ -127,7 +110,7 @@ if (fs.existsSync(adminFrontendPath)) {
 
 // 5. Fallback for Main SPA (must be after /api and static)
 if (fs.existsSync(mainFrontendPath)) {
-  console.log('✅ SPA Fallback enabled for routes like /purchases/new');
+  // SPA Fallback enabled
   
   // Catch-all route for SPA - MUST be last
   app.get('*', (req, res, next) => {
@@ -136,16 +119,16 @@ if (fs.existsSync(mainFrontendPath)) {
       return next();
     }
     
-    console.log(`[SPA Fallback] Serving index.html for: ${req.url}`);
+    // SPA Fallback serving index.html
     res.sendFile(path.join(mainFrontendPath, 'index.html'), (err) => {
       if (err) {
-        console.error('[SPA Fallback] Error sending index.html:', err);
+        // SPA Fallback error
         next(err);
       }
     });
   });
 } else {
-  console.log('⚠️ SPA Fallback disabled - frontend/dist not found');
+  // SPA Fallback disabled
   app.get('/', (req, res) => {
     res.send(`
       <div style="font-family: sans-serif; padding: 2rem; text-align: center;">
@@ -161,7 +144,7 @@ if (fs.existsSync(mainFrontendPath)) {
 
 // 404 handler for API routes
 app.use((req, res) => {
-  console.log(`[404] Route not found: ${req.method} ${req.url}`);
+  // 404 Route not found
   res.status(404).json({ error: 'Route not found' });
 });
 
@@ -175,10 +158,5 @@ app.get('/health', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ Monorepo Gateway running on port ${PORT}`);
-  console.log(`🔗 Main API: /api`);
-  console.log(`🔗 Admin API: /admin/api`);
-  console.log(`🔗 Admin Portal: /admin-portal`);
-  console.log(`🔗 Uploads: /uploads`);
-  console.log(`🔗 Health: /health`);
+  // Monorepo Gateway running
 });

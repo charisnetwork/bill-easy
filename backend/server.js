@@ -9,9 +9,6 @@ const { rateLimit } = require('express-rate-limit');
 
 const { sequelize, Plan, Company, Subscription, Godown, User, UserCompany } = require('./models');
 
-// Initialize GCS storage
-require('./utils/storage');
-
 // Routes
 const authRoutes = require('./routes/auth');
 const companyRoutes = require('./routes/company');
@@ -58,7 +55,6 @@ const ALLOWED_ORIGINS = [
   // Production custom domain (if using)
   'https://charisbilleasy.store',
   'https://www.charisbilleasy.store',
-  'https://bill-easy-production.up.railway.app',
   // Local development
   'http://localhost:3000',
   'http://localhost:5173',
@@ -70,20 +66,19 @@ const ALLOWED_ORIGINS = [
 if (process.env.FRONTEND_URL) {
   const envOrigins = process.env.FRONTEND_URL.split(',').map(o => o.trim());
   ALLOWED_ORIGINS.push(...envOrigins);
-  console.log('CORS: Added FRONTEND_URL origins:', envOrigins);
+  // CORS: FRONTEND_URL origins added
 }
 
 // Helper to check if origin matches allowed patterns
 const isOriginAllowed = (origin) => {
-  if (!origin) return true;
   // Exact match
   if (ALLOWED_ORIGINS.includes(origin)) return true;
   
   // Allow all Vercel preview deployments (xxx.vercel.app)
-  if (origin.endsWith('.vercel.app')) return true;
+  if (origin && origin.endsWith('.vercel.app')) return true;
   
   // Allow Railway app domains
-  if (origin.includes('.up.railway.app')) return true;
+  if (origin && origin.includes('.up.railway.app')) return true;
   
   return false;
 };
@@ -91,16 +86,20 @@ const isOriginAllowed = (origin) => {
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || isOriginAllowed(origin)) {
+      // Allow requests with no origin (mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true);
+      
+      // Check if origin is allowed
+      if (isOriginAllowed(origin)) {
         callback(null, true);
       } else {
-        callback(null, false);
+        console.warn(`CORS blocked: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
       }
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-company-id'],
-    credentials: true,
-    optionsSuccessStatus: 200
+    credentials: true
   })
 );
 
@@ -234,27 +233,17 @@ app.get('/api-info', (req, res) => {
 app.use((err, req, res, next) => {
   // Handle CORS errors specifically
   if (err.message === 'Not allowed by CORS') {
-    const isProd = process.env.NODE_ENV === 'production';
-    console.error(`CORS ERROR: Request from ${req.headers.origin} blocked`);
-    
+    // CORS error logged
     return res.status(403).json({
       error: 'CORS error: Origin not allowed',
-      origin: isProd ? 'HIDDEN' : req.headers.origin,
-      allowedOrigins: isProd ? [] : ALLOWED_ORIGINS
+      origin: req.headers.origin,
+      allowedOrigins: ALLOWED_ORIGINS
     });
   }
   
   console.error('ERROR:', err);
-  
-  // Mask internal errors in production
-  const status = err.status || 500;
-  const message = (process.env.NODE_ENV === 'production' && status === 500) 
-    ? 'Internal server error' 
-    : err.message;
-
-  res.status(status).json({
-    error: message,
-    stack: process.env.NODE_ENV === 'production' ? undefined : err.stack
+  res.status(err.status || 500).json({
+    error: err.message || 'Internal server error'
   });
 });
 
@@ -264,7 +253,7 @@ app.use((err, req, res, next) => {
 
 // 404 handler for unmatched routes
 app.use((req, res) => {
-  console.log(`[404] Route not found: ${req.method} ${req.url}`);
+  // 404 - Route not found
   res.status(404).json({
     error: 'Route not found',
     path: req.url,
@@ -370,9 +359,9 @@ const seedPlans = async () => {
       }
     }
 
-    console.log('Plans seeded/updated successfully');
+    // Plans seeded
   } catch (error) {
-    console.error('Plan seed error:', error);
+    // Plan seed error handled
   }
 };
 
@@ -380,7 +369,7 @@ const seedPlans = async () => {
    SERVER START
 ========================================= */
 
-const PORT = process.env.PORT || 8081;
+const PORT = process.env.PORT || 8001;
 
 process.on('uncaughtException', (err) => {
   console.error('UNCAUGHT EXCEPTION:', err);
@@ -406,12 +395,12 @@ const startServer = async () => {
       // Check if plans table exists first
       const tables = await queryInterface.showAllTables();
       if (!tables.includes('plans')) {
-        console.log('  - plans table does not exist, skipping migration');
+        // plans table migration skipped
       } else {
         const tableInfo = await queryInterface.describeTable('plans');
         
         if (!tableInfo.max_users) {
-          console.log('  - Adding max_users column to plans');
+          // Migration: max_users column
           await queryInterface.addColumn('plans', 'max_users', {
             type: DataTypes.INTEGER,
             defaultValue: 1
@@ -419,7 +408,7 @@ const startServer = async () => {
         }
         
         if (!tableInfo.max_invoices_per_month) {
-          console.log('  - Adding max_invoices_per_month column to plans');
+          // Migration: max_invoices_per_month column
           await queryInterface.addColumn('plans', 'max_invoices_per_month', {
             type: DataTypes.INTEGER,
             defaultValue: 100
@@ -427,7 +416,7 @@ const startServer = async () => {
         }
         
         if (!tableInfo.max_products) {
-          console.log('  - Adding max_products column to plans');
+          // Migration: max_products column
           await queryInterface.addColumn('plans', 'max_products', {
             type: DataTypes.INTEGER,
             defaultValue: 100
@@ -435,7 +424,7 @@ const startServer = async () => {
         }
         
         if (!tableInfo.storage_limit) {
-          console.log('  - Adding storage_limit column to plans');
+          // Migration: storage_limit column
           await queryInterface.addColumn('plans', 'storage_limit', {
             type: DataTypes.INTEGER,
             defaultValue: 100
@@ -443,7 +432,7 @@ const startServer = async () => {
         }
         
         if (!tableInfo.features) {
-          console.log('  - Adding features column to plans');
+          // Migration: features column
           await queryInterface.addColumn('plans', 'features', {
             type: DataTypes.JSON,
             defaultValue: {}
@@ -451,7 +440,7 @@ const startServer = async () => {
         }
         
         if (!tableInfo.is_active) {
-          console.log('  - Adding is_active column to plans');
+          // Migration: is_active column
           await queryInterface.addColumn('plans', 'is_active', {
             type: DataTypes.BOOLEAN,
             defaultValue: true
@@ -459,14 +448,14 @@ const startServer = async () => {
         }
         
         if (!tableInfo.billing_cycle) {
-          console.log('  - Adding billing_cycle column to plans');
+          // Migration: billing_cycle column
           await queryInterface.addColumn('plans', 'billing_cycle', {
             type: DataTypes.ENUM('monthly', '3month', '6month', 'yearly', 'lifetime'),
             defaultValue: 'monthly'
           });
         }
         
-        console.log('Plans table migration completed');
+        // Plans migration done
       }
 
       // Migration: Add missing columns to users table
@@ -474,7 +463,7 @@ const startServer = async () => {
         const userTableInfo = await queryInterface.describeTable('users');
         
         if (!userTableInfo.password) {
-          console.log('  - Adding password column to users');
+          // Migration: password column
           await queryInterface.addColumn('users', 'password', {
             type: DataTypes.STRING,
             allowNull: true // Allow null for migration, but it will be populated
@@ -482,7 +471,7 @@ const startServer = async () => {
         }
         
         if (!userTableInfo.permissions) {
-          console.log('  - Adding permissions column to users');
+          // Migration: permissions column
           await queryInterface.addColumn('users', 'permissions', {
             type: DataTypes.JSON,
             defaultValue: {}
@@ -490,7 +479,7 @@ const startServer = async () => {
         }
 
         if (!userTableInfo.is_active) {
-          console.log('  - Adding is_active column to users');
+          // Migration: is_active column
           await queryInterface.addColumn('users', 'is_active', {
             type: DataTypes.BOOLEAN,
             defaultValue: true
@@ -498,7 +487,7 @@ const startServer = async () => {
         }
 
         if (!userTableInfo.email_verified) {
-          console.log('  - Adding email_verified column to users');
+          // Migration: email_verified column
           await queryInterface.addColumn('users', 'email_verified', {
             type: DataTypes.BOOLEAN,
             defaultValue: false
@@ -506,7 +495,7 @@ const startServer = async () => {
         }
 
         if (!userTableInfo.last_login) {
-          console.log('  - Adding last_login column to users');
+          // Migration: last_login column
           await queryInterface.addColumn('users', 'last_login', {
             type: DataTypes.DATE,
             allowNull: true
@@ -514,7 +503,7 @@ const startServer = async () => {
         }
 
         if (!userTableInfo.role) {
-          console.log('  - Adding role column to users');
+          // Migration: role column
           await queryInterface.addColumn('users', 'role', {
             type: DataTypes.ENUM('owner', 'admin', 'staff'),
             defaultValue: 'staff'
@@ -539,7 +528,7 @@ const startServer = async () => {
 
         for (const col of columnsToAdd) {
           if (!compTableInfo[col.name]) {
-            console.log(`  - Adding ${col.name} column to companies`);
+            // Migration column added
             await queryInterface.addColumn('companies', col.name, {
               type: col.type,
               defaultValue: col.default
@@ -550,7 +539,7 @@ const startServer = async () => {
 
       // Migration: Ensure AIUsage table exists
       if (!tables.includes('ai_usage')) {
-        console.log('  - Creating ai_usage table');
+        // Migration: ai_usage table
         await queryInterface.createTable('ai_usage', {
           id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
           user_id: { type: DataTypes.UUID, allowNull: false },
@@ -563,15 +552,14 @@ const startServer = async () => {
         await queryInterface.addIndex('ai_usage', ['user_id', 'date'], { unique: true });
       }
     } catch (migrationError) {
-      console.error('Plans table migration error:', migrationError.message);
-      console.error(migrationError.stack);
+      // Migration error handled
       // Don't throw - continue startup even if migration fails
     }
 
     // Only use alter: true in development; in production, use migrations
     const syncOptions = process.env.NODE_ENV === 'production' ? {} : { alter: true };
     await sequelize.sync(syncOptions);
-    console.log('Database synchronized');
+    // Database synchronized
 
     await seedPlans();
 
@@ -591,7 +579,7 @@ const startServer = async () => {
         );
       }
     } catch (checkExpiredError) {
-      console.warn('Warning: Could not check expired subscriptions:', checkExpiredError.message);
+      // Subscription check warning
       // Continue startup - this might happen if plans table columns are missing
     }
     
@@ -600,8 +588,7 @@ const startServer = async () => {
       // Check if User table has password column before query
       const tableInfo = await queryInterface.describeTable('users');
       if (!tableInfo.password) {
-        console.warn('⚠️ WARNING: "password" column is missing in users table. Skipping integrity check.');
-        console.log('Available columns in users:', Object.keys(tableInfo));
+        // Password column check skipped
       } else {
         const allUsers = await User.findAll();
         for (const user of allUsers) {
@@ -614,7 +601,7 @@ const startServer = async () => {
         }
       }
     } catch (userIntegrityError) {
-      console.warn('Warning: Could not ensure user data integrity:', userIntegrityError.message);
+      // User integrity check warning
     }
 
     try {
@@ -626,13 +613,13 @@ const startServer = async () => {
       try {
         freePlan = await Plan.findOne({ where: { plan_name: 'Free Account' } });
       } catch (planError) {
-        console.warn('Warning: Could not fetch Free Account plan:', planError.message);
+        // Free plan fetch warning
       }
 
       for (const company of companies) {
         // 1. Default Godown
         if (!company.Godowns || company.Godowns.length === 0) {
-          console.log(`Creating default Godown for: ${company.name}`);
+          // Creating default Godown
           await Godown.create({
             company_id: company.id,
             name: 'Main Store',
@@ -644,7 +631,7 @@ const startServer = async () => {
         
         // 2. Default Subscription
         if (!company.Subscription && freePlan) {
-          console.log(`Creating Free Account sub for: ${company.name}`);
+          // Creating default Subscription
           const expiry = new Date();
           expiry.setFullYear(expiry.getFullYear() + 10);
           await Subscription.create({
@@ -658,7 +645,7 @@ const startServer = async () => {
         }
       }
     } catch (companySetupError) {
-      console.warn('Warning: Could not setup default company data:', companySetupError.message);
+      // Company setup warning
     }
 
     app.listen(PORT, '0.0.0.0', () => {
