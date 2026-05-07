@@ -2,6 +2,9 @@
 // API Configuration for Vercel + Railway Setup
 // =========================================
 
+// Railway backend URL - Production Backend (fallback if env not set)
+const RAILWAY_BACKEND_URL = 'https://bill-easy-production.up.railway.app';
+
 // Get backend URL from environment
 let envBackendUrl = 
   import.meta.env?.VITE_BACKEND_URL ||
@@ -12,8 +15,8 @@ if (envBackendUrl && envBackendUrl.endsWith('/')) {
   envBackendUrl = envBackendUrl.slice(0, -1);
 }
 
-// In production, force use of the environment variable
-export const BACKEND_URL = envBackendUrl || '';
+// In production, use environment variable or fallback to Railway URL
+export const BACKEND_URL = envBackendUrl || RAILWAY_BACKEND_URL;
 export const API_BASE_URL = `${BACKEND_URL}/api`;
 
 // Helper to construct full asset URLs (images, PDFs, etc.)
@@ -26,27 +29,60 @@ export const getAssetUrl = (path) => {
 
 // Helper to normalize API errors to strings
 export const getErrorMessage = (error, defaultMessage = 'An error occurred') => {
+
   // If it's already a string, return it
   if (typeof error === 'string') return error;
 
-  // Mask internal errors in production for security and privacy
+  // Handle network errors (backend not running)
   if (error?.code === 'ERR_NETWORK' || error?.message?.includes('Network Error')) {
-    return 'Server connection failed. Please check your internet or contact support.';
+    return 'Cannot connect to server. Please make sure the backend is running.';
   }
 
+  // Handle 404 errors specifically
   if (error?.response?.status === 404) {
-    return 'Requested resource not found.';
+    const url = error.config?.url || 'unknown endpoint';
+    return `API endpoint not found: ${url}. Please check the backend URL configuration.`;
   }
 
   // If it's an Axios error with response
   if (error?.response?.data) {
     const data = error.response.data;
+    
+    // Handle { error: 'message' }
     if (typeof data.error === 'string') return data.error;
+    
+    // Handle { error: { message: '...' } }
+    if (typeof data.error?.message === 'string') return data.error.message;
+    
+    // Handle { message: '...' }
     if (typeof data.message === 'string') return data.message;
+
+    // Handle { errors: [...] } from express-validator
+    if (Array.isArray(data.errors) && data.errors.length > 0) {
+      return data.errors[0].msg || data.errors[0].message || 'Validation error';
+    }
+    
+    // Stringify the data object if it's an object but not a string
+    if (typeof data === 'object' && data !== null) {
+      // If it's { code, message }, return message or stringify
+      if (data.message && typeof data.message === 'string') return data.message;
+      // Return default message instead of JSON to avoid rendering objects
+      return defaultMessage;
+    }
+
+    return String(data);
+  }
+
+  // If error has message property
+  if (typeof error?.message === 'string') return error.message;
+  
+  // If error is an object, return default message
+  if (typeof error === 'object' && error !== null) {
     return defaultMessage;
   }
 
-  return error?.message || defaultMessage;
+  // Default fallback
+  return defaultMessage;
 };
 
 export default {

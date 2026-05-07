@@ -9,5 +9,18 @@
       }
     }
   ],
-    // "rewrites": []  // Commenting out for cleaner env-only deployment setup
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://bill-easy-production.up.railway.app/api/$1"
+    },
+    {
+      "source": "/uploads/(.*)",
+      "destination": "https://bill-easy-production.up.railway.app/uploads/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/frontend/dist/index.html"
+    }
+  ]
 }
