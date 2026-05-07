@@ -52,11 +52,19 @@ mainBackend.on('error', (err) => {
 
 // Proxy /api traffic to the main backend
 app.use('/api', createProxyMiddleware({
-  target: `http://127.0.0.1:${BACKEND_PORT}`,
+  target: `http://localhost:${BACKEND_PORT}`,
   changeOrigin: true,
   logLevel: 'debug',
   proxyTimeout: 60000,
-  timeout: 60000
+  timeout: 60000,
+  on: {
+    error: (err, req, res) => {
+      console.error(`[Proxy Error] ${req.method} ${req.url} ->`, err.message);
+      if (!res.headersSent) {
+        res.status(502).json({ error: 'Backend unavailable', details: err.message });
+      }
+    }
+  }
 }));
 
 // Serve Uploads from the Main Backend

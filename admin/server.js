@@ -47,7 +47,15 @@ app.use('/api', createProxyMiddleware({
   changeOrigin: true,
   logLevel: 'debug',
   proxyTimeout: 60000,
-  timeout: 60000
+  timeout: 60000,
+  on: {
+    error: (err, req, res) => {
+      console.error(`[Admin Proxy Error] ${req.method} ${req.url} ->`, err.message);
+      if (!res.headersSent) {
+        res.status(502).json({ error: 'Admin backend unavailable', details: err.message });
+      }
+    }
+  }
 }));
 
 const adminFrontendPath = path.join(__dirname, 'frontend/dist');
