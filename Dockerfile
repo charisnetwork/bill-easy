@@ -20,26 +20,8 @@ RUN cd backend && npm install --omit=dev
 COPY admin/backend/package.json admin/backend/package-lock.json ./admin/backend/
 RUN cd admin/backend && npm install --omit=dev
 
-# Copy frontend package files (need devDeps for building)
-COPY frontend/package.json ./frontend/
-# Note: package-lock.json might not exist in frontend if it uses yarn, 
-# but we'll try to copy it if it exists
-COPY frontend/package-lock.json* ./frontend/
-RUN cd frontend && npm install --legacy-peer-deps
-
-# Copy admin frontend package files
-COPY admin/frontend/package.json ./admin/frontend/
-COPY admin/frontend/package-lock.json* ./admin/frontend/
-RUN cd admin/frontend && npm install --legacy-peer-deps
-
 # Copy the rest of the source code
 COPY . .
-
-# Run the build process
-RUN npm run build
-
-# Cleanup devDependencies from frontend/admin-frontend after build
-RUN rm -rf frontend/node_modules admin/frontend/node_modules
 
 EXPOSE 8080
 
