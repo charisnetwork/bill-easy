@@ -6,7 +6,7 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
-const BACKEND_PORT = process.env.BACKEND_PORT || '8080';
+const BACKEND_PORT = process.env.BACKEND_PORT || '8081';
 
 app.set('trust proxy', 1);
 
