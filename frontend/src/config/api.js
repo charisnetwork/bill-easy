@@ -5,7 +5,7 @@
 // Railway backend URL - Production Backend (fallback if env not set)
 const RAILWAY_BACKEND_URL = 'https://bill-easy-production.up.railway.app';
 
-// Get backend URL from environment
+// Get backend URL from environment (HIGHEST PRIORITY)
 let envBackendUrl = 
   import.meta.env?.VITE_BACKEND_URL ||
   import.meta.env?.REACT_APP_BACKEND_URL;
@@ -20,18 +20,13 @@ if (envBackendUrl && !envBackendUrl.startsWith('http')) {
   envBackendUrl = 'https://' + envBackendUrl;
 }
 
-// In production on Vercel, use relative URL for API calls (Vercel rewrites handle proxying)
-// Otherwise use the configured backend URL
-const isProduction = typeof window !== 'undefined' && (
-  window.location.hostname === 'charisbilleasy.store' ||
-  window.location.hostname === 'www.charisbilleasy.store' ||
-  window.location.hostname.endsWith('.vercel.app')
-);
-
-// For API calls from Vercel, use empty string (relative) so Vercel rewrites work
-// For direct Railway access or local dev, use the full backend URL
-export const BACKEND_URL = isProduction ? '' : (envBackendUrl || RAILWAY_BACKEND_URL);
+// PRIORITY: 1. Env variable, 2. Hardcoded fallback
+export const BACKEND_URL = envBackendUrl || RAILWAY_BACKEND_URL;
 export const API_BASE_URL = `${BACKEND_URL}/api`;
+
+// Debug log (remove in production if needed)
+console.log('[API Config] BACKEND_URL:', BACKEND_URL);
+console.log('[API Config] API_BASE_URL:', API_BASE_URL);
 
 // Helper to construct full asset URLs (images, PDFs, etc.)
 export const getAssetUrl = (path) => {
