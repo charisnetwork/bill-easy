@@ -9,9 +9,9 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line 
 } from 'recharts';
 
-const API_BASE_URL = (import.meta.env.VITE_ADMIN_BACKEND_URL || 'http://localhost:3025') + '/api';
+const API_BASE_URL = (import.meta.env.VITE_ADMIN_API_URL || import.meta.env.VITE_ADMIN_BACKEND_URL || 'http://localhost:3025') + '/api';
 const ADMIN_SECRET = import.meta.env.VITE_ADMIN_SECRET || 'developer_secret_key_2026';
-const SAAS_URL = import.meta.env.VITE_SAAS_URL || 'http://localhost:3000';
+const SAAS_URL = import.meta.env.VITE_SAAS_URL || 'https://charisbilleasy.store';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
