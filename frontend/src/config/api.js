@@ -2,13 +2,18 @@
 // API Configuration for Vercel + Railway Setup
 // =========================================
 
-// Railway backend URL - Production Backend (fallback if env not set)
+// Railway backend URL - Production Backend
 const RAILWAY_BACKEND_URL = 'https://bill-easy-production.up.railway.app';
 
 // Get backend URL from environment (HIGHEST PRIORITY)
 let envBackendUrl = 
+  import.meta.env?.MAIN_SAAS_BACKEND ||
   import.meta.env?.VITE_BACKEND_URL ||
   import.meta.env?.REACT_APP_BACKEND_URL;
+
+// DEBUG: Log what we received
+console.log('[API Config] Env MAIN_SAAS_BACKEND:', import.meta.env?.MAIN_SAAS_BACKEND);
+console.log('[API Config] Env VITE_BACKEND_URL:', import.meta.env?.VITE_BACKEND_URL);
 
 // Sanitize: Remove trailing slash if present
 if (envBackendUrl && envBackendUrl.endsWith('/')) {
@@ -21,7 +26,13 @@ if (envBackendUrl && !envBackendUrl.startsWith('http')) {
 }
 
 // PRIORITY: 1. Env variable, 2. Hardcoded fallback
-export const BACKEND_URL = envBackendUrl || RAILWAY_BACKEND_URL;
+// FORCE PRODUCTION: If env is localhost/empty, use production
+if (!envBackendUrl || envBackendUrl.includes('localhost')) {
+  console.log('[API Config] Forcing production backend');
+  envBackendUrl = RAILWAY_BACKEND_URL;
+}
+
+export const BACKEND_URL = envBackendUrl;
 export const API_BASE_URL = `${BACKEND_URL}/api`;
 
 // Debug log (remove in production if needed)
