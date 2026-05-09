@@ -3,37 +3,14 @@ const router = express.Router();
 const analyticsController = require('../controllers/analyticsController');
 const managementController = require('../controllers/managementController');
 
-// Developer-only simple auth middleware
-const authMiddleware = (req, res, next) => {
-  const adminSecret = process.env.ADMIN_SECRET;
-  let providedSecret = req.headers['x-admin-secret'];
-  
-  // Also check Authorization header for flexibility with different clients
-  if (!providedSecret && req.headers['authorization']) {
-    const authHeader = req.headers['authorization'];
-    if (authHeader.startsWith('Bearer ')) {
-      providedSecret = authHeader.substring(7);
-    } else {
-      providedSecret = authHeader;
-    }
-  }
+// Note: Auth is handled in server.js with JWT
+// These routes are protected by the authMiddleware in server.js
 
-  // Ensure ADMIN_SECRET is set in environment AND matches the header
-  if (adminSecret && providedSecret === adminSecret) {
-    return next();
-  }
-  
-  return res.status(403).json({ 
-    error: "Unauthorized access", 
-    message: adminSecret ? "Invalid secret" : "ADMIN_SECRET not configured on server"
-  });
-};
-
-router.post('/login', authMiddleware, (req, res) => {
+router.post('/login', (req, res) => {
   res.json({ success: true, message: "Authenticated successfully" });
 });
 
-router.get('/profile', authMiddleware, (req, res) => {
+router.get('/profile', (req, res) => {
   res.json({ 
     id: 'platform_admin',
     name: 'Platform Administrator',
@@ -41,8 +18,6 @@ router.get('/profile', authMiddleware, (req, res) => {
     role: 'superadmin'
   });
 });
-
-router.use(authMiddleware);
 
 // Dashboard & Analytics
 router.get('/dashboard/summary', analyticsController.getSummary);
