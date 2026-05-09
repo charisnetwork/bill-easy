@@ -7,5 +7,6 @@ export default defineConfig({
   server: {
     port: 3021,
     host: true
-  }
+  },
+  envPrefix: ['VITE_', 'ADMIN_BACKEND_KEY', 'ADMIN_PASS_KEY']
 });
