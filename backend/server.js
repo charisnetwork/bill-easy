@@ -101,7 +101,7 @@ app.use(
       }
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-company-id'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-company-id', 'x-admin-secret', 'x-admin-token'],
     credentials: true
   })
 );
