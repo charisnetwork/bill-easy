@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const { adminDB, saasDB } = require('./config/db');
 const adminRoutes = require('./routes/adminRoutes');
 
@@ -8,6 +10,12 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Admin credentials - only pachu.mgd@gmail.com is allowed
+const ADMIN_EMAIL = 'pachu.mgd@gmail.com';
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH; // bcrypt hash of the password
+const JWT_SECRET = process.env.JWT_SECRET || process.env.ADMIN_SECRET; // Use JWT_SECRET or fallback to ADMIN_SECRET
+const JWT_EXPIRES_IN = '24h';
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -24,7 +32,8 @@ app.use(cors({
     
     const isAllowed = allowedOrigins.includes(origin) || 
                      origin.endsWith('.vercel.app') || 
-                     origin.includes('.up.railway.app');
+                     origin.includes('.up.railway.app') ||
+                     origin.includes('.pages.dev');
                      
     if (isAllowed) {
       callback(null, true);
@@ -42,13 +51,142 @@ app.use(cors({
 app.use(express.json());
 app.use(morgan('dev'));
 
-// Health Check
+// JWT Authentication Middleware
+const authenticateJWT = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+  
+  // Also support x-admin-token header for flexibility
+  const tokenFromHeader = req.headers['x-admin-token'];
+  const finalToken = token || tokenFromHeader;
+  
+  if (!finalToken) {
+    return res.status(401).json({ error: 'Access denied. No token provided.' });
+  }
+  
+  try {
+    const decoded = jwt.verify(finalToken, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    console.error('JWT verification failed:', err.message);
+    return res.status(403).json({ error: 'Invalid or expired token.' });
+  }
+};
+
+// Legacy secret authentication (for backward compatibility)
+const authenticateLegacy = (req, res, next) => {
+  const adminSecret = process.env.ADMIN_SECRET;
+  let providedSecret = req.headers['x-admin-secret'];
+  
+  if (!providedSecret && req.headers['authorization']) {
+    const authHeader = req.headers['authorization'];
+    if (authHeader.startsWith('Bearer ')) {
+      providedSecret = authHeader.substring(7);
+    } else {
+      providedSecret = authHeader;
+    }
+  }
+  
+  if (adminSecret && providedSecret === adminSecret) {
+    return next();
+  }
+  
+  return res.status(403).json({ 
+    error: "Unauthorized access", 
+    message: adminSecret ? "Invalid secret" : "ADMIN_SECRET not configured on server"
+  });
+};
+
+// Combined auth middleware - tries JWT first, then falls back to legacy
+const authMiddleware = (req, res, next) => {
+  // Try JWT auth first
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  const tokenFromHeader = req.headers['x-admin-token'];
+  
+  if (token || tokenFromHeader) {
+    return authenticateJWT(req, res, next);
+  }
+  
+  // Fall back to legacy secret auth
+  return authenticateLegacy(req, res, next);
+};
+
+// Health Check (public)
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    auth: 'jwt-enabled'
+  });
 });
 
-// Routes
-app.use('/api', adminRoutes);
+// Public routes
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+  
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required.' });
+  }
+  
+  // Only allow the specific admin email
+  if (email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+    return res.status(401).json({ error: 'Invalid credentials.' });
+  }
+  
+  // Check if password hash is configured
+  if (!ADMIN_PASSWORD_HASH) {
+    console.error('ADMIN_PASSWORD_HASH is not set in environment variables');
+    return res.status(500).json({ error: 'Server configuration error.' });
+  }
+  
+  // Verify password
+  const isPasswordValid = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
+  
+  if (!isPasswordValid) {
+    return res.status(401).json({ error: 'Invalid credentials.' });
+  }
+  
+  // Generate JWT token
+  const token = jwt.sign(
+    { 
+      email: ADMIN_EMAIL,
+      role: 'superadmin',
+      iat: Math.floor(Date.now() / 1000)
+    },
+    JWT_SECRET,
+    { expiresIn: JWT_EXPIRES_IN }
+  );
+  
+  res.json({
+    success: true,
+    message: 'Login successful',
+    token,
+    user: {
+      email: ADMIN_EMAIL,
+      name: 'Platform Administrator',
+      role: 'superadmin'
+    }
+  });
+});
+
+// Get current user (protected)
+app.get('/api/auth/me', authMiddleware, (req, res) => {
+  res.json({
+    email: ADMIN_EMAIL,
+    name: 'Platform Administrator',
+    role: 'superadmin'
+  });
+});
+
+// Logout (client-side token removal, but we can log it)
+app.post('/api/auth/logout', authMiddleware, (req, res) => {
+  res.json({ success: true, message: 'Logged out successfully' });
+});
+
+// Protected routes
+app.use('/api', authMiddleware, adminRoutes);
 
 // Error Handler
 app.use((err, req, res, next) => {
@@ -68,8 +206,13 @@ app.use((err, req, res, next) => {
 const startServer = async () => {
   try {
     // Check for critical environment variables
-    if (!process.env.ADMIN_SECRET) {
-      console.warn('⚠️ WARNING: ADMIN_SECRET is not set. Admin API is insecure!');
+    if (!JWT_SECRET) {
+      console.warn('⚠️ WARNING: JWT_SECRET is not set. Using fallback - this is insecure!');
+    }
+    
+    if (!ADMIN_PASSWORD_HASH) {
+      console.warn('⚠️ WARNING: ADMIN_PASSWORD_HASH is not set. Login will not work!');
+      console.log('💡 To set up admin password, generate a bcrypt hash and set ADMIN_PASSWORD_HASH env variable');
     }
 
     // Authenticate SaaS DB (Read-Only access recommended)
@@ -83,6 +226,8 @@ const startServer = async () => {
 
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Developer Admin Control Center running on port ${PORT}`);
+      console.log(`🔐 Admin Email: ${ADMIN_EMAIL}`);
+      console.log(`🔑 JWT Auth: ${JWT_SECRET ? 'Enabled' : 'DISABLED - Using legacy secret only'}`);
     });
   } catch (error) {
     console.error('❌ Database connection failed:', error);

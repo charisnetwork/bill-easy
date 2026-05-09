@@ -80,6 +80,9 @@ const isOriginAllowed = (origin) => {
   // Allow Railway app domains
   if (origin && origin.includes('.up.railway.app')) return true;
   
+  // Allow Cloudflare Pages domains (xxx.pages.dev and custom *.pages.dev)
+  if (origin && origin.includes('.pages.dev')) return true;
+  
   return false;
 };
 
