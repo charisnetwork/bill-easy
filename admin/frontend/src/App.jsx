@@ -10,7 +10,14 @@ import {
 } from 'recharts';
 import Login from './components/Login';
 
+// DEBUG: Log env vars
+console.log('[DEBUG] ADMIN_BACKEND_KEY:', import.meta.env.ADMIN_BACKEND_KEY);
+console.log('[DEBUG] VITE_ADMIN_API_URL:', import.meta.env.VITE_ADMIN_API_URL);
+console.log('[DEBUG] VITE_ADMIN_BACKEND_URL:', import.meta.env.VITE_ADMIN_BACKEND_URL);
+
 const API_BASE_URL = (import.meta.env.ADMIN_BACKEND_KEY || import.meta.env.VITE_ADMIN_API_URL || import.meta.env.VITE_ADMIN_BACKEND_URL || 'http://localhost:3025') + '/api';
+
+console.log('[DEBUG] API_BASE_URL:', API_BASE_URL);
 const SAAS_URL = import.meta.env.VITE_SAAS_URL || 'https://charisbilleasy.store';
 
 const AdminApp = () => {
