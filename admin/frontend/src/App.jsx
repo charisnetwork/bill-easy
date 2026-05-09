@@ -8,20 +8,18 @@ import {
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line 
 } from 'recharts';
+import Login from './components/Login';
 
-const API_BASE_URL = (import.meta.env.VITE_ADMIN_API_URL || import.meta.env.VITE_ADMIN_BACKEND_URL || 'http://localhost:3025') + '/api';
-const ADMIN_SECRET = import.meta.env.VITE_ADMIN_SECRET || 'developer_secret_key_2026';
+const API_BASE_URL = (import.meta.env.ADMIN_BACKEND_KEY || import.meta.env.VITE_ADMIN_API_URL || import.meta.env.VITE_ADMIN_BACKEND_URL || 'http://localhost:3025') + '/api';
 const SAAS_URL = import.meta.env.VITE_SAAS_URL || 'https://charisbilleasy.store';
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: { 
-    'x-admin-secret': ADMIN_SECRET,
-    'Authorization': `Bearer ${ADMIN_SECRET}`
-  }
-});
-
 const AdminApp = () => {
+  // Auth state
+  const [token, setToken] = useState(localStorage.getItem('admin_token'));
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  
+  // App state
   const [activeTab, setActiveTab] = useState('dashboard');
   const [summary, setSummary] = useState(null);
   const [revenueData, setRevenueData] = useState([]);
@@ -76,13 +74,93 @@ const AdminApp = () => {
     is_active: true
   });
 
+  // Create axios instance
+  const api = axios.create({
+    baseURL: API_BASE_URL
+  });
+
+  // Add request interceptor to inject token dynamically
   useEffect(() => {
-    fetchAllData();
+    const requestInterceptor = api.interceptors.request.use(
+      (config) => {
+        const currentToken = localStorage.getItem('admin_token');
+        if (currentToken) {
+          config.headers['Authorization'] = `Bearer ${currentToken}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    const responseInterceptor = api.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          handleLogout();
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      api.interceptors.request.eject(requestInterceptor);
+      api.interceptors.response.eject(responseInterceptor);
+    };
   }, []);
 
+  // Validate token on mount
   useEffect(() => {
-    fetchRevenue();
-  }, [revenueType]);
+    const validateToken = async () => {
+      if (!token) {
+        setAuthLoading(false);
+        return;
+      }
+      
+      try {
+        const response = await api.get('/auth/me');
+        setUser(response.data);
+      } catch (err) {
+        console.error('Token validation failed:', err);
+        localStorage.removeItem('admin_token');
+        setToken(null);
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+    
+    validateToken();
+  }, []);
+
+  // Fetch data when authenticated
+  useEffect(() => {
+    if (token && user) {
+      fetchAllData();
+    }
+  }, [token, user]);
+
+  useEffect(() => {
+    if (token && user) {
+      fetchRevenue();
+    }
+  }, [revenueType, token, user]);
+
+  const handleLogin = (newToken, userData) => {
+    setToken(newToken);
+    setUser(userData);
+    localStorage.setItem('admin_token', newToken);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (err) {
+      // Ignore logout errors
+    }
+    localStorage.removeItem('admin_token');
+    setToken(null);
+    setUser(null);
+    window.location.reload();
+  };
 
   const fetchAllData = async () => {
     setLoading(true);
@@ -101,7 +179,7 @@ const AdminApp = () => {
       setPlans(pRes.data);
       fetchRevenue();
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching data:', err);
     } finally {
       setLoading(false);
     }
@@ -114,7 +192,6 @@ const AdminApp = () => {
         feature_key: featureKey,
         is_enabled: !currentState
       });
-      // Refresh plans data
       const pRes = await api.get('/plans');
       setPlans(pRes.data);
     } catch (err) {
@@ -198,6 +275,7 @@ const AdminApp = () => {
       alert('Failed to create coupon: ' + (err.response?.data?.error || err.message));
     }
   };
+
   const handleDeleteCoupon = async (id) => {
     if (window.confirm('Delete this coupon?')) {
       try {
@@ -209,7 +287,29 @@ const AdminApp = () => {
     }
   };
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen bg-slate-950 text-indigo-400 font-black animate-pulse">BOOTING CONTROL CENTER...</div>;
+  // Show loading while validating token
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-950 text-indigo-400 font-black">
+        <div className="flex items-center gap-3">
+          <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          Verifying session...
+        </div>
+      </div>
+    );
+  }
+
+  // Show login if not authenticated
+  if (!token || !user) {
+    return <Login onLogin={handleLogin} />;
+  }
+
+  // Main app
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-screen bg-slate-950 text-indigo-400 font-black animate-pulse">
+      BOOTING CONTROL CENTER...
+    </div>
+  );
 
   return (
     <div className="flex h-screen bg-slate-950 text-slate-300 font-sans selection:bg-indigo-500/30">
@@ -257,6 +357,21 @@ const AdminApp = () => {
             </a>
           </div>
         </nav>
+
+        {/* User Info & Logout */}
+        <div className="mt-auto pt-6 border-t border-slate-800">
+          <div className="px-4 py-3 mb-3">
+            <p className="text-xs font-bold text-white truncate">{user.email}</p>
+            <p className="text-[10px] text-indigo-400 uppercase">{user.role}</p>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-all duration-200 text-sm font-bold"
+          >
+            <LogOut className="w-5 h-5" />
+            Sign Out
+          </button>
+        </div>
       </aside>
 
       {/* Main Content */}
