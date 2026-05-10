@@ -65,6 +65,16 @@ const authenticateJWT = (req, res, next) => {
     return res.status(401).json({ error: 'Access denied. No token provided.' });
   }
   
+  // Handle legacy tokens (prefix with 'legacy-')
+  if (finalToken.startsWith('legacy-')) {
+    const secret = finalToken.substring(7);
+    if (secret === process.env.ADMIN_SECRET) {
+      req.user = { email: ADMIN_EMAIL, role: 'superadmin' };
+      return next();
+    }
+    return res.status(403).json({ error: 'Invalid legacy token.' });
+  }
+  
   try {
     const decoded = jwt.verify(finalToken, JWT_SECRET);
     req.user = decoded;
