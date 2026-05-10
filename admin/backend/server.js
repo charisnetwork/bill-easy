@@ -134,23 +134,30 @@ app.get('/health', (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   
+  console.log('[Login] Attempt:', email);
+  console.log('[Login] ADMIN_EMAIL configured:', ADMIN_EMAIL);
+  console.log('[Login] ADMIN_PASSWORD_HASH configured:', ADMIN_PASSWORD_HASH ? 'Yes (length: ' + ADMIN_PASSWORD_HASH.length + ')' : 'NO');
+  
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required.' });
   }
   
   // Only allow the specific admin email
   if (email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+    console.log('[Login] Email mismatch');
     return res.status(401).json({ error: 'Invalid credentials.' });
   }
   
   // Check if password hash is configured
   if (!ADMIN_PASSWORD_HASH) {
-    console.error('ADMIN_PASSWORD_HASH is not set in environment variables');
+    console.error('[Login] ADMIN_PASSWORD_HASH not set');
     return res.status(500).json({ error: 'Server configuration error.' });
   }
   
   // Verify password
+  console.log('[Login] Comparing password...');
   const isPasswordValid = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
+  console.log('[Login] Password valid:', isPasswordValid);
   
   if (!isPasswordValid) {
     return res.status(401).json({ error: 'Invalid credentials.' });
