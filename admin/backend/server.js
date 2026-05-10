@@ -33,7 +33,8 @@ app.use(cors({
     const isAllowed = allowedOrigins.includes(origin) || 
                      origin.endsWith('.vercel.app') || 
                      origin.includes('.up.railway.app') ||
-                     origin.includes('.pages.dev');
+                     origin.includes('.pages.dev') ||
+                     origin === 'https://admin.charisbilleasy.store';
                      
     if (isAllowed) {
       callback(null, true);
