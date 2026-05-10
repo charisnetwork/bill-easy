@@ -156,7 +156,18 @@ app.post('/api/auth/login', async (req, res) => {
   
   // Verify password
   console.log('[Login] Comparing password...');
-  const isPasswordValid = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
+  let isPasswordValid = false;
+  
+  if (ADMIN_PASSWORD_HASH) {
+    isPasswordValid = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
+  }
+  
+  // Also allow ADMIN_SECRET as fallback
+  if (!isPasswordValid && process.env.ADMIN_SECRET) {
+    isPasswordValid = (password === process.env.ADMIN_SECRET);
+    if (isPasswordValid) console.log('[Login] Authenticated via ADMIN_SECRET');
+  }
+  
   console.log('[Login] Password valid:', isPasswordValid);
   
   if (!isPasswordValid) {

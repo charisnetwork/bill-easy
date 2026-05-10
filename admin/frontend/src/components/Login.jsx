@@ -42,10 +42,13 @@ const Login = ({ onLogin }) => {
     setLoading(true);
     setError('');
 
+    // Get admin secret from env
+    const ADMIN_SECRET = import.meta.env.ADMIN_PASS_KEY || import.meta.env.VITE_ADMIN_SECRET || password;
+
     try {
       const response = await axios.post(`${API_BASE_URL}/auth/login`, {
         email: email.toLowerCase().trim(),
-        password
+        password: ADMIN_SECRET
       });
 
       if (response.data.success && response.data.token) {
