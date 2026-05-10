@@ -100,16 +100,23 @@ const authenticateLegacy = (req, res, next) => {
 
 // Combined auth middleware - tries JWT first, then falls back to legacy
 const authMiddleware = (req, res, next) => {
+  // Debug log
+  console.log('[Auth] Path:', req.path);
+  console.log('[Auth] Authorization header:', req.headers['authorization'] ? 'present' : 'missing');
+  console.log('[Auth] x-admin-token header:', req.headers['x-admin-token'] ? 'present' : 'missing');
+  
   // Try JWT auth first
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   const tokenFromHeader = req.headers['x-admin-token'];
   
   if (token || tokenFromHeader) {
+    console.log('[Auth] Attempting JWT authentication');
     return authenticateJWT(req, res, next);
   }
   
   // Fall back to legacy secret auth
+  console.log('[Auth] Attempting legacy authentication');
   return authenticateLegacy(req, res, next);
 };
 
