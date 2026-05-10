@@ -207,13 +207,14 @@ const chatWithAssistant = async (req, res) => {
 
     // 6. Call Gemini
     let text;
-    const modelNames = ["gemini-2.0-flash", "gemini-1.5-flash"];
+    // Use Gemini 3.0 Flash as primary, fallback to 2.5 Flash if available
+    const modelNames = ["gemini-3.0-flash", "gemini-2.5-flash", "gemini-2.0-flash-exp"];
     let lastError = null;
 
     for (const modelName of modelNames) {
       try {
         console.log(`>>> Charis: Calling ${modelName}...`);
-        const model = genAI.getGenerativeModel({ model: modelName }, { apiVersion: 'v1' });
+        const model = genAI.getGenerativeModel({ model: modelName });
         const result = await model.generateContent(fullPrompt);
         const response = await result.response;
         text = response.text();
@@ -225,6 +226,7 @@ const chatWithAssistant = async (req, res) => {
       } catch (apiError) {
         console.error(`>>> Charis API Error with ${modelName}:`, apiError.message);
         lastError = apiError;
+        // Continue to next model
         continue;
       }
     }
@@ -278,7 +280,7 @@ const processPDFExtract = async (req, res) => {
     
     Document text: ${extractedText.substring(0, 3000)}`;
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" }, { apiVersion: 'v1' });
+    const model = genAI.getGenerativeModel({ model: "gemini-3.0-flash" });
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const parsedData = JSON.parse(response.text());
