@@ -1,9 +1,69 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const { Invoice, Product, Company, Expense, Subscription, Plan, AIUsage } = require("../models");
+const { Invoice, Product, Company, Expense, Subscription, Plan, AIUsage, Purchase, Supplier } = require("../models");
 const { Op, sequelize } = require("sequelize");
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+// STRICT SYSTEM INSTRUCTION FOR CHARIS
+const CHARIS_SYSTEM_INSTRUCTION = `You are Charis, the exclusive AI assistant for Bill Easy - a GST billing and inventory management platform.
+
+🚫 STRICT RULES - NEVER VIOLATE:
+1. ONLY discuss Bill Easy platform topics: Invoices, E-way Bills, Purchase Orders, Reports, Products, Stock, GST, Customers, Suppliers
+2. NEVER answer coding questions, programming, general news, weather, sports, entertainment, or any non-business topics
+3. NEVER provide code examples, scripts, or technical implementations
+4. If asked about unrelated topics, politely redirect: "I'm Charis, your Bill Easy assistant. I can only help with billing, inventory, and business tasks on the Bill Easy platform."
+
+✅ ALLOWED TOPICS:
+- How to create invoices, quotations, credit notes
+- How to create E-way bills and track them
+- How to create Purchase Orders (PO)
+- How to generate and read reports (sales, purchase, GST, stock)
+- How to add/manage products and stock
+- How to add customers and suppliers
+- GST calculations and compliance
+- How to use Bill Easy features
+
+📋 BILL EASY FEATURES GUIDE:
+
+1. CREATE INVOICE:
+   - Go to Sales → Invoices → Create Invoice
+   - Select Customer or add new
+   - Add items (search existing or type new)
+   - Set GST rates, quantities, prices
+   - Save and print/share
+
+2. CREATE E-WAY BILL:
+   - Go to Sales → E-way Bills → Create E-way Bill
+   - Fill vehicle details, distance, transport info
+   - Generate and print
+
+3. CREATE PURCHASE ORDER (PO):
+   - Go to Purchase → Purchase Orders → Create PO
+   - Select Supplier
+   - Add items to order
+   - Set expected delivery date
+   - Save and send to supplier
+
+4. VIEW REPORTS:
+   - Go to Reports section
+   - Available: Sales Report, Purchase Report, GST Report, Stock Report, Profit/Loss
+   - Select date range and filters
+   - Export to PDF/Excel
+
+5. ADD PRODUCT:
+   - Go to Products → Add Product
+   - Fill: Name, HSN Code, GST Rate, Unit, Opening Stock
+   - Set Low Stock Alert
+   - Save
+
+6. MANAGE STOCK:
+   - View low stock alerts on dashboard
+   - Go to Inventory → Stock Adjustment
+   - Transfer between godowns
+   - Update quantities
+
+Always be helpful, concise, and guide users step-by-step for Bill Easy operations.`;
 
 const chatWithAssistant = async (req, res) => {
   const companyId = req.companyId;
@@ -11,10 +71,10 @@ const chatWithAssistant = async (req, res) => {
   console.log(">>> Charis Assistant: Request received from Company ID:", companyId, "User ID:", userId);
   
   try {
-    const { question } = req.body;
+    const { question, pdfData, pdfType } = req.body;
 
-    if (!question) {
-      return res.status(400).json({ error: "Question is required" });
+    if (!question && !pdfData) {
+      return res.status(400).json({ error: "Question or PDF data is required" });
     }
 
     if (!process.env.GEMINI_API_KEY) {
@@ -29,7 +89,7 @@ const chatWithAssistant = async (req, res) => {
     });
 
     const planName = subscription?.Plan?.plan_name || 'Free Account';
-    let dailyLimit = 12; // Default for Free
+    let dailyLimit = 12;
 
     if (planName.toLowerCase().includes('premium')) {
       dailyLimit = 50;
@@ -49,38 +109,51 @@ const chatWithAssistant = async (req, res) => {
       });
     }
 
-    // 2. Topic Restriction & Context Fetching
-    const lowerQuestion = question.toLowerCase();
+    // 2. STRICT Topic Filtering - Block non-Bill Easy topics
+    const lowerQuestion = (question || '').toLowerCase();
     
-    // Check if the question is related to Bill Easy or general business tasks
-    const businessKeywords = [
-      'sale', 'invoice', 'bill', 'product', 'stock', 'inventory', 'customer', 
-      'supplier', 'expense', 'profit', 'loss', 'gst', 'tax', 'report', 'business',
-      'godown', 'warehouse', 'payment', 'credit', 'quotation', 'eway', 'staff',
-      'attendance', 'payroll', 'total', 'how many', 'what is', 'low', 'today'
+    // STRICT BLOCK LIST - Topics Charis should NEVER answer
+    const blockedTopics = [
+      'code', 'coding', 'programming', 'script', 'python', 'javascript', 'java', 'c++',
+      'news', 'weather', 'sports', 'cricket', 'football', 'movie', 'film', 'song',
+      'recipe', 'cooking', 'travel', 'politics', 'election', 'stock market', 'crypto',
+      'bitcoin', 'game', 'gaming', 'playstation', 'xbox', 'dating', 'relationship'
     ];
     
-    const isRelated = businessKeywords.some(keyword => lowerQuestion.includes(keyword)) || 
-                     lowerQuestion.length < 10; // Allow short greetings
-
-    if (!isRelated && 
-        !lowerQuestion.includes('hi') && 
-        !lowerQuestion.includes('hello') && 
-        !lowerQuestion.includes('charis')) {
+    const isBlocked = blockedTopics.some(topic => lowerQuestion.includes(topic));
+    
+    if (isBlocked) {
       return res.json({ 
-        answer: "I am Charis, your Bill Easy business assistant. I can only help you with questions related to your business, such as sales, stock levels, expenses, and reports. For coding or other unrelated topics, please use a general-purpose AI." 
+        answer: "🚫 I'm Charis, your Bill Easy business assistant. I cannot help with coding, news, entertainment, or general topics.\n\n✅ I can help you with:\n• Creating invoices, e-way bills, purchase orders\n• Generating sales, GST, and stock reports\n• Managing products and inventory\n• Bill Easy platform features\n\nHow can I assist with your billing or inventory today?" 
       });
     }
 
+    // 3. Handle PDF Processing for Items/Purchases
+    let pdfContext = "";
+    if (pdfData && pdfType) {
+      console.log(">>> Charis: Processing PDF data...");
+      
+      if (pdfType === 'purchase_invoice' || pdfType === 'supplier_bill') {
+        pdfContext = `\n[PDF DATA PROVIDED - Purchase Document]\nExtract product details from this PDF and:\n1. If item exists in database: Add purchase quantity to stock\n2. If item is NEW: Create new product with details\n\nPDF Content Summary: ${pdfData.substring(0, 2000)}`;
+      } else if (pdfType === 'product_catalog') {
+        pdfContext = `\n[PDF DATA PROVIDED - Product Catalog]\nExtract products and add them to inventory. Create new products if they don't exist.\n\nPDF Content: ${pdfData.substring(0, 2000)}`;
+      }
+    }
+
+    // 4. Fetch Contextual Data
     let financialContext = "";
     let inventoryContext = "";
 
-    // 3. Conditional Context Fetching
-    const isFinancialQuery = lowerQuestion.includes('profit') || lowerQuestion.includes('loss') || lowerQuestion.includes('sales') || lowerQuestion.includes('money') || lowerQuestion.includes('total');
-    const isInventoryQuery = lowerQuestion.includes('stock') || lowerQuestion.includes('inventory') || lowerQuestion.includes('item') || lowerQuestion.includes('product');
+    const isFinancialQuery = lowerQuestion.includes('profit') || lowerQuestion.includes('loss') || 
+                            lowerQuestion.includes('sales') || lowerQuestion.includes('money') || 
+                            lowerQuestion.includes('total') || lowerQuestion.includes('expense');
+    
+    const isInventoryQuery = lowerQuestion.includes('stock') || lowerQuestion.includes('inventory') || 
+                            lowerQuestion.includes('item') || lowerQuestion.includes('product') ||
+                            lowerQuestion.includes('low stock');
 
     if (isFinancialQuery) {
-      console.log(">>> Charis: Fetching Financial Context for relevant query...");
+      console.log(">>> Charis: Fetching Financial Context...");
       try {
         const todayStart = new Date();
         todayStart.setHours(0,0,0,0);
@@ -96,14 +169,14 @@ const chatWithAssistant = async (req, res) => {
         const totalExpenses = parseFloat(totalExpensesData || 0);
         const netProfit = totalSales - totalExpenses;
 
-        financialContext = `\n[Real-time Financial Data] Today's Sales: ${todaySales.toFixed(2)}, Total Lifetime Sales: ${totalSales.toFixed(2)}, Total Expenses: ${totalExpenses.toFixed(2)}, Estimated Net Profit: ${netProfit.toFixed(2)}.`;
+        financialContext = `\n[Financial Data] Today's Sales: ₹${todaySales.toFixed(2)}, Total Sales: ₹${totalSales.toFixed(2)}, Expenses: ₹${totalExpenses.toFixed(2)}, Net Profit: ₹${netProfit.toFixed(2)}`;
       } catch (dbError) {
         console.error(">>> Charis DB Error (Financial):", dbError.message);
       }
     }
 
     if (isInventoryQuery) {
-      console.log(">>> Charis: Fetching Inventory Context for relevant query...");
+      console.log(">>> Charis: Fetching Inventory Context...");
       try {
         const lowStockProducts = await Product.findAll({
           where: { 
@@ -116,15 +189,7 @@ const chatWithAssistant = async (req, res) => {
         });
 
         if (lowStockProducts.length > 0) {
-          inventoryContext = "\n[Real-time Inventory Data] Items running low: " + lowStockProducts.map(p => `${p.name} (${p.stock_quantity} left)`).join(", ");
-        } else {
-          // If no items are below alert level, just get current stock levels
-          const topProducts = await Product.findAll({
-            where: { company_id: companyId },
-            limit: 5,
-            attributes: ['name', 'stock_quantity']
-          });
-          inventoryContext = "\n[Real-time Inventory Data] Stock levels: " + topProducts.map(p => `${p.name} (${p.stock_quantity})`).join(", ");
+          inventoryContext = "\n[Inventory Alert] Low Stock Items: " + lowStockProducts.map(p => `${p.name} (${p.stock_quantity})`).join(", ");
         }
       } catch (dbError) {
         console.error(">>> Charis DB Error (Inventory):", dbError.message);
@@ -132,65 +197,49 @@ const chatWithAssistant = async (req, res) => {
     }
 
     const company = await Company.findByPk(companyId, { attributes: ['name'] });
-    const businessName = company?.name || "the business";
+    const businessName = company?.name || "your business";
 
-    // 4. Updated Personality & System Instruction
-    const systemInstruction = `You are Charis, the exclusive business assistant for ${businessName} on the Bill Easy platform. 
-Rules:
-- YOU ARE ONLY ALLOWED TO DISCUSS BUSINESS DATA RELATED TO BILL EASY (Sales, Stock, Invoices, Customers, Expenses, etc.).
-- STRICTLY PROHIBITED: Coding, technical programming, general knowledge outside of business, or any unrelated topics.
-- If the user asks about unrelated topics (like coding), politely refuse and state your purpose.
-- Use the provided real-time data to answer questions about today's sales, low stock, etc.
-- If the user greets you, respond politely as a business assistant.
-- Be concise, professional, and use clean text (avoid triple asterisks).`;
+    // 5. Construct Prompt
+    const contextStr = (financialContext || inventoryContext || pdfContext) ? 
+      `\nContext:${financialContext}${inventoryContext}${pdfContext}` : "";
+    
+    const fullPrompt = `${CHARIS_SYSTEM_INSTRUCTION}\n\nBusiness: ${businessName}${contextStr}\n\nUser: ${question || 'Process the PDF data'}`;
 
-    // 5. Prompt Construction
-    const contextStr = (financialContext || inventoryContext) ? `\nContextual Data:${financialContext}${inventoryContext}` : "";
-    const fullPrompt = `${systemInstruction}${contextStr}\n\nUser Question: ${question}`;
-
-    // 6. Gemini Call with Fallback
+    // 6. Call Gemini
     let text;
-    // In 2026, we prioritize Gemini 3.0 Flash as requested
-    const modelNames = ["gemini-3.0-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+    const modelNames = ["gemini-2.0-flash", "gemini-1.5-flash"];
     let lastError = null;
 
     for (const modelName of modelNames) {
       try {
-        console.log(`>>> Charis: Attempting to call ${modelName} (v1)...`);
-        // Explicitly use v1 API which is more stable for production models
+        console.log(`>>> Charis: Calling ${modelName}...`);
         const model = genAI.getGenerativeModel({ model: modelName }, { apiVersion: 'v1' });
         const result = await model.generateContent(fullPrompt);
         const response = await result.response;
         text = response.text();
         
         if (text) {
-          // Increment Usage Count on success
           await usage.increment('count');
-          break; // Success!
+          break;
         }
       } catch (apiError) {
         console.error(`>>> Charis API Error with ${modelName}:`, apiError.message);
         lastError = apiError;
-        
-        // If it's a 404, we immediately try the next one
-        if (apiError.message.includes('404')) continue;
-        
-        // For other errors (like rate limits), we still try the next model
         continue;
       }
     }
 
     if (!text) {
       return res.status(200).json({ 
-        answer: "I'm having a bit of trouble connecting to my brain right now. Please try asking me again in a few seconds." 
+        answer: "I'm having trouble connecting right now. Please try again in a few seconds." 
       });
     }
 
-    console.log(">>> Charis successfully generated a response. New usage count:", usage.count + 1);
+    console.log(">>> Charis response generated. Usage:", usage.count + 1);
     res.json({ answer: text, usage: usage.count + 1, limit: dailyLimit });
 
   } catch (error) {
-    console.error(">>> Charis Assistant General Error:", error);
+    console.error(">>> Charis Assistant Error:", error);
     res.status(500).json({ 
       error: "Charis is temporarily unavailable", 
       details: error.message 
@@ -198,6 +247,87 @@ Rules:
   }
 };
 
+// PDF Processing Helper
+const processPDFExtract = async (req, res) => {
+  const companyId = req.companyId;
+  
+  try {
+    const { extractedText, documentType } = req.body;
+    
+    if (!extractedText) {
+      return res.status(400).json({ error: "No text extracted from PDF" });
+    }
+
+    // Use Gemini to parse the PDF content
+    const prompt = `Extract product information from this ${documentType} and return JSON format:
+    {
+      "items": [
+        {
+          "name": "product name",
+          "hsn_code": "HSN code if available",
+          "quantity": number,
+          "unit_price": number,
+          "gst_rate": 5/12/18/28,
+          "is_new_product": true/false
+        }
+      ],
+      "supplier_name": "supplier name if available",
+      "invoice_number": "invoice number",
+      "invoice_date": "date"
+    }
+    
+    Document text: ${extractedText.substring(0, 3000)}`;
+
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" }, { apiVersion: 'v1' });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const parsedData = JSON.parse(response.text());
+
+    // Create or update products
+    const createdItems = [];
+    for (const item of parsedData.items) {
+      let product = await Product.findOne({
+        where: { 
+          company_id: companyId,
+          name: { [Op.iLike]: item.name }
+        }
+      });
+
+      if (!product) {
+        // Create new product
+        product = await Product.create({
+          company_id: companyId,
+          name: item.name,
+          hsn_code: item.hsn_code || '',
+          gst_rate: item.gst_rate || 18,
+          sale_price: item.unit_price * 1.2, // 20% markup
+          purchase_price: item.unit_price,
+          stock_quantity: item.quantity,
+          low_stock_alert: 10,
+          unit: 'PCS'
+        });
+        createdItems.push({ name: item.name, action: 'created', quantity: item.quantity });
+      } else {
+        // Update existing product stock
+        await product.increment('stock_quantity', { by: item.quantity });
+        createdItems.push({ name: item.name, action: 'stock_added', quantity: item.quantity });
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Processed ${createdItems.length} items`,
+      items: createdItems,
+      supplier: parsedData.supplier_name
+    });
+
+  } catch (error) {
+    console.error(">>> PDF Processing Error:", error);
+    res.status(500).json({ error: "Failed to process PDF", details: error.message });
+  }
+};
+
 module.exports = {
-  chatWithAssistant
+  chatWithAssistant,
+  processPDFExtract
 };
