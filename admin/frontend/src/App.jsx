@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { 
   LayoutDashboard, Globe, Tag, Megaphone, DollarSign, 
@@ -18,6 +18,10 @@ const AdminApp = () => {
   const [token, setToken] = useState(localStorage.getItem('admin_token'));
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  
+  // Axios instance ref
+  const apiRef = useRef(axios.create({ baseURL: API_BASE_URL }));
+  const api = apiRef.current;
   
   // App state
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -74,18 +78,15 @@ const AdminApp = () => {
     is_active: true
   });
 
-  // Create axios instance
-  const api = axios.create({
-    baseURL: API_BASE_URL
-  });
-
   // Add request interceptor to inject token dynamically
   useEffect(() => {
     const requestInterceptor = api.interceptors.request.use(
       (config) => {
         const currentToken = localStorage.getItem('admin_token');
+        console.log('[Axios Interceptor] Token:', currentToken ? 'present' : 'missing');
         if (currentToken) {
           config.headers['Authorization'] = `Bearer ${currentToken}`;
+          console.log('[Axios Interceptor] Added Authorization header');
         }
         return config;
       },
