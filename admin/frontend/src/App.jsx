@@ -10,14 +10,7 @@ import {
 } from 'recharts';
 import Login from './components/Login';
 
-// DEBUG: Log env vars
-console.log('[DEBUG] ADMIN_BACKEND_KEY:', import.meta.env.ADMIN_BACKEND_KEY);
-console.log('[DEBUG] VITE_ADMIN_API_URL:', import.meta.env.VITE_ADMIN_API_URL);
-console.log('[DEBUG] VITE_ADMIN_BACKEND_URL:', import.meta.env.VITE_ADMIN_BACKEND_URL);
-
 const API_BASE_URL = (import.meta.env.ADMIN_BACKEND_KEY || import.meta.env.VITE_ADMIN_API_URL || import.meta.env.VITE_ADMIN_BACKEND_URL || 'http://localhost:3025') + '/api';
-
-console.log('[DEBUG] API_BASE_URL:', API_BASE_URL);
 const SAAS_URL = import.meta.env.VITE_SAAS_URL || 'https://charisbilleasy.store';
 
 const AdminApp = () => {
@@ -319,9 +312,14 @@ const AdminApp = () => {
   );
 
   return (
-    <div className="flex h-screen bg-slate-950 text-slate-300 font-sans selection:bg-indigo-500/30">
-      {/* Sidebar */}
-      <aside className="w-64 bg-slate-950 border-r border-slate-800 flex flex-col p-6">
+    <>
+      {/* DEBUG BANNER - Remove after fixing */}
+      <div style={{position:'fixed',top:0,left:0,right:0,zIndex:9999,background:'red',color:'white',padding:'10px',fontSize:'12px'}}>
+        DEBUG: API_BASE_URL = {API_BASE_URL} | ADMIN_BACKEND_KEY = {import.meta.env.ADMIN_BACKEND_KEY || 'NOT SET'}
+      </div>
+      <div className="flex h-screen bg-slate-950 text-slate-300 font-sans selection:bg-indigo-500/30" style={{marginTop:'40px'}}>
+        {/* Sidebar */}
+        <aside className="w-64 bg-slate-950 border-r border-slate-800 flex flex-col p-6">
         <div className="mb-10">
           <h1 className="text-xl font-black text-white flex items-center gap-2">
             <Shield className="w-6 h-6 text-indigo-500" />
@@ -940,6 +938,7 @@ const AdminApp = () => {
         )}
       </main>
     </div>
+    </>
   );
 };
 
