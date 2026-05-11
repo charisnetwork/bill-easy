@@ -157,6 +157,6 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  // Monorepo Gateway running
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Monorepo Gateway running on port ${PORT}`);
 });
