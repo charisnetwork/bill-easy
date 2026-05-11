@@ -95,6 +95,7 @@ export const LandingPage = () => {
             <div className="hidden md:flex items-center gap-8">
               <a href="#features" className="text-sm text-slate-600 hover:text-slate-900 transition-colors">Features</a>
               <a href="#pricing" className="text-sm text-slate-600 hover:text-slate-900 transition-colors">Pricing</a>
+              <a href="/downloads.html" className="text-sm text-slate-600 hover:text-slate-900 transition-colors font-medium">Downloads</a>
             </div>
 
             <div className="flex items-center gap-3">
@@ -143,9 +144,11 @@ export const LandingPage = () => {
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </Button>
                 </Link>
-                <Button size="lg" variant="outline" className="border-slate-500 text-white hover:bg-white/10">
-                  Watch Demo
-                </Button>
+                <a href="/downloads.html">
+                  <Button size="lg" variant="outline" className="border-slate-500 text-white hover:bg-white/10 w-full sm:w-auto">
+                    ⬇️ Download for Windows
+                  </Button>
+                </a>
               </div>
 
               <div className="flex items-center gap-6 mt-8 text-sm text-slate-400">
