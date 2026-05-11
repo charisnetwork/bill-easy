@@ -23,6 +23,6 @@ RUN cd admin/backend && npm install --omit=dev
 # Copy the rest of the source code
 COPY . .
 
-EXPOSE 8080
+EXPOSE 3000
 
 CMD ["node", "railway-monorepo.js"]
