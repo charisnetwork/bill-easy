@@ -1,8 +1,10 @@
 [build]
 builder = "nixpacks"
 
+# Force rebuild: cache-bust-2026-05-11T18-15-00Z
+
 [phases.build]
-cmds = ["echo 'Skipping build phase - using pre-built structure'"]
+cmds = ["echo 'Building with cache bust'"]
 
 [phases.setup]
 nixPkgs = ["nodejs_22"]
