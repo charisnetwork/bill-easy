@@ -4,11 +4,18 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.set('trust proxy', 1);
+
+// Track backend health
+const backendHealth = {
+  main: { ready: false, port: 8001, lastCheck: null },
+  admin: { ready: false, port: 3025, lastCheck: null }
+};
 
 // Normalize URLs (fix double slashes like //api)
 app.use((req, res, next) => {
@@ -18,13 +25,16 @@ app.use((req, res, next) => {
   next();
 });
 
-// Enable CORS for all routes
+// Enable CORS for all routes - MUST be before other middleware
 app.use(cors({
   origin: '*',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-token', 'x-admin-secret', 'x-company-id']
 }));
+
+// Handle OPTIONS preflight for all routes
+app.options('*', cors());
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -33,10 +43,40 @@ app.use((req, res, next) => {
   next();
 });
 
-// Monorepo Gateway starting
+// Health check function for backends
+const checkBackendHealth = (port, timeout = 5000) => {
+  return new Promise((resolve) => {
+    const request = http.get(`http://localhost:${port}/health`, (res) => {
+      resolve(res.statusCode === 200);
+    });
+    request.on('error', () => resolve(false));
+    request.setTimeout(timeout, () => {
+      request.destroy();
+      resolve(false);
+    });
+  });
+};
+
+// Wait for backend to be ready
+const waitForBackend = async (name, port, maxAttempts = 30) => {
+  console.log(`⏳ Waiting for ${name} backend on port ${port}...`);
+  
+  for (let i = 0; i < maxAttempts; i++) {
+    const isHealthy = await checkBackendHealth(port, 2000);
+    if (isHealthy) {
+      console.log(`✅ ${name} backend is ready on port ${port}`);
+      backendHealth[name.toLowerCase()].ready = true;
+      backendHealth[name.toLowerCase()].lastCheck = new Date();
+      return true;
+    }
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+  
+  console.error(`❌ ${name} backend failed to start on port ${port}`);
+  return false;
+};
 
 // Start Main Backend
-// Main Backend spawning on port 8001
 const mainBackendEnv = {
   ...process.env,
   PORT: '8001',
@@ -49,15 +89,16 @@ const mainBackend = spawn('node', ['server.js'], {
   stdio: 'inherit'
 });
 
+mainBackend.on('error', (err) => {
+  console.error('❌ Main backend spawn error:', err);
+});
+
 // Start Admin Backend
-// Admin Backend spawning on port 3025
 const adminBackendEnv = {
   ...process.env,
   PORT: '3025',
   NODE_ENV: process.env.NODE_ENV || 'production'
 };
-
-
 
 const adminBackend = spawn('node', ['server.js'], { 
   cwd: path.join(__dirname, 'admin/backend'),
@@ -65,160 +106,214 @@ const adminBackend = spawn('node', ['server.js'], {
   stdio: 'inherit'
 });
 
-// 1. Serve Main Frontend Static Files (HIGHEST PRIORITY)
-const mainFrontendPath = path.join(__dirname, 'frontend/dist');
-// Checking main frontend
-
-// Frontend folder check done
-
-if (fs.existsSync(mainFrontendPath) && fs.existsSync(path.join(mainFrontendPath, 'index.html'))) {
-  // Main frontend found
-  
-  // Serve static files with proper caching
-  app.use(express.static(mainFrontendPath, {
-    maxAge: '1d',
-    etag: true,
-    lastModified: true
-  }));
-} else {
-  // Main frontend not found
-}
-
-// 2. Proxy API routes (Use specific matching)
-const adminProxy = createProxyMiddleware({ 
-  target: 'http://localhost:3025', 
-  pathRewrite: { '^/admin/api': '/api' },
-  changeOrigin: true,
-  logLevel: 'debug',
-  proxyTimeout: 60000,
-  timeout: 60000,
-  onError: (err, req, res) => {
-    console.error('[Admin Proxy Error]', err.message);
-    res.status(502).json({ error: 'Admin backend unavailable', message: err.message });
-  }
+adminBackend.on('error', (err) => {
+  console.error('❌ Admin backend spawn error:', err);
 });
 
-const mainProxy = createProxyMiddleware({ 
-  target: 'http://localhost:8001', 
-  changeOrigin: true,
-  logLevel: 'debug',
-  proxyTimeout: 60000,
-  timeout: 60000,
-  onError: (err, req, res) => {
-    console.error('[Main Proxy Error]', err.message);
-    res.status(502).json({ error: 'Main backend unavailable', message: err.message });
+// Proxy middleware factory with error handling
+const createProxy = (target, pathRewrite, name) => {
+  return createProxyMiddleware({
+    target,
+    pathRewrite,
+    changeOrigin: true,
+    logLevel: 'debug',
+    proxyTimeout: 60000,
+    timeout: 60000,
+    onError: (err, req, res) => {
+      console.error(`[${name} Proxy Error]`, err.message);
+      if (!res.headersSent) {
+        res.status(502).json({ 
+          error: `${name} backend unavailable`, 
+          message: err.message,
+          code: 'BACKEND_UNAVAILABLE'
+        });
+      }
+    },
+    onProxyReq: (proxyReq, req, res) => {
+      console.log(`[${name} Proxy] ${req.method} ${req.url} -> ${target}${proxyReq.path}`);
+    },
+    onProxyRes: (proxyRes, req, res) => {
+      console.log(`[${name} Proxy Response] ${proxyRes.statusCode} for ${req.url}`);
+    }
+  });
+};
+
+// Wait for backends before setting up proxies
+const startGateway = async () => {
+  // Wait for both backends to be ready
+  const [mainReady, adminReady] = await Promise.all([
+    waitForBackend('Main', 8001),
+    waitForBackend('Admin', 3025)
+  ]);
+
+  if (!mainReady) {
+    console.error('⚠️ Main backend not ready - API requests may fail');
   }
-});
+  if (!adminReady) {
+    console.error('⚠️ Admin backend not ready - Admin API requests may fail');
+  }
 
-app.use('/admin/api', adminProxy);
-app.use('/api', mainProxy);
+  // 1. Serve Main Frontend Static Files (HIGHEST PRIORITY)
+  const mainFrontendPath = path.join(__dirname, 'frontend/dist');
 
-// 3. Serve Uploads
-app.use('/uploads', express.static(path.join(__dirname, 'backend/uploads')));
-
-// 4. Serve Admin Frontend
-const adminFrontendPath = path.join(__dirname, 'admin/frontend/dist');
-if (fs.existsSync(adminFrontendPath)) {
-  // Admin frontend found
-  
-  // Serve at /admin-portal path
-  app.use('/admin-portal', express.static(adminFrontendPath));
-  app.get('/admin-portal/*', (req, res) => {
-    res.sendFile(path.join(adminFrontendPath, 'index.html'));
-  });
-  
-  // Also serve at root for admin subdomain (admin.charisbilleasy.store)
-  app.use((req, res, next) => {
-    const host = req.headers.host || '';
-    if (host.startsWith('admin.')) {
-      // Skip API routes - they should be proxied
-      if (req.url.startsWith('/admin/api') || req.url.startsWith('/api')) {
-        return next();
-      }
-      
-      // For API requests from admin subdomain, rewrite /api to /admin/api for proxy
-      if (req.url.startsWith('/api/')) {
-        req.url = '/admin' + req.url;
-        return next();
-      }
-      
-      // Serve static files from admin frontend first
-      const staticMiddleware = express.static(adminFrontendPath);
-      staticMiddleware(req, res, (err) => {
-        if (err) return next(err);
-        // If static file not found, serve index.html (SPA behavior)
-        if (!res.headersSent) {
-          res.sendFile(path.join(adminFrontendPath, 'index.html'));
-        }
-      });
-      return;
-    }
-    next();
-  });
-}
-
-// 5. Fallback for Main SPA (must be after /api and static)
-if (fs.existsSync(mainFrontendPath)) {
-  // SPA Fallback enabled
-  
-  // Catch-all route for SPA - MUST be last
-  app.get('*', (req, res, next) => {
-    // Skip API and uploads routes
-    if (req.url.startsWith('/api') || req.url.startsWith('/admin/api') || req.url.startsWith('/uploads') || req.url.startsWith('/health')) {
-      return next();
-    }
+  if (fs.existsSync(mainFrontendPath) && fs.existsSync(path.join(mainFrontendPath, 'index.html'))) {
+    console.log('✅ Main frontend found');
     
-    // SPA Fallback serving index.html
-    res.sendFile(path.join(mainFrontendPath, 'index.html'), (err) => {
-      if (err) {
-        // SPA Fallback error
-        next(err);
+    app.use(express.static(mainFrontendPath, {
+      maxAge: '1d',
+      etag: true,
+      lastModified: true
+    }));
+  } else {
+    console.log('⚠️ Main frontend not found at', mainFrontendPath);
+  }
+
+  // 2. Proxy API routes (Use specific matching) - MUST be before static file catch-all
+  const adminProxy = createProxy(
+    'http://localhost:3025', 
+    { '^/admin/api': '/api' },
+    'Admin'
+  );
+
+  const mainProxy = createProxy(
+    'http://localhost:8001', 
+    null,
+    'Main'
+  );
+
+  // Admin API routes first (more specific)
+  app.use('/admin/api', adminProxy);
+  // Main API routes
+  app.use('/api', mainProxy);
+
+  // 3. Serve Uploads
+  app.use('/uploads', express.static(path.join(__dirname, 'backend/uploads')));
+
+  // 4. Serve Admin Frontend
+  const adminFrontendPath = path.join(__dirname, 'admin/frontend/dist');
+  if (fs.existsSync(adminFrontendPath)) {
+    console.log('✅ Admin frontend found');
+    
+    // Serve at /admin-portal path
+    app.use('/admin-portal', express.static(adminFrontendPath));
+    app.get('/admin-portal/*', (req, res) => {
+      res.sendFile(path.join(adminFrontendPath, 'index.html'));
+    });
+    
+    // Also serve at root for admin subdomain (admin.charisbilleasy.store)
+    app.use((req, res, next) => {
+      const host = req.headers.host || '';
+      if (host.startsWith('admin.')) {
+        // Skip API routes - they should be proxied
+        if (req.url.startsWith('/admin/api') || req.url.startsWith('/api')) {
+          return next();
+        }
+        
+        // For API requests from admin subdomain, rewrite /api to /admin/api for proxy
+        if (req.url.startsWith('/api/')) {
+          req.url = '/admin' + req.url;
+          return next();
+        }
+        
+        // Serve static files from admin frontend first
+        const staticMiddleware = express.static(adminFrontendPath);
+        staticMiddleware(req, res, (err) => {
+          if (err) return next(err);
+          // If static file not found, serve index.html (SPA behavior)
+          if (!res.headersSent) {
+            res.sendFile(path.join(adminFrontendPath, 'index.html'));
+          }
+        });
+        return;
+      }
+      next();
+    });
+  } else {
+    console.log('⚠️ Admin frontend not found at', adminFrontendPath);
+  }
+
+  // 5. Health Check
+  app.get('/health', (req, res) => {
+    res.json({ 
+      status: 'gateway-ok',
+      frontend: fs.existsSync(mainFrontendPath) ? 'available' : 'not-found',
+      backends: backendHealth,
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // Root endpoint
+  app.get('/', (req, res) => {
+    res.json({
+      message: 'Bill Easy API Gateway',
+      status: 'running',
+      port: PORT,
+      backends: backendHealth,
+      endpoints: {
+        health: '/health',
+        api: '/api',
+        adminApi: '/admin/api',
+        adminPortal: '/admin-portal'
       }
     });
   });
-} else {
-  // SPA Fallback disabled
-  app.get('/', (req, res) => {
-    res.send(`
-      <div style="font-family: sans-serif; padding: 2rem; text-align: center;">
-        <h1 style="color: #2563eb;">🚀 Bill Easy Monorepo Gateway is ACTIVE</h1>
-        <p>This is the gateway server. The main frontend (React) build was not found in <code>frontend/dist</code>.</p>
-        <div style="margin-top: 2rem; padding: 1rem; background: #f3f4f6; border-radius: 8px; display: inline-block;">
-          <strong>API Status:</strong> <a href="/api">Main API</a> | <a href="/admin/api">Admin API</a> | <a href="/health">Health Check</a>
-        </div>
-      </div>
-    `);
-  });
-}
 
-// Health Check - MUST be defined before 404 handler
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'gateway-ok',
-    frontend: fs.existsSync(mainFrontendPath) ? 'available' : 'not-found',
-    timestamp: new Date().toISOString()
+  // 6. Fallback for Main SPA (must be after /api and static)
+  if (fs.existsSync(mainFrontendPath)) {
+    app.get('*', (req, res, next) => {
+      // Skip API and uploads routes
+      if (req.url.startsWith('/api') || req.url.startsWith('/admin/api') || req.url.startsWith('/uploads') || req.url.startsWith('/health')) {
+        return next();
+      }
+      
+      res.sendFile(path.join(mainFrontendPath, 'index.html'), (err) => {
+        if (err) {
+          next(err);
+        }
+      });
+    });
+  }
+
+  // 404 handler for API routes - MUST be last
+  app.use((req, res) => {
+    res.status(404).json({ 
+      error: 'Route not found',
+      path: req.path,
+      method: req.method
+    });
   });
+
+  // Start server
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`\n🚀 Monorepo Gateway running on port ${PORT}`);
+    console.log(`📡 Main Backend: http://localhost:8001 (${mainReady ? '✅ Ready' : '❌ Not Ready'})`);
+    console.log(`🔐 Admin Backend: http://localhost:3025 (${adminReady ? '✅ Ready' : '❌ Not Ready'})`);
+    console.log(`\n📋 Endpoints:`);
+    console.log(`   - Health: http://localhost:${PORT}/health`);
+    console.log(`   - Main API: http://localhost:${PORT}/api`);
+    console.log(`   - Admin API: http://localhost:${PORT}/admin/api`);
+    console.log(`   - Admin Portal: http://localhost:${PORT}/admin-portal`);
+  });
+};
+
+// Handle process termination
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  mainBackend.kill();
+  adminBackend.kill();
+  process.exit(0);
 });
 
-// Root endpoint
-app.get('/', (req, res) => {
-  res.json({
-    message: 'Bill Easy API Gateway',
-    status: 'running',
-    port: PORT,
-    endpoints: {
-      health: '/health',
-      api: '/api',
-      adminApi: '/admin/api'
-    }
-  });
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully');
+  mainBackend.kill();
+  adminBackend.kill();
+  process.exit(0);
 });
 
-// 404 handler for API routes - MUST be last
-app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Monorepo Gateway running on port ${PORT}`);
+// Start the gateway
+console.log('🚀 Starting Bill Easy Monorepo Gateway...\n');
+startGateway().catch(err => {
+  console.error('Failed to start gateway:', err);
+  process.exit(1);
 });

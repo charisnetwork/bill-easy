@@ -241,34 +241,49 @@ app.use((err, req, res, next) => {
 
 // Database Sync & Server Start
 const startServer = async () => {
-  try {
-    // Check for critical environment variables
-    if (!JWT_SECRET) {
-      console.warn('⚠️ WARNING: JWT_SECRET is not set. Using fallback - this is insecure!');
+  let retries = 0;
+  const maxRetries = 5;
+  
+  while (retries < maxRetries) {
+    try {
+      // Check for critical environment variables
+      if (!JWT_SECRET) {
+        console.warn('⚠️ WARNING: JWT_SECRET is not set. Using fallback - this is insecure!');
+      }
+      
+      if (!ADMIN_PASSWORD_HASH) {
+        console.warn('⚠️ WARNING: ADMIN_PASSWORD_HASH is not set. Login will not work!');
+        console.log('💡 To set up admin password, generate a bcrypt hash and set ADMIN_PASSWORD_HASH env variable');
+      }
+
+      // Authenticate SaaS DB (Read-Only access recommended)
+      await saasDB.authenticate();
+      console.log('✅ Connected to SaaS Database');
+
+      // Sync Admin DB (Write Access for Affiliates, Expenses, etc.)
+      await adminDB.authenticate();
+      await adminDB.sync({ alter: true });
+      console.log('✅ Connected and Synced Admin Database');
+
+      app.listen(PORT, '0.0.0.0', () => {
+        console.log(`🚀 Developer Admin Control Center running on port ${PORT}`);
+        console.log(`🔐 Admin Email: ${ADMIN_EMAIL}`);
+        console.log(`🔑 JWT Auth: ${JWT_SECRET ? 'Enabled' : 'DISABLED - Using legacy secret only'}`);
+      });
+      
+      return; // Success - exit retry loop
+    } catch (error) {
+      retries++;
+      console.error(`❌ Database connection failed (attempt ${retries}/${maxRetries}):`, error.message);
+      
+      if (retries >= maxRetries) {
+        console.error('❌ Max retries reached. Exiting...');
+        process.exit(1);
+      }
+      
+      console.log(`⏳ Retrying in 3 seconds...`);
+      await new Promise(resolve => setTimeout(resolve, 3000));
     }
-    
-    if (!ADMIN_PASSWORD_HASH) {
-      console.warn('⚠️ WARNING: ADMIN_PASSWORD_HASH is not set. Login will not work!');
-      console.log('💡 To set up admin password, generate a bcrypt hash and set ADMIN_PASSWORD_HASH env variable');
-    }
-
-    // Authenticate SaaS DB (Read-Only access recommended)
-    await saasDB.authenticate();
-    console.log('✅ Connected to SaaS Database');
-
-    // Sync Admin DB (Write Access for Affiliates, Expenses, etc.)
-    await adminDB.authenticate();
-    await adminDB.sync({ alter: true });
-    console.log('✅ Connected and Synced Admin Database');
-
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Developer Admin Control Center running on port ${PORT}`);
-      console.log(`🔐 Admin Email: ${ADMIN_EMAIL}`);
-      console.log(`🔑 JWT Auth: ${JWT_SECRET ? 'Enabled' : 'DISABLED - Using legacy secret only'}`);
-    });
-  } catch (error) {
-    console.error('❌ Database connection failed:', error);
-    process.exit(1);
   }
 };
 
