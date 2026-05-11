@@ -20,10 +20,7 @@ const apiLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => {
-    // Use user ID if authenticated, otherwise IP
-    return req.user?.id || req.ip;
-  },
+  // Use default keyGenerator which handles IPv6 properly
   handler: (req, res, next, options) => {
     console.warn(`[Rate Limit] Exceeded for ${req.ip} on ${req.path}`);
     res.status(options.statusCode).json(options.message);
@@ -42,11 +39,7 @@ const authLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => {
-    // Rate limit by email if provided, otherwise IP
-    const email = req.body?.email;
-    return email ? `auth:${email.toLowerCase()}` : req.ip;
-  },
+  // Use default keyGenerator which handles IPv6 properly
   handler: (req, res, next, options) => {
     const email = req.body?.email;
     console.warn(`[Auth Rate Limit] Exceeded for ${email || req.ip}`);
@@ -64,11 +57,8 @@ const passwordResetLimiter = rateLimit({
     retryAfter: 3600
   },
   standardHeaders: true,
-  keyHeaders: false,
-  keyGenerator: (req) => {
-    const email = req.body?.email;
-    return email ? `reset:${email.toLowerCase()}` : req.ip;
-  }
+  legacyHeaders: false
+  // Removed invalid 'keyHeaders' option
 });
 
 // Account-level brute force protection
