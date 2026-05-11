@@ -22,11 +22,11 @@ RUN cd admin/backend && npm install --omit=dev
 
 # Copy frontend package files (for build)
 COPY frontend/package.json frontend/package-lock.json ./frontend/
-RUN cd frontend && npm install
+RUN cd frontend && npm install --legacy-peer-deps
 
 # Copy admin frontend package files (for build)
 COPY admin/frontend/package.json admin/frontend/package-lock.json ./admin/frontend/
-RUN cd admin/frontend && npm install
+RUN cd admin/frontend && npm install --legacy-peer-deps
 
 # Copy the rest of the source code
 COPY . .
