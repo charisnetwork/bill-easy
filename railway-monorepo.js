@@ -78,22 +78,33 @@ if (fs.existsSync(mainFrontendPath) && fs.existsSync(path.join(mainFrontendPath,
 }
 
 // 2. Proxy API routes (Use specific matching)
-app.use('/admin/api', createProxyMiddleware({ 
+const adminProxy = createProxyMiddleware({ 
   target: 'http://localhost:3025', 
   pathRewrite: { '^/admin/api': '/api' },
   changeOrigin: true,
   logLevel: 'debug',
   proxyTimeout: 60000,
-  timeout: 60000
-}));
+  timeout: 60000,
+  onError: (err, req, res) => {
+    console.error('[Admin Proxy Error]', err.message);
+    res.status(502).json({ error: 'Admin backend unavailable', message: err.message });
+  }
+});
 
-app.use('/api', createProxyMiddleware({ 
+const mainProxy = createProxyMiddleware({ 
   target: 'http://localhost:8001', 
   changeOrigin: true,
   logLevel: 'debug',
   proxyTimeout: 60000,
-  timeout: 60000
-}));
+  timeout: 60000,
+  onError: (err, req, res) => {
+    console.error('[Main Proxy Error]', err.message);
+    res.status(502).json({ error: 'Main backend unavailable', message: err.message });
+  }
+});
+
+app.use('/admin/api', adminProxy);
+app.use('/api', mainProxy);
 
 // 3. Serve Uploads
 app.use('/uploads', express.static(path.join(__dirname, 'backend/uploads')));
@@ -113,12 +124,27 @@ if (fs.existsSync(adminFrontendPath)) {
   app.use((req, res, next) => {
     const host = req.headers.host || '';
     if (host.startsWith('admin.')) {
-      // Serve admin frontend for admin subdomain
-      if (req.path === '/' || req.path === '/index.html') {
-        return res.sendFile(path.join(adminFrontendPath, 'index.html'));
+      // Skip API routes - they should be proxied
+      if (req.url.startsWith('/admin/api') || req.url.startsWith('/api')) {
+        return next();
       }
-      // Serve static files from admin frontend
-      return express.static(adminFrontendPath)(req, res, next);
+      
+      // For API requests from admin subdomain, rewrite /api to /admin/api for proxy
+      if (req.url.startsWith('/api/')) {
+        req.url = '/admin' + req.url;
+        return next();
+      }
+      
+      // Serve static files from admin frontend first
+      const staticMiddleware = express.static(adminFrontendPath);
+      staticMiddleware(req, res, (err) => {
+        if (err) return next(err);
+        // If static file not found, serve index.html (SPA behavior)
+        if (!res.headersSent) {
+          res.sendFile(path.join(adminFrontendPath, 'index.html'));
+        }
+      });
+      return;
     }
     next();
   });
