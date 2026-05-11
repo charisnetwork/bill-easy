@@ -1,6 +1,14 @@
 [build]
-builder = "DOCKERFILE"
-dockerfilePath = "Dockerfile"
+builder = "nixpacks"
+
+[phases.build]
+cmds = ["echo 'Skipping build phase - using pre-built structure'"]
+
+[phases.setup]
+nixPkgs = ["nodejs_22"]
+
+[start]
+cmd = "node railway-monorepo.js"
 
 [deploy]
 startCommand = "node railway-monorepo.js"
