@@ -1,17 +1,27 @@
 import axios from 'axios';
-import { API_BASE_URL, BACKEND_URL, getErrorMessage } from '../config/api';
+import { API_BASE_URL, getErrorMessage } from '../config/api';
 
 const API_URL = API_BASE_URL;
 
-const getToken = () => localStorage.getItem('token');
-
+// Create axios instance with credentials support for cookies
 const api = axios.create({
-  baseURL: API_URL
+  baseURL: API_URL,
+  withCredentials: true  // Important: sends/receives cookies
 });
 
-// Request interceptor - adds auth token and logs requests
+// In-memory token storage reference (set by AuthContext)
+let accessTokenGetter = () => null;
+let logoutHandler = () => {};
+
+// Called by AuthContext to set up token access
+export const setAuthHandlers = (getToken, logout) => {
+  accessTokenGetter = getToken;
+  logoutHandler = logout;
+};
+
+// Request interceptor - adds auth token
 api.interceptors.request.use((config) => {
-  const token = getToken();
+  const token = accessTokenGetter();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -27,7 +37,7 @@ api.interceptors.request.use((config) => {
   return Promise.reject(error);
 });
 
-// Response interceptor - logs responses and handles errors
+// Response interceptor - handles errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -36,9 +46,11 @@ api.interceptors.response.use(
       // API error logged
     }
     
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+    // Handle 401 errors - AuthContext will handle token refresh
+    // Only redirect if it's not a token_expired error (which AuthContext handles)
+    if (error.response?.status === 401 && 
+        error.response?.data?.code !== 'TOKEN_EXPIRED') {
+      logoutHandler();
     }
     
     // Normalize error data to ensure .error is always a string
@@ -47,7 +59,6 @@ api.interceptors.response.use(
       if (data.error && typeof data.error !== 'string') {
         data.error = getErrorMessage(error);
       } else if (!data.error) {
-        // Fallback if there is no .error property but we have other data
         data.error = getErrorMessage(error);
       }
     }
@@ -60,10 +71,15 @@ api.interceptors.response.use(
 export const authAPI = {
   login: (data) => api.post('/auth/login', data),
   register: (data) => api.post('/auth/register', data),
+  refresh: () => api.post('/auth/refresh'),  // Uses cookie automatically
+  logout: () => api.post('/auth/logout'),
+  logoutAll: () => api.post('/auth/logout-all'),
   getProfile: () => api.get('/auth/profile'),
   updateProfile: (data) => api.put('/auth/profile', data),
   changePassword: (data) => api.post('/auth/change-password', data),
-  switchCompany: (companyId) => api.post(`/auth/switch-company/${companyId}`)
+  switchCompany: (companyId) => api.post(`/auth/switch-company/${companyId}`),
+  getSessions: () => api.get('/auth/sessions'),
+  revokeSession: (sessionId) => api.post(`/auth/sessions/${sessionId}/revoke`)
 };
 
 // Company APIs

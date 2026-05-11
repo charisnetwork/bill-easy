@@ -120,15 +120,10 @@ app.use(morgan('dev'));
    RATE LIMITING
 ========================================= */
 
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 1000,
-  message: {
-    error: 'Too many requests, please try again later'
-  }
-});
+const { apiLimiter } = require('./middleware/rateLimit');
 
-app.use(limiter);
+// Apply general API rate limiting (excludes auth routes which have their own)
+app.use('/api/', apiLimiter);
 
 /* =========================================
    BODY PARSER

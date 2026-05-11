@@ -1,13 +1,25 @@
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { User, Company, Plan, Subscription, UserCompany } = require('../models');
+const tokenService = require('../services/tokenService');
+const { logAuthAttempt, clearBruteForce } = require('../middleware/rateLimit');
+const { logSecurityEvent, EVENT_TYPES, SEVERITY } = require('../services/auditService');
+
+// Cookie configuration
+const REFRESH_COOKIE_NAME = 'refreshToken';
+const REFRESH_COOKIE_OPTIONS = {
+  httpOnly: true,        // Not accessible via JavaScript
+  secure: process.env.NODE_ENV === 'production',  // HTTPS only in production
+  sameSite: 'strict',    // CSRF protection
+  maxAge: 7 * 24 * 60 * 60 * 1000,  // 7 days
+  path: '/api/auth/refresh'  // Only sent to refresh endpoint
+};
 
 /* ===============================
    REGISTER
 ================================ */
 const register = async (req, res) => {
   try {
-    // Registration request processed
     const { companyName, email, password, name, phone, gstNumber, address } = req.body;
 
     // Check existing email
@@ -16,7 +28,6 @@ const register = async (req, res) => {
       return res.status(400).json({ error: 'Email already registered' });
     }
 
-    // Creating company with GST
     // Create company
     const company = await Company.create({
       name: companyName,
@@ -25,10 +36,9 @@ const register = async (req, res) => {
       address: address,
       email: email
     });
-    // Company created successfully
 
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);  // Increased rounds
 
     // Create user
     const user = await User.create({
@@ -37,7 +47,8 @@ const register = async (req, res) => {
       password: hashedPassword,
       name,
       phone,
-      role: 'owner'
+      role: 'owner',
+      token_version: 1
     });
 
     // Create UserCompany relationship
@@ -47,7 +58,7 @@ const register = async (req, res) => {
       role: 'owner'
     });
 
-    // Find or create Free plan (match seeded name)
+    // Find or create Free plan
     let freePlan = await Plan.findOne({ where: { plan_name: 'Free Account' } });
 
     if (!freePlan) {
@@ -81,18 +92,28 @@ const register = async (req, res) => {
       }
     });
 
-    // Generate JWT
-    const token = jwt.sign(
-      { userId: user.id, companyId: company.id },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: process.env.JWT_EXPIRES_IN || '7d'
-      }
+    // Generate session ID
+    const sessionId = crypto.randomUUID();
+    const fingerprint = tokenService.generateDeviceFingerprint(req);
+    const deviceInfo = {
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      timestamp: new Date().toISOString()
+    };
+
+    // Generate tokens
+    const accessToken = tokenService.createAccessToken(user, sessionId);
+    const refreshToken = await tokenService.createRefreshToken(
+      user.id, sessionId, deviceInfo, fingerprint
     );
+
+    // Set refresh token as HttpOnly cookie
+    res.cookie(REFRESH_COOKIE_NAME, refreshToken, REFRESH_COOKIE_OPTIONS);
 
     res.status(201).json({
       message: 'Registration successful',
-      token,
+      accessToken,  // Short-lived, stored in memory
+      expiresIn: 900,  // 15 minutes in seconds
       user: {
         id: user.id,
         name: user.name,
@@ -106,11 +127,10 @@ const register = async (req, res) => {
     });
 
   } catch (error) {
-    // Registration error logged
+    console.error('Registration error:', error);
     res.status(500).json({ error: 'Registration failed' });
   }
 };
-
 
 /* ===============================
    LOGIN
@@ -130,23 +150,30 @@ const login = async (req, res) => {
     });
 
     if (!user) {
+      await logAuthAttempt(req, false, null, { message: 'User not found' });
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     if (!user.is_active) {
+      await logAuthAttempt(req, false, user, { message: 'Account deactivated' });
       return res.status(401).json({ error: 'Account is deactivated' });
     }
 
-    // Check if user has a password set
     if (!user.password) {
+      await logAuthAttempt(req, false, user, { message: 'No password set' });
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const validPassword = await bcrypt.compare(password, user.password);
 
     if (!validPassword) {
+      await logAuthAttempt(req, false, user, { message: 'Invalid password' });
       return res.status(401).json({ error: 'Invalid credentials' });
     }
+
+    // Successful login - clear brute force counter
+    clearBruteForce(email);
+    await logAuthAttempt(req, true, user);
 
     // Fetch all companies this user has access to
     const userCompanies = await UserCompany.findAll({
@@ -160,7 +187,7 @@ const login = async (req, res) => {
       role: uc.role
     }));
 
-    // Find the best plan across all these companies to determine overall account limits
+    // Find the best plan across all these companies
     const companyIds = userCompanies.filter(uc => uc.role === 'owner').map(uc => uc.company_id);
     let maxBusinesses = 1;
     
@@ -178,17 +205,27 @@ const login = async (req, res) => {
     // Update last login
     await user.update({ last_login: new Date() });
 
-    // Generate JWT
-    const token = jwt.sign(
-      { userId: user.id, companyId: user.company_id },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: process.env.JWT_EXPIRES_IN || '7d'
-      }
+    // Generate session ID and tokens
+    const sessionId = crypto.randomUUID();
+    const fingerprint = tokenService.generateDeviceFingerprint(req);
+    const deviceInfo = {
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      timestamp: new Date().toISOString()
+    };
+
+    // Generate tokens
+    const accessToken = tokenService.createAccessToken(user, sessionId);
+    const refreshToken = await tokenService.createRefreshToken(
+      user.id, sessionId, deviceInfo, fingerprint
     );
 
+    // Set refresh token as HttpOnly cookie
+    res.cookie(REFRESH_COOKIE_NAME, refreshToken, REFRESH_COOKIE_OPTIONS);
+
     res.json({
-      token,
+      accessToken,  // Short-lived, client stores in memory
+      expiresIn: 900,  // 15 minutes in seconds
       user: {
         id: user.id,
         name: user.name,
@@ -215,11 +252,153 @@ const login = async (req, res) => {
     });
 
   } catch (error) {
-    // Login error logged
+    console.error('Login error:', error);
+    await logAuthAttempt(req, false, null, error);
     res.status(500).json({ error: 'Login failed' });
   }
 };
 
+/* ===============================
+   REFRESH TOKEN
+================================ */
+const refreshToken = async (req, res) => {
+  try {
+    const refreshToken = req.cookies[REFRESH_COOKIE_NAME];
+    
+    if (!refreshToken) {
+      return res.status(401).json({ 
+        error: 'No refresh token provided',
+        code: 'REFRESH_TOKEN_MISSING'
+      });
+    }
+
+    const fingerprint = tokenService.generateDeviceFingerprint(req);
+    const deviceInfo = {
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      timestamp: new Date().toISOString()
+    };
+
+    // Rotate refresh token (single-use)
+    const rotation = await tokenService.rotateRefreshToken(
+      refreshToken, 
+      deviceInfo, 
+      fingerprint
+    );
+
+    // Get user for access token
+    const user = await User.findByPk(rotation.userId);
+    if (!user || !user.is_active) {
+      return res.status(401).json({ error: 'User not found or inactive' });
+    }
+
+    // Generate new access token
+    const accessToken = tokenService.createAccessToken(user, rotation.sessionId);
+
+    // Generate new refresh token
+    const newRefreshToken = await tokenService.createRefreshToken(
+      user.id, 
+      rotation.sessionId, 
+      deviceInfo, 
+      fingerprint
+    );
+
+    // Set new refresh token as HttpOnly cookie
+    res.cookie(REFRESH_COOKIE_NAME, newRefreshToken, REFRESH_COOKIE_OPTIONS);
+
+    // Log token refresh
+    await logSecurityEvent(EVENT_TYPES.TOKEN_REFRESH, {
+      userId: user.id,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      metadata: { sessionId: rotation.sessionId }
+    });
+
+    res.json({
+      accessToken,
+      expiresIn: 900  // 15 minutes
+    });
+
+  } catch (error) {
+    console.error('Token refresh error:', error);
+    
+    // Clear cookie on error
+    res.clearCookie(REFRESH_COOKIE_NAME, { path: '/api/auth/refresh' });
+    
+    if (error.message.includes('reuse detected')) {
+      await logSecurityEvent(EVENT_TYPES.TOKEN_REUSE_DETECTED, {
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+        severity: SEVERITY.CRITICAL
+      });
+    }
+    
+    res.status(401).json({ 
+      error: error.message || 'Invalid refresh token',
+      code: 'REFRESH_FAILED'
+    });
+  }
+};
+
+/* ===============================
+   LOGOUT
+================================ */
+const logout = async (req, res) => {
+  try {
+    const refreshToken = req.cookies[REFRESH_COOKIE_NAME];
+    
+    // Revoke refresh token if present
+    if (refreshToken) {
+      const tokenHash = tokenService.hashToken(refreshToken);
+      await tokenService.revokeToken(tokenHash);
+    }
+    
+    // Clear cookie
+    res.clearCookie(REFRESH_COOKIE_NAME, { path: '/api/auth/refresh' });
+    
+    // Log logout
+    if (req.user) {
+      await logSecurityEvent(EVENT_TYPES.LOGOUT, {
+        userId: req.user.id,
+        ip: req.ip,
+        userAgent: req.headers['user-agent']
+      });
+    }
+    
+    res.json({ message: 'Logged out successfully' });
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({ error: 'Logout failed' });
+  }
+};
+
+/* ===============================
+   LOGOUT ALL SESSIONS
+================================ */
+const logoutAll = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const currentSessionId = req.user.sessionId;
+    
+    // Revoke all tokens except current session
+    await tokenService.revokeAllUserTokens(userId, currentSessionId);
+    
+    // Increment token version to invalidate all access tokens
+    await tokenService.incrementTokenVersion(userId);
+    
+    await logSecurityEvent(EVENT_TYPES.ALL_SESSIONS_REVOKED, {
+      userId,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      severity: SEVERITY.HIGH
+    });
+    
+    res.json({ message: 'All other sessions logged out successfully' });
+  } catch (error) {
+    console.error('Logout all error:', error);
+    res.status(500).json({ error: 'Failed to logout all sessions' });
+  }
+};
 
 /* ===============================
    GET PROFILE
@@ -228,7 +407,6 @@ const getProfile = async (req, res) => {
   try {
     const user = req.user;
 
-    // Fetch all companies this user has access to
     const userCompanies = await UserCompany.findAll({
       where: { user_id: user.id },
       include: [{ model: Company }]
@@ -240,7 +418,6 @@ const getProfile = async (req, res) => {
       role: uc.role
     }));
 
-    // Find the best plan across all these companies to determine overall account limits
     const companyIds = userCompanies.filter(uc => uc.role === 'owner').map(uc => uc.company_id);
     let maxBusinesses = 1;
     
@@ -301,11 +478,10 @@ const getProfile = async (req, res) => {
     });
 
   } catch (error) {
-    // Get profile error logged
+    console.error('Get profile error:', error);
     res.status(500).json({ error: 'Failed to get profile' });
   }
 };
-
 
 /* ===============================
    UPDATE PROFILE
@@ -322,11 +498,10 @@ const updateProfile = async (req, res) => {
     res.json({ message: 'Profile updated successfully' });
 
   } catch (error) {
-    // Update profile error logged
+    console.error('Update profile error:', error);
     res.status(500).json({ error: 'Failed to update profile' });
   }
 };
-
 
 /* ===============================
    CHANGE PASSWORD
@@ -346,20 +521,38 @@ const changePassword = async (req, res) => {
       });
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
 
+    // Update password and increment token version
     await req.user.update({
-      password: hashedPassword
+      password: hashedPassword,
+      token_version: (req.user.token_version || 1) + 1
     });
 
-    res.json({ message: 'Password changed successfully' });
+    // Revoke all refresh tokens except current session
+    await tokenService.revokeAllUserTokens(req.user.id, req.user.sessionId);
+
+    // Log password change
+    await logSecurityEvent(EVENT_TYPES.PASSWORD_CHANGE, {
+      userId: req.user.id,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      severity: SEVERITY.HIGH
+    });
+
+    res.json({ 
+      message: 'Password changed successfully. Please log in again on other devices.' 
+    });
 
   } catch (error) {
-    // Change password error logged
+    console.error('Change password error:', error);
     res.status(500).json({ error: 'Failed to change password' });
   }
 };
 
+/* ===============================
+   SWITCH COMPANY
+================================ */
 const switchCompany = async (req, res) => {
   try {
     const { companyId } = req.params;
@@ -377,17 +570,82 @@ const switchCompany = async (req, res) => {
 
     res.json({ message: 'Switched company successfully' });
   } catch (error) {
-    // Switch company error logged
+    console.error('Switch company error:', error);
     res.status(500).json({ error: 'Failed to switch company' });
   }
 };
 
+/* ===============================
+   GET ACTIVE SESSIONS
+================================ */
+const getSessions = async (req, res) => {
+  try {
+    const sessions = await tokenService.getUserSessions(req.user.id);
+    
+    // Mark current session
+    const currentSessionId = req.user.sessionId;
+    const sessionsWithCurrent = sessions.map(s => ({
+      ...s.toJSON(),
+      isCurrent: s.session_id === currentSessionId
+    }));
+    
+    res.json({ sessions: sessionsWithCurrent });
+  } catch (error) {
+    console.error('Get sessions error:', error);
+    res.status(500).json({ error: 'Failed to get sessions' });
+  }
+};
+
+/* ===============================
+   REVOKE SESSION
+================================ */
+const revokeSession = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    
+    // Don't allow revoking current session through this endpoint
+    if (sessionId === req.user.sessionId) {
+      return res.status(400).json({ 
+        error: 'Cannot revoke current session. Use logout instead.' 
+      });
+    }
+    
+    // Revoke tokens for this session
+    const { RefreshToken } = require('../models');
+    await RefreshToken.update(
+      { revoked_at: new Date() },
+      { 
+        where: { 
+          user_id: req.user.id,
+          session_id: sessionId,
+          revoked_at: null
+        } 
+      }
+    );
+    
+    await logSecurityEvent(EVENT_TYPES.SESSION_REVOKED, {
+      userId: req.user.id,
+      ip: req.ip,
+      metadata: { revokedSessionId: sessionId }
+    });
+    
+    res.json({ message: 'Session revoked successfully' });
+  } catch (error) {
+    console.error('Revoke session error:', error);
+    res.status(500).json({ error: 'Failed to revoke session' });
+  }
+};
 
 module.exports = {
   register,
   login,
+  refreshToken,
+  logout,
+  logoutAll,
   getProfile,
   updateProfile,
   changePassword,
-  switchCompany
+  switchCompany,
+  getSessions,
+  revokeSession
 };

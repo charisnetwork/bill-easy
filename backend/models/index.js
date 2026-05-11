@@ -92,7 +92,8 @@ const User = sequelize.define('User',{
   permissions:{ type:DataTypes.JSON, defaultValue:{} },
   is_active:{ type:DataTypes.BOOLEAN, defaultValue:true },
   email_verified:{ type:DataTypes.BOOLEAN, defaultValue:false },
-  last_login:{ type:DataTypes.DATE }
+  last_login:{ type:DataTypes.DATE },
+  token_version:{ type:DataTypes.INTEGER, defaultValue:1 }  // For mass logout
 }, { tableName: 'users' });
 
 const Coupon = sequelize.define('Coupon', {
@@ -653,6 +654,41 @@ UserCompany.belongsTo(User, { foreignKey: 'user_id' });
 
 Company.hasMany(UserCompany, { foreignKey: 'company_id' });
 UserCompany.belongsTo(Company, { foreignKey: 'company_id' });
+
+/* =========================================
+   REFRESH TOKEN MODEL (Security)
+========================================= */
+
+const RefreshToken = sequelize.define('RefreshToken', {
+  id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+  token_hash: { type: DataTypes.STRING(128), allowNull: false, unique: true },  // SHA256 hash
+  user_id: { type: DataTypes.UUID, allowNull: false },
+  session_id: { type: DataTypes.STRING(64), allowNull: false },  // Unique session identifier
+  device_info: { type: DataTypes.JSON, defaultValue: {} },  // Browser, OS, etc.
+  fingerprint: { type: DataTypes.STRING(64) },  // Device fingerprint
+  expires_at: { type: DataTypes.DATE, allowNull: false },
+  created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+  rotated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+  used_at: { type: DataTypes.DATE },  // Set when token is rotated (single-use)
+  revoked_at: { type: DataTypes.DATE }  // Set when user logs out or token compromised
+}, { 
+  tableName: 'refresh_tokens',
+  timestamps: false,
+  indexes: [
+    { fields: ['token_hash'] },
+    { fields: ['user_id'] },
+    { fields: ['session_id'] },
+    { fields: ['expires_at'] },
+    { fields: ['revoked_at'] }
+  ]
+});
+
+/* =========================================
+   RELATIONSHIPS
+========================================= */
+
+User.hasMany(RefreshToken, { foreignKey: 'user_id' });
+RefreshToken.belongsTo(User, { foreignKey: 'user_id' });
 
 /* =========================================
    EXPORT
