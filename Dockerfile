@@ -3,6 +3,9 @@ FROM node:22-alpine
 
 WORKDIR /app
 
+# Cache bust: 2026-05-11T18:05:00Z
+# Force rebuild to get latest gateway fixes
+
 # Install build dependencies
 RUN apk add --no-cache python3 make g++
 
