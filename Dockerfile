@@ -44,3 +44,4 @@ RUN cd admin/frontend && npm prune --omit=dev
 EXPOSE 3000
 
 CMD ["node", "railway-monorepo.js"]
+
