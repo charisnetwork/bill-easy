@@ -387,6 +387,14 @@ const startServer = async () => {
     await sequelize.authenticate();
     console.log('Database connection established');
 
+    // Run security migrations first
+    try {
+      const runMigrations = require('./scripts/runMigrations');
+      await runMigrations();
+    } catch (migrationError) {
+      console.warn('Migration warning (continuing):', migrationError.message);
+    }
+
     // Run migrations to fix database schema
     console.log('Running database migrations...');
     const queryInterface = sequelize.getQueryInterface();
