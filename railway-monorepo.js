@@ -26,6 +26,13 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// Request logging middleware
+app.use((req, res, next) => {
+  const host = req.headers.host || 'unknown';
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - Host: ${host}`);
+  next();
+});
+
 // Monorepo Gateway starting
 
 // Start Main Backend

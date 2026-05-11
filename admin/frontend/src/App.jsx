@@ -11,13 +11,20 @@ import {
 import Login from './components/Login';
 
 // Detect if we're running through the main gateway or standalone
+const host = window.location.host;
 const isGateway = window.location.pathname.startsWith('/admin-portal') || 
-                  window.location.host === 'charisbilleasy.store' ||
-                  window.location.host === 'www.charisbilleasy.store';
+                  host === 'charisbilleasy.store' ||
+                  host === 'www.charisbilleasy.store' ||
+                  host === 'admin.charisbilleasy.store';
+
+// For Cloudflare Pages or other static hosts, use the production backend
+const isStaticHost = host.includes('pages.dev') || host.includes('netlify.app') || host.includes('vercel.app');
 
 const API_BASE_URL = isGateway 
   ? '/admin/api'  // Through gateway - use relative path
-  : (import.meta.env.ADMIN_BACKEND_KEY || import.meta.env.VITE_ADMIN_API_URL || import.meta.env.VITE_ADMIN_BACKEND_URL || 'http://localhost:3025') + '/api';
+  : isStaticHost
+    ? 'https://bill-easy-production.up.railway.app/admin/api'  // Cloudflare Pages → Railway
+    : (import.meta.env.VITE_ADMIN_API_URL || 'http://localhost:3025') + '/api';
 
 const SAAS_URL = import.meta.env.VITE_SAAS_URL || 'https://charisbilleasy.store';
 
