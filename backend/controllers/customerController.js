@@ -29,7 +29,7 @@ const getCustomers = async (req, res) => {
       totalPages: Math.ceil(count / limit)
     });
   } catch (error) {
-    console.error('Get customers error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get customers' });
   }
 };
@@ -46,7 +46,7 @@ const getCustomer = async (req, res) => {
 
     res.json(customer);
   } catch (error) {
-    console.error('Get customer error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get customer' });
   }
 };
@@ -69,7 +69,7 @@ const createCustomer = async (req, res) => {
 
     res.status(201).json({ message: 'Customer created successfully', customer });
   } catch (error) {
-    console.error('Create customer error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to create customer' });
   }
 };
@@ -89,7 +89,7 @@ const updateCustomer = async (req, res) => {
     await customer.update({ name, phone, email, gst_number, address, city, state, pincode });
     res.json({ message: 'Customer updated successfully', customer });
   } catch (error) {
-    console.error('Update customer error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to update customer' });
   }
 };
@@ -113,7 +113,7 @@ const deleteCustomer = async (req, res) => {
     await customer.destroy();
     res.json({ message: 'Customer deleted successfully' });
   } catch (error) {
-    console.error('Delete customer error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to delete customer' });
   }
 };
@@ -174,7 +174,7 @@ const getCustomerLedger = async (req, res) => {
       outstanding_balance: customer.outstanding_balance
     });
   } catch (error) {
-    console.error('Get customer ledger error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get customer ledger' });
   }
 };

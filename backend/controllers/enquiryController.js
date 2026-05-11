@@ -17,14 +17,14 @@ exports.createEnquiry = async (req, res) => {
       status: 'pending'
     });
 
-    console.log(`>>> New Lead Generated: ${name} (${phone})`);
+    // New lead generated
 
     res.status(201).json({
       message: "Thank you! Our team will contact you soon.",
       data: enquiry
     });
   } catch (error) {
-    console.error(">>> Enquiry Error:", error.message);
+    // Error logged
     res.status(500).json({ error: "Failed to submit enquiry. Please try again later." });
   }
 };

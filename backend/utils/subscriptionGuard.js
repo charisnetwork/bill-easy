@@ -97,7 +97,7 @@ const SubscriptionGuard = {
           return !!features[actionType];
       }
     } catch (error) {
-      console.error('SubscriptionGuard Error:', error);
+      // Error logged
       return false;
     }
   }

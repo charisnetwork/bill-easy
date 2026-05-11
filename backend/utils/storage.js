@@ -38,13 +38,12 @@ if (isGCSConfigured) {
     });
 
     bucket = storage.bucket(GCS_BUCKET_NAME);
-    console.log(`[GCS] Connected to bucket: ${GCS_BUCKET_NAME}`);
-    console.log(`[GCS] Using service account: ${GCS_CLIENT_EMAIL}`);
+    // GCS connected
   } catch (error) {
-    console.error('[GCS] Failed to initialize:', error.message);
+    // GCS init error logged
   }
 } else {
-  console.log('[GCS] Not configured. Set GCS_PROJECT_ID, GCS_CLIENT_EMAIL, and GCS_PRIVATE_KEY env vars.');
+  // GCS not configured
 }
 
 /**
@@ -86,11 +85,11 @@ const uploadImage = async (buffer, filename, folder = 'uploads', mimetype = 'ima
     // Return the public URL
     const publicUrl = `https://storage.googleapis.com/${GCS_BUCKET_NAME}/${gcsFileName}`;
     
-    console.log(`[GCS] Uploaded: ${gcsFileName} -> ${publicUrl}`);
+    // File uploaded to GCS
     
     return publicUrl;
   } catch (error) {
-    console.error('[GCS] Upload failed:', error.message);
+    // Upload error logged
     throw new Error(`Failed to upload to GCS: ${error.message}`);
   }
 };
@@ -110,10 +109,10 @@ const deleteImage = async (fileUrl) => {
     if (match && match[1]) {
       const fileName = match[1];
       await bucket.file(fileName).delete();
-      console.log(`[GCS] Deleted: ${fileName}`);
+      // File deleted from GCS
     }
   } catch (error) {
-    console.error('[GCS] Delete failed:', error.message);
+    // Delete error logged
     // Don't throw - deletion failures shouldn't break the app
   }
 };

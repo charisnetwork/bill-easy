@@ -96,7 +96,10 @@ app.use(
       if (isOriginAllowed(origin)) {
         callback(null, true);
       } else {
-        console.warn(`CORS blocked: ${origin}`);
+        // CORS blocked - log minimal info in development only
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn(`CORS blocked: ${origin}`);
+        }
         callback(new Error('Not allowed by CORS'));
       }
     },

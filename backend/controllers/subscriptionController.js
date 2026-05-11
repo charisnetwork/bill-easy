@@ -9,12 +9,12 @@ try {
       key_id: process.env.RAZORPAY_KEY_ID,
       key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
-    console.log('✅ Razorpay initialized successfully');
+    // Razorpay initialized
   } else {
-    console.warn('⚠️ RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET is not set. Razorpay integration will be disabled.');
+    // Razorpay not configured
   }
 } catch (error) {
-  console.error('❌ Failed to initialize Razorpay:', error.message);
+  // Razorpay init error logged
 }
 
 const validateCoupon = async (req, res) => {
@@ -55,7 +55,7 @@ const validateCoupon = async (req, res) => {
       finalPrice
     });
   } catch (error) {
-    console.error('Validate coupon error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to validate coupon' });
   }
 };
@@ -79,7 +79,7 @@ const getPlans = async (req, res) => {
 
     res.json(result);
   } catch (error) {
-    console.error('Get plans error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get plans' });
   }
 };
@@ -97,7 +97,7 @@ const getCurrentSubscription = async (req, res) => {
 
     res.json(subscription);
   } catch (error) {
-    console.error('Get subscription error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get subscription' });
   }
 };
@@ -181,7 +181,7 @@ const upgradePlan = async (req, res) => {
       subscription: updatedSubscription 
     });
   } catch (error) {
-    console.error('Upgrade plan error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to upgrade plan' });
   }
 };
@@ -199,7 +199,7 @@ const cancelSubscription = async (req, res) => {
     await subscription.update({ status: 'cancelled' });
     res.json({ message: 'Subscription cancelled successfully' });
   } catch (error) {
-    console.error('Cancel subscription error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to cancel subscription' });
   }
 };
@@ -237,7 +237,7 @@ const getUsage = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Get usage error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get usage' });
   }
 };
@@ -307,7 +307,7 @@ const processPayment = async (req, res) => {
       key_id: process.env.RAZORPAY_KEY_ID
     });
   } catch (error) {
-    console.error('Process payment error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to create payment order' });
   }
 };

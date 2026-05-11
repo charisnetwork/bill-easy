@@ -29,7 +29,7 @@ const getSuppliers = async (req, res) => {
       totalPages: Math.ceil(count / limit)
     });
   } catch (error) {
-    console.error('Get suppliers error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get suppliers' });
   }
 };
@@ -46,7 +46,7 @@ const getSupplier = async (req, res) => {
 
     res.json(supplier);
   } catch (error) {
-    console.error('Get supplier error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get supplier' });
   }
 };
@@ -69,7 +69,7 @@ const createSupplier = async (req, res) => {
 
     res.status(201).json({ message: 'Supplier created successfully', supplier });
   } catch (error) {
-    console.error('Create supplier error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to create supplier' });
   }
 };
@@ -89,7 +89,7 @@ const updateSupplier = async (req, res) => {
     await supplier.update({ name, phone, email, gst_number, address, city, state, pincode });
     res.json({ message: 'Supplier updated successfully', supplier });
   } catch (error) {
-    console.error('Update supplier error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to update supplier' });
   }
 };
@@ -112,7 +112,7 @@ const deleteSupplier = async (req, res) => {
     await supplier.destroy();
     res.json({ message: 'Supplier deleted successfully' });
   } catch (error) {
-    console.error('Delete supplier error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to delete supplier' });
   }
 };
@@ -172,7 +172,7 @@ const getSupplierLedger = async (req, res) => {
       outstanding_balance: supplier.outstanding_balance
     });
   } catch (error) {
-    console.error('Get supplier ledger error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get supplier ledger' });
   }
 };

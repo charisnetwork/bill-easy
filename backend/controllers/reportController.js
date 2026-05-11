@@ -5,7 +5,7 @@ const getDashboard = async (req, res) => {
     const summary = await ReportService.getDashboardSummary(req.companyId, req.user);
     res.json(summary);
   } catch (error) {
-    console.error('Get dashboard error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get dashboard data' });
   }
 };
@@ -19,7 +19,7 @@ const getSalesReport = async (req, res) => {
     const report = await ReportService.getSalesReport(req.companyId, startDate, endDate);
     res.json(report);
   } catch (error) {
-    console.error('Get sales report error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get sales report' });
   }
 };
@@ -33,7 +33,7 @@ const getPurchaseReport = async (req, res) => {
     const report = await ReportService.getPurchaseReport(req.companyId, startDate, endDate);
     res.json(report);
   } catch (error) {
-    console.error('Get purchase report error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get purchase report' });
   }
 };
@@ -47,7 +47,7 @@ const getExpenseReport = async (req, res) => {
     const report = await ReportService.getExpenseReport(req.companyId, startDate, endDate);
     res.json(report);
   } catch (error) {
-    console.error('Get expense report error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get expense report' });
   }
 };
@@ -61,7 +61,7 @@ const getProfitLossReport = async (req, res) => {
     const report = await ReportService.getProfitLossReport(req.companyId, startDate, endDate);
     res.json(report);
   } catch (error) {
-    console.error('Get P&L report error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get P&L report' });
   }
 };
@@ -75,7 +75,7 @@ const getGSTReport = async (req, res) => {
     const report = await ReportService.getGSTReport(req.companyId, startDate, endDate);
     res.json(report);
   } catch (error) {
-    console.error('Get GST report error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get GST report' });
   }
 };
@@ -85,7 +85,7 @@ const getCustomerOutstanding = async (req, res) => {
     const report = await ReportService.getCustomerOutstanding(req.companyId);
     res.json(report);
   } catch (error) {
-    console.error('Get customer outstanding error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get customer outstanding' });
   }
 };
@@ -95,7 +95,7 @@ const getSupplierOutstanding = async (req, res) => {
     const report = await ReportService.getSupplierOutstanding(req.companyId);
     res.json(report);
   } catch (error) {
-    console.error('Get supplier outstanding error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get supplier outstanding' });
   }
 };
@@ -105,7 +105,7 @@ const getStockReport = async (req, res) => {
     const report = await ReportService.getStockReport(req.companyId);
     res.json(report);
   } catch (error) {
-    console.error('Get stock report error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get stock report' });
   }
 };

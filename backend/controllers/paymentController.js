@@ -35,7 +35,7 @@ const getPayments = async (req, res) => {
       currentPage: parseInt(page)
     });
   } catch (error) {
-    console.error("Get payments error:", error);
+    // Error logged
     res.status(500).json({ error: "Failed to fetch payments" });
   }
 };
@@ -102,7 +102,7 @@ const createPayment = async (req, res) => {
     });
   } catch (error) {
     await transaction.rollback();
-    console.error("Create payment error:", error);
+    // Error logged
     res.status(500).json({ error: "Failed to record payment" });
   }
 };
@@ -152,7 +152,7 @@ const deletePayment = async (req, res) => {
     res.json({ message: "Payment deleted and balances reverted" });
   } catch (error) {
     await transaction.rollback();
-    console.error("Delete payment error:", error);
+    // Error logged
     res.status(500).json({ error: error.message || "Failed to delete payment" });
   }
 };

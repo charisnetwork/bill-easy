@@ -44,7 +44,7 @@ const getProducts = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Get products error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get products' });
   }
 };
@@ -64,14 +64,14 @@ const getProduct = async (req, res) => {
     res.json(product);
 
   } catch (error) {
-    console.error('Get product error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get product' });
   }
 };
 
 const createProduct = async (req, res) => {
   try {
-    console.log('Create product request body:', req.body);
+    // Create product request
     let {
       name,
       sku,
@@ -169,14 +169,14 @@ const createProduct = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Create product error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to create product' });
   }
 };
 
 const updateProduct = async (req, res) => {
   try {
-    console.log('Update product request body:', req.body);
+    // Update product request
     let {
       name,
       sku,
@@ -238,7 +238,7 @@ const updateProduct = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Update product error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to update product' });
   }
 };
@@ -279,7 +279,7 @@ const deleteProduct = async (req, res) => {
     res.json({ message: 'Product deleted successfully' });
 
   } catch (error) {
-    console.error('Delete product error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to delete product' });
   }
 };
@@ -353,7 +353,7 @@ const adjustStock = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Adjust stock error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to adjust stock' });
   }
 };
@@ -385,7 +385,7 @@ const getStockMovements = async (req, res) => {
     res.json(movements);
 
   } catch (error) {
-    console.error('Get stock movements error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get stock movements' });
   }
 };
@@ -401,7 +401,7 @@ const getCategories = async (req, res) => {
     res.json(categories);
 
   } catch (error) {
-    console.error('Get categories error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get categories' });
   }
 };
@@ -444,7 +444,7 @@ const createCategory = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Create category error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to create category' });
   }
 };
@@ -470,7 +470,7 @@ const updateCategory = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Update category error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to update category' });
   }
 };
@@ -501,7 +501,7 @@ const deleteCategory = async (req, res) => {
     res.json({ message: 'Category deleted successfully' });
 
   } catch (error) {
-    console.error('Delete category error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to delete category' });
   }
 };
@@ -622,7 +622,7 @@ const importProducts = async (req, res) => {
 
   } catch (error) {
     if (transaction) await transaction.rollback();
-    console.error('Import products error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to import products: ' + error.message });
   }
 };

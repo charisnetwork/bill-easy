@@ -10,7 +10,7 @@ const peekInvoiceNumber = async (companyId) => {
     const prefix = company?.invoice_prefix || "INV";
     const nextNumber = counter ? (counter.last_number + 1) : 1;
     
-    console.log(`[peekInvoiceNumber] Company: ${companyId}, Next: ${nextNumber}`);
+    // Invoice number generated
     return `${prefix}-${nextNumber}`;
   } catch (error) {
     console.error('Peek Invoice Number error:', error);
@@ -38,7 +38,7 @@ const generateInvoiceNumber = async (companyId, existingTransaction = null) => {
     const prefix = company?.invoice_prefix || "INV";
     const invoiceNumber = `${prefix}-${counter.last_number}`;
 
-    console.log(`[generateInvoiceNumber] Company: ${companyId}, New Number: ${invoiceNumber}`);
+    // Invoice number generated
 
     if (!existingTransaction) {
       await transaction.commit();
@@ -80,7 +80,7 @@ const generateQuotationNumber = async (companyId, existingTransaction = null) =>
 
     const quotationNumber = `QTN-${counter.last_number}`;
     
-    console.log(`[generateQuotationNumber] Company: ${companyId}, New Number: ${quotationNumber}`);
+    // Quotation number generated
 
     if (!existingTransaction) {
       await transaction.commit();

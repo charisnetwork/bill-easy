@@ -11,9 +11,7 @@ let envBackendUrl =
   import.meta.env?.VITE_BACKEND_URL ||
   import.meta.env?.REACT_APP_BACKEND_URL;
 
-// DEBUG: Log what we received
-console.log('[API Config] Env MAIN_SAAS_BACKEND:', import.meta.env?.MAIN_SAAS_BACKEND);
-console.log('[API Config] Env VITE_BACKEND_URL:', import.meta.env?.VITE_BACKEND_URL);
+// Environment configuration loaded silently
 
 // Sanitize: Remove trailing slash if present
 if (envBackendUrl && envBackendUrl.endsWith('/')) {
@@ -28,16 +26,13 @@ if (envBackendUrl && !envBackendUrl.startsWith('http')) {
 // PRIORITY: 1. Env variable, 2. Hardcoded fallback
 // FORCE PRODUCTION: If env is localhost/empty, use production
 if (!envBackendUrl || envBackendUrl.includes('localhost')) {
-  console.log('[API Config] Forcing production backend');
   envBackendUrl = RAILWAY_BACKEND_URL;
 }
 
 export const BACKEND_URL = envBackendUrl;
 export const API_BASE_URL = `${BACKEND_URL}/api`;
 
-// Debug log (remove in production if needed)
-console.log('[API Config] BACKEND_URL:', BACKEND_URL);
-console.log('[API Config] API_BASE_URL:', API_BASE_URL);
+// API configuration complete
 
 // Helper to construct full asset URLs (images, PDFs, etc.)
 export const getAssetUrl = (path) => {

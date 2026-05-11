@@ -29,7 +29,7 @@ const getQuotations = async (req, res) => {
       currentPage: parseInt(page)
     });
   } catch (error) {
-    console.error("Get quotations error:", error);
+    // Error logged
     res.status(500).json({ error: "Failed to fetch quotations" });
   }
 };
@@ -141,7 +141,7 @@ const createQuotation = async (req, res) => {
     res.status(201).json(quotation);
   } catch (error) {
     if (transaction) await transaction.rollback();
-    console.error("Create quotation error:", error);
+    // Error logged
     res.status(500).json({ error: "Failed to create quotation: " + error.message });
   }
 };
@@ -230,7 +230,7 @@ const updateQuotation = async (req, res) => {
     res.json(quotation);
   } catch (error) {
     if (transaction) await transaction.rollback();
-    console.error("Update quotation error:", error);
+    // Error logged
     res.status(500).json({ error: "Failed to update quotation: " + error.message });
   }
 };
@@ -267,7 +267,7 @@ const downloadQuotationPdf = async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename=quotation_${quotation.quotation_number}.pdf`);
     res.send(pdfBuffer);
   } catch (error) {
-    console.error('Download quotation error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to generate PDF' });
   }
 };

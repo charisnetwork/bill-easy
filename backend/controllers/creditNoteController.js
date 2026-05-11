@@ -27,7 +27,7 @@ const getCreditNotes = async (req, res) => {
       currentPage: parseInt(page)
     });
   } catch (error) {
-    console.error("Get credit notes error:", error);
+    // Error logged
     res.status(500).json({ error: "Failed to fetch credit notes" });
   }
 };
@@ -144,7 +144,7 @@ const downloadCreditNotePdf = async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename=credit_note_${creditNote.credit_note_number}.pdf`);
     res.send(pdfBuffer);
   } catch (error) {
-    console.error('Download CN error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to generate PDF' });
   }
 };

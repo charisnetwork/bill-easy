@@ -25,9 +25,9 @@ let bucket;
 
 if (bucketName) {
   bucket = storage.bucket(bucketName);
-  console.log('✅ Google Cloud Storage initialized with bucket:', bucketName);
+  // GCS initialized
 } else {
-  console.warn('⚠️ GCS_BUCKET_NAME is not set. Falling back to local storage is not implemented.');
+  // GCS bucket not configured
 }
 
 /**
@@ -51,7 +51,7 @@ const uploadToGCS = (buffer, destination, mimetype) => {
     });
 
     stream.on('error', (err) => {
-      console.error('GCS Upload Error:', err);
+      // Upload error logged
       reject(err);
     });
 

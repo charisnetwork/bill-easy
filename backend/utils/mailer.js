@@ -93,13 +93,10 @@ const sendEmailViaAPI = async ({
   
   try {
     const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
-    console.log('[Brevo API] Email sent successfully! Message ID:', data.messageId);
+    // Email sent successfully
     return data;
   } catch (error) {
-    console.error('[Brevo API] Error sending email:', error.message);
-    if (error.response) {
-      console.error('[Brevo API] Response:', error.response.text);
-    }
+    // Email sending error logged
     throw error;
   }
 };

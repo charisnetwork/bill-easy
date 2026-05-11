@@ -22,7 +22,7 @@ const getCompany = async (req, res) => {
 
   } catch (error) {
 
-    console.error("Get company error:", error);
+    // Error logged
 
     res.status(500).json({
       error: "Failed to get company"
@@ -99,7 +99,7 @@ const updateCompany = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Update company error:", error);
+    // Error logged
     res.status(500).json({ error: "Failed to update company" });
   }
 };
@@ -145,7 +145,7 @@ const updateSettings = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Update settings error:", error);
+    // Error logged
     res.status(500).json({ error: "Failed to update settings" });
   }
 };
@@ -178,7 +178,7 @@ const uploadLogo = async (req, res) => {
       logo: publicUrl
     });
   } catch (err) {
-    console.error(err);
+
     res.status(500).json({ error: "Logo upload failed: " + err.message });
   }
 };
@@ -271,7 +271,7 @@ const getUsers = async (req, res) => {
 
   } catch (error) {
 
-    console.error("Get users error:", error);
+    // Error logged
 
     res.status(500).json({
       error: "Failed to get users"
@@ -326,7 +326,7 @@ const addUser = async (req, res) => {
 
   } catch (error) {
 
-    console.error("Add user error:", error);
+    // Error logged
 
     res.status(500).json({
       error: "Failed to add user"
@@ -376,7 +376,7 @@ const updateUser = async (req, res) => {
 
   } catch (error) {
 
-    console.error("Update user error:", error);
+    // Error logged
 
     res.status(500).json({
       error: "Failed to update user"
@@ -436,7 +436,7 @@ const deleteUser = async (req, res) => {
 
   } catch (error) {
 
-    console.error("Delete user error:", error);
+    // Error logged
 
     res.status(500).json({
       error: "Failed to delete user"
@@ -485,7 +485,7 @@ const addCompany = async (req, res) => {
       }
     });
     
-    console.log(`[AddCompany] User: ${req.user.email} | Current: ${currentCount} | Max: ${maxBusinesses} (${currentHighestPlan})`);
+    // Add company request processed
 
     // 3. Validation: Block if limit reached
     if (currentCount >= maxBusinesses) {
@@ -531,7 +531,7 @@ const addCompany = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Add company error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to create business: ' + error.message });
   }
 };
@@ -589,7 +589,7 @@ const updateInvoiceCustomization = async (req, res) => {
     res.json({ message: 'Invoice settings updated successfully', settings: company });
 
   } catch (error) {
-    console.error('Update customization error:', error);
+    // Error logged
     res.status(500).json({ error: 'Update failed', message: error.message });
   }
 };

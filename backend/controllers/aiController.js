@@ -68,7 +68,7 @@ Always be helpful, concise, and guide users step-by-step for Bill Easy operation
 const chatWithAssistant = async (req, res) => {
   const companyId = req.companyId;
   const userId = req.user.id;
-  console.log(">>> Charis Assistant: Request received from Company ID:", companyId, "User ID:", userId);
+  // Charis Assistant request received
   
   try {
     const { question, pdfData, pdfType } = req.body;
@@ -78,7 +78,7 @@ const chatWithAssistant = async (req, res) => {
     }
 
     if (!process.env.GEMINI_API_KEY) {
-      console.error(">>> Charis Error: GEMINI_API_KEY is missing in backend .env");
+      // GEMINI_API_KEY missing error
       return res.status(500).json({ error: "AI service is not configured on the server." });
     }
 
@@ -131,7 +131,7 @@ const chatWithAssistant = async (req, res) => {
     // 3. Handle PDF Processing for Items/Purchases
     let pdfContext = "";
     if (pdfData && pdfType) {
-      console.log(">>> Charis: Processing PDF data...");
+      // Processing PDF data
       
       if (pdfType === 'purchase_invoice' || pdfType === 'supplier_bill') {
         pdfContext = `\n[PDF DATA PROVIDED - Purchase Document]\nExtract product details from this PDF and:\n1. If item exists in database: Add purchase quantity to stock\n2. If item is NEW: Create new product with details\n\nPDF Content Summary: ${pdfData.substring(0, 2000)}`;
@@ -153,7 +153,7 @@ const chatWithAssistant = async (req, res) => {
                             lowerQuestion.includes('low stock');
 
     if (isFinancialQuery) {
-      console.log(">>> Charis: Fetching Financial Context...");
+      // Fetching financial context
       try {
         const todayStart = new Date();
         todayStart.setHours(0,0,0,0);
@@ -171,12 +171,12 @@ const chatWithAssistant = async (req, res) => {
 
         financialContext = `\n[Financial Data] Today's Sales: ₹${todaySales.toFixed(2)}, Total Sales: ₹${totalSales.toFixed(2)}, Expenses: ₹${totalExpenses.toFixed(2)}, Net Profit: ₹${netProfit.toFixed(2)}`;
       } catch (dbError) {
-        console.error(">>> Charis DB Error (Financial):", dbError.message);
+        // DB error logged
       }
     }
 
     if (isInventoryQuery) {
-      console.log(">>> Charis: Fetching Inventory Context...");
+      // Fetching inventory context
       try {
         const lowStockProducts = await Product.findAll({
           where: { 
@@ -192,7 +192,7 @@ const chatWithAssistant = async (req, res) => {
           inventoryContext = "\n[Inventory Alert] Low Stock Items: " + lowStockProducts.map(p => `${p.name} (${p.stock_quantity})`).join(", ");
         }
       } catch (dbError) {
-        console.error(">>> Charis DB Error (Inventory):", dbError.message);
+        // DB error logged
       }
     }
 
@@ -213,7 +213,7 @@ const chatWithAssistant = async (req, res) => {
 
     for (const modelName of modelNames) {
       try {
-        console.log(`>>> Charis: Calling ${modelName}...`);
+        // Calling AI model
         const model = genAI.getGenerativeModel({ model: modelName });
         const result = await model.generateContent(fullPrompt);
         const response = await result.response;
@@ -224,7 +224,7 @@ const chatWithAssistant = async (req, res) => {
           break;
         }
       } catch (apiError) {
-        console.error(`>>> Charis API Error with ${modelName}:`, apiError.message);
+        // API error logged
         lastError = apiError;
         // Continue to next model
         continue;
@@ -237,11 +237,11 @@ const chatWithAssistant = async (req, res) => {
       });
     }
 
-    console.log(">>> Charis response generated. Usage:", usage.count + 1);
+    // Response generated
     res.json({ answer: text, usage: usage.count + 1, limit: dailyLimit });
 
   } catch (error) {
-    console.error(">>> Charis Assistant Error:", error);
+    // Assistant error logged
     res.status(500).json({ 
       error: "Charis is temporarily unavailable", 
       details: error.message 
@@ -324,7 +324,7 @@ const processPDFExtract = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(">>> PDF Processing Error:", error);
+    // PDF processing error logged
     res.status(500).json({ error: "Failed to process PDF", details: error.message });
   }
 };

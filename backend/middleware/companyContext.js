@@ -5,10 +5,10 @@ module.exports = async function (req, res, next) {
     // Check header first, then fallback to user's primary company
     let companyId = req.headers["x-company-id"] || req.user.company_id;
 
-    console.log(`[CompanyContext] User: ${req.user.email}, Header CompanyID: ${req.headers["x-company-id"]}, User CompanyID: ${req.user.company_id}, Effective CompanyID: ${companyId}`);
+    // Company context resolved
 
     if (!companyId) {
-      console.warn(`[CompanyContext] Company ID missing for user: ${req.user.email}`);
+      // Company ID missing warning
       return res.status(400).json({
         error: "Company ID missing"
       });
@@ -36,7 +36,7 @@ module.exports = async function (req, res, next) {
     req.companyId = companyId;
     next();
   } catch (error) {
-    console.error("Company context error:", error);
+    // Error logged
     res.status(500).json({ error: "Failed to verify company context" });
   }
 };

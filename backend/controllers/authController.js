@@ -7,7 +7,7 @@ const { User, Company, Plan, Subscription, UserCompany } = require('../models');
 ================================ */
 const register = async (req, res) => {
   try {
-    console.log('Registration request body:', { ...req.body, password: '***' });
+    // Registration request processed
     const { companyName, email, password, name, phone, gstNumber, address } = req.body;
 
     // Check existing email
@@ -16,7 +16,7 @@ const register = async (req, res) => {
       return res.status(400).json({ error: 'Email already registered' });
     }
 
-    console.log('Creating company with GST:', gstNumber);
+    // Creating company with GST
     // Create company
     const company = await Company.create({
       name: companyName,
@@ -25,7 +25,7 @@ const register = async (req, res) => {
       address: address,
       email: email
     });
-    console.log('Company created:', company.id, 'GST saved:', company.gst_number);
+    // Company created successfully
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -106,7 +106,7 @@ const register = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Registration error:', error);
+    // Registration error logged
     res.status(500).json({ error: 'Registration failed' });
   }
 };
@@ -215,7 +215,7 @@ const login = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Login error:', error);
+    // Login error logged
     res.status(500).json({ error: 'Login failed' });
   }
 };
@@ -301,7 +301,7 @@ const getProfile = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Get profile error:', error);
+    // Get profile error logged
     res.status(500).json({ error: 'Failed to get profile' });
   }
 };
@@ -322,7 +322,7 @@ const updateProfile = async (req, res) => {
     res.json({ message: 'Profile updated successfully' });
 
   } catch (error) {
-    console.error('Update profile error:', error);
+    // Update profile error logged
     res.status(500).json({ error: 'Failed to update profile' });
   }
 };
@@ -355,7 +355,7 @@ const changePassword = async (req, res) => {
     res.json({ message: 'Password changed successfully' });
 
   } catch (error) {
-    console.error('Change password error:', error);
+    // Change password error logged
     res.status(500).json({ error: 'Failed to change password' });
   }
 };
@@ -377,7 +377,7 @@ const switchCompany = async (req, res) => {
 
     res.json({ message: 'Switched company successfully' });
   } catch (error) {
-    console.error('Switch company error:', error);
+    // Switch company error logged
     res.status(500).json({ error: 'Failed to switch company' });
   }
 };

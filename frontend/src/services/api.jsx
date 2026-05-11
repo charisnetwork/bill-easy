@@ -33,7 +33,7 @@ api.interceptors.response.use(
   (error) => {
     // Log API errors only in development
     if (import.meta.env?.DEV) {
-      console.error('[API Error]', error.response?.status, error.config?.url);
+      // API error logged
     }
     
     if (error.response?.status === 401) {

@@ -90,7 +90,7 @@ export const AuthProvider = ({ children }) => {
       setMaxBusinesses(response.data.maxBusinesses || 1);
       setSubscription(response.data.subscription);
     } catch (error) {
-      console.error('Failed to fetch profile:', error);
+      // Failed to fetch profile
       // Only logout if it's a 401 error
       if (error.response?.status === 401) {
         localStorage.removeItem('token');
@@ -141,7 +141,7 @@ export const AuthProvider = ({ children }) => {
       await fetchProfile();
       window.location.href = '/dashboard'; // Force refresh to clear state
     } catch (error) {
-      console.error('Failed to switch company:', error);
+      // Failed to switch company
     }
   };
 

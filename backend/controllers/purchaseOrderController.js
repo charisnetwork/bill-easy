@@ -55,7 +55,7 @@ const getPurchaseOrders = async (req, res) => {
       totalPages: Math.ceil(count / limit)
     });
   } catch (error) {
-    console.error('Get POs error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get purchase orders' });
   }
 };
@@ -76,7 +76,7 @@ const getPurchaseOrder = async (req, res) => {
 
     res.json(po);
   } catch (error) {
-    console.error('Get PO error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get purchase order' });
   }
 };
@@ -143,7 +143,7 @@ const createPurchaseOrder = async (req, res) => {
     res.status(201).json({ message: 'Purchase Order created successfully', po });
   } catch (error) {
     await t.rollback();
-    console.error('Create PO error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to create purchase order' });
   }
 };
@@ -218,7 +218,7 @@ const updatePurchaseOrder = async (req, res) => {
     res.json({ message: 'Purchase Order updated successfully' });
   } catch (error) {
     await t.rollback();
-    console.error('Update PO error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to update purchase order' });
   }
 };
@@ -236,7 +236,7 @@ const deletePurchaseOrder = async (req, res) => {
     await po.destroy();
     res.json({ message: 'Purchase Order deleted successfully' });
   } catch (error) {
-    console.error('Delete PO error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to delete purchase order' });
   }
 };
@@ -266,7 +266,7 @@ const downloadPdf = async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename=PO_${po.po_number}_${new Date(po.po_date).toISOString().split('T')[0]}.pdf`);
     res.send(pdfBuffer);
   } catch (error) {
-    console.error('Download PO PDF error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to generate PDF' });
   }
 };

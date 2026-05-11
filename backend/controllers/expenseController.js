@@ -36,7 +36,7 @@ const getExpenses = async (req, res) => {
       totalPages: Math.ceil(count / limit)
     });
   } catch (error) {
-    console.error('Get expenses error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get expenses' });
   }
 };
@@ -53,7 +53,7 @@ const getExpense = async (req, res) => {
 
     res.json(expense);
   } catch (error) {
-    console.error('Get expense error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get expense' });
   }
 };
@@ -74,7 +74,7 @@ const createExpense = async (req, res) => {
 
     res.status(201).json({ message: 'Expense created successfully', expense });
   } catch (error) {
-    console.error('Create expense error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to create expense' });
   }
 };
@@ -94,7 +94,7 @@ const updateExpense = async (req, res) => {
     await expense.update({ category, amount, payment_method, date, notes, reference_number });
     res.json({ message: 'Expense updated successfully', expense });
   } catch (error) {
-    console.error('Update expense error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to update expense' });
   }
 };
@@ -112,7 +112,7 @@ const deleteExpense = async (req, res) => {
     await expense.destroy();
     res.json({ message: 'Expense deleted successfully' });
   } catch (error) {
-    console.error('Delete expense error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to delete expense' });
   }
 };

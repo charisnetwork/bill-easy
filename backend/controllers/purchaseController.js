@@ -61,7 +61,7 @@ const getPurchases = async (req, res) => {
       totalPages: Math.ceil(count / limit)
     });
   } catch (error) {
-    console.error('Get purchases error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get purchases' });
   }
 };
@@ -82,7 +82,7 @@ const getPurchase = async (req, res) => {
 
     res.json(purchase);
   } catch (error) {
-    console.error('Get purchase error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to get purchase' });
   }
 };
@@ -270,7 +270,7 @@ const createPurchase = async (req, res) => {
       throw error;
     }
   } catch (error) {
-    console.error('Create purchase error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to create purchase' });
   }
 };
@@ -317,7 +317,7 @@ const deletePurchase = async (req, res) => {
       throw error;
     }
   } catch (error) {
-    console.error('Delete purchase error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to delete purchase' });
   }
 };
@@ -374,7 +374,7 @@ const recordPayment = async (req, res) => {
       throw error;
     }
   } catch (error) {
-    console.error('Record payment error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to record payment' });
   }
 };
@@ -535,7 +535,7 @@ const updatePurchase = async (req, res) => {
       throw error;
     }
   } catch (error) {
-    console.error('Update purchase error:', error);
+    // Error logged
     res.status(500).json({ error: 'Failed to update purchase' });
   }
 };
@@ -543,7 +543,7 @@ const updatePurchase = async (req, res) => {
 const parsePurchasePDF = async (req, res) => {
   let tempFilePath = null;
   try {
-    console.log('[parsePurchasePDF] Start');
+    // Parsing purchase PDF
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
@@ -578,7 +578,7 @@ const parsePurchasePDF = async (req, res) => {
 
         pythonProcess.on('close', (code) => {
           if (code !== 0) {
-            console.error('[Python PDF Parser] Error code:', code, errorOutput);
+            // PDF parser error
             reject(new Error(errorOutput || 'Python process exited with non-zero code'));
           } else {
             try {
@@ -590,9 +590,9 @@ const parsePurchasePDF = async (req, res) => {
         });
       });
       
-      console.log('[parsePurchasePDF] Python extraction successful');
+      // PDF extraction successful
     } catch (pyError) {
-      console.warn('[parsePurchasePDF] Python extraction failed, falling back to basic extraction:', pyError.message);
+      // PDF extraction fallback
     }
 
     let finalItems = [];
@@ -733,7 +733,7 @@ const parsePurchasePDF = async (req, res) => {
       message: uniqueItems.length > 0 ? `Extracted ${uniqueItems.length} items.` : "No items detected."
     });
   } catch (error) {
-    console.error('[parsePurchasePDF] Error:', error);
+    // PDF parsing error logged
     res.status(500).json({ error: 'Failed to parse PDF: ' + error.message });
   } finally {
     if (tempFilePath && fs.existsSync(tempFilePath)) {

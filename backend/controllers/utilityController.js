@@ -72,7 +72,7 @@ exports.getGST = async (req, res) => {
     res.json(mockData);
 
   } catch (error) {
-    console.error("GST Lookup Error:", error);
+    // Error logged
     res.status(500).json({
       error: "GST lookup failed"
     });
