@@ -656,6 +656,30 @@ Company.hasMany(UserCompany, { foreignKey: 'company_id' });
 UserCompany.belongsTo(Company, { foreignKey: 'company_id' });
 
 /* =========================================
+   ACTIVITY LOG MODEL (Audit)
+========================================= */
+
+const ActivityLog = sequelize.define('ActivityLog', {
+  id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+  user_id: { type: DataTypes.UUID, allowNull: true },
+  company_id: { type: DataTypes.UUID, allowNull: true },
+  action: { type: DataTypes.STRING, allowNull: false },
+  entity_type: { type: DataTypes.STRING, allowNull: true },
+  entity_id: { type: DataTypes.STRING, allowNull: true },
+  details: { type: DataTypes.JSON, defaultValue: {} },
+  created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
+}, { 
+  tableName: 'activity_logs',
+  timestamps: false,
+  indexes: [
+    { fields: ['user_id'] },
+    { fields: ['company_id'] },
+    { fields: ['action'] },
+    { fields: ['created_at'] }
+  ]
+});
+
+/* =========================================
    REFRESH TOKEN MODEL (Security)
 ========================================= */
 
@@ -702,6 +726,7 @@ module.exports = {
   Affiliate,
   User,
   RefreshToken,
+  ActivityLog,
   UserCompany,
   Subscription,
   Customer,
