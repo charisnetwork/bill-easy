@@ -138,7 +138,7 @@ const createProxy = (target, pathRewrite, name) => {
   });
 };
 
-// Wait for backends before setting up proxies
+// Wait for backends before setting up routes
 const startGateway = async () => {
   // Wait for both backends to be ready
   const [mainReady, adminReady] = await Promise.all([
@@ -153,22 +153,10 @@ const startGateway = async () => {
     console.error('⚠️ Admin backend not ready - Admin API requests may fail');
   }
 
-  // 1. Serve Main Frontend Static Files (HIGHEST PRIORITY)
-  const mainFrontendPath = path.join(__dirname, 'frontend/dist');
-
-  if (fs.existsSync(mainFrontendPath) && fs.existsSync(path.join(mainFrontendPath, 'index.html'))) {
-    console.log('✅ Main frontend found');
-    
-    app.use(express.static(mainFrontendPath, {
-      maxAge: '1d',
-      etag: true,
-      lastModified: true
-    }));
-  } else {
-    console.log('⚠️ Main frontend not found at', mainFrontendPath);
-  }
-
-  // 2. Proxy API routes (Use specific matching) - MUST be before static file catch-all
+  // =========================================
+  // 1. API ROUTES FIRST (highest priority)
+  // =========================================
+  
   const adminProxy = createProxy(
     'http://localhost:3025', 
     { '^/admin/api': '/api' },
@@ -181,15 +169,74 @@ const startGateway = async () => {
     'Main'
   );
 
-  // Admin API routes first (more specific)
+  // Admin API routes (more specific first)
   app.use('/admin/api', adminProxy);
   // Main API routes
   app.use('/api', mainProxy);
 
-  // 3. Serve Uploads
+  // Gateway health check (before static files)
+  app.get('/health', (req, res) => {
+    res.json({ 
+      status: 'gateway-ok',
+      frontend: fs.existsSync(path.join(__dirname, 'frontend/dist')) ? 'available' : 'not-found',
+      backends: backendHealth,
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // Root endpoint
+  app.get('/', (req, res) => {
+    res.json({
+      message: 'Bill Easy API Gateway',
+      status: 'running',
+      port: PORT,
+      backends: backendHealth,
+      endpoints: {
+        health: '/health',
+        api: '/api',
+        adminApi: '/admin/api',
+        adminPortal: '/admin-portal'
+      }
+    });
+  });
+
+  // =========================================
+  // 2. STATIC FILES (after API routes)
+  // =========================================
+
+  // Serve Uploads
   app.use('/uploads', express.static(path.join(__dirname, 'backend/uploads')));
 
-  // 4. Serve Admin Frontend
+  // Main Frontend Static Files
+  const mainFrontendPath = path.join(__dirname, 'frontend/dist');
+  if (fs.existsSync(mainFrontendPath) && fs.existsSync(path.join(mainFrontendPath, 'index.html'))) {
+    console.log('✅ Main frontend found');
+    
+    // Serve static files
+    app.use(express.static(mainFrontendPath, {
+      maxAge: '1d',
+      etag: true,
+      lastModified: true
+    }));
+    
+    // SPA fallback - must be after API routes
+    app.get('*', (req, res, next) => {
+      // Skip API and uploads routes
+      if (req.url.startsWith('/api') || req.url.startsWith('/admin/api') || req.url.startsWith('/uploads') || req.url.startsWith('/health')) {
+        return next();
+      }
+      
+      res.sendFile(path.join(mainFrontendPath, 'index.html'), (err) => {
+        if (err) {
+          next(err);
+        }
+      });
+    });
+  } else {
+    console.log('⚠️ Main frontend not found at', mainFrontendPath);
+  }
+
+  // Admin Frontend
   const adminFrontendPath = path.join(__dirname, 'admin/frontend/dist');
   if (fs.existsSync(adminFrontendPath)) {
     console.log('✅ Admin frontend found');
@@ -230,48 +277,6 @@ const startGateway = async () => {
     });
   } else {
     console.log('⚠️ Admin frontend not found at', adminFrontendPath);
-  }
-
-  // 5. Health Check
-  app.get('/health', (req, res) => {
-    res.json({ 
-      status: 'gateway-ok',
-      frontend: fs.existsSync(mainFrontendPath) ? 'available' : 'not-found',
-      backends: backendHealth,
-      timestamp: new Date().toISOString()
-    });
-  });
-
-  // Root endpoint
-  app.get('/', (req, res) => {
-    res.json({
-      message: 'Bill Easy API Gateway',
-      status: 'running',
-      port: PORT,
-      backends: backendHealth,
-      endpoints: {
-        health: '/health',
-        api: '/api',
-        adminApi: '/admin/api',
-        adminPortal: '/admin-portal'
-      }
-    });
-  });
-
-  // 6. Fallback for Main SPA (must be after /api and static)
-  if (fs.existsSync(mainFrontendPath)) {
-    app.get('*', (req, res, next) => {
-      // Skip API and uploads routes
-      if (req.url.startsWith('/api') || req.url.startsWith('/admin/api') || req.url.startsWith('/uploads') || req.url.startsWith('/health')) {
-        return next();
-      }
-      
-      res.sendFile(path.join(mainFrontendPath, 'index.html'), (err) => {
-        if (err) {
-          next(err);
-        }
-      });
-    });
   }
 
   // 404 handler for API routes - MUST be last
