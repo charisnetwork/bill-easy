@@ -24,7 +24,9 @@ app.use(cors({
     
     // Check if origin is allowed
     const allowedOrigins = [
+      'https://charisbilleasy.store',
       'https://admin.charisbilleasy.store',
+      'https://www.charisbilleasy.store',
       'http://localhost:5173',
       'http://localhost:3000',
       ...(process.env.ADMIN_FRONTEND_URL ? process.env.ADMIN_FRONTEND_URL.split(',') : [])
@@ -33,8 +35,7 @@ app.use(cors({
     const isAllowed = allowedOrigins.includes(origin) || 
                      origin.endsWith('.vercel.app') || 
                      origin.includes('.up.railway.app') ||
-                     origin.includes('.pages.dev') ||
-                     origin === 'https://admin.charisbilleasy.store';
+                     origin.includes('.pages.dev');
                      
     if (isAllowed) {
       callback(null, true);
