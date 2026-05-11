@@ -2,10 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { Shield, Lock, Mail, Eye, EyeOff, Loader2 } from 'lucide-react';
 import axios from 'axios';
 
-const API_BASE_URL = (import.meta.env.ADMIN_BACKEND_KEY || import.meta.env.VITE_ADMIN_API_URL || import.meta.env.VITE_ADMIN_BACKEND_URL || 'http://localhost:3025') + '/api';
+// Detect if we're running through the main gateway or standalone
+const isGateway = window.location.pathname.startsWith('/admin-portal') || 
+                  window.location.host === 'charisbilleasy.store' ||
+                  window.location.host === 'www.charisbilleasy.store' ||
+                  window.location.host === 'admin.charisbilleasy.store';
+
+const API_BASE_URL = isGateway 
+  ? '/admin/api'  // Through gateway - use relative path
+  : (import.meta.env.ADMIN_BACKEND_KEY || import.meta.env.VITE_ADMIN_API_URL || import.meta.env.VITE_ADMIN_BACKEND_URL || 'http://localhost:3025') + '/api';
 
 const Login = ({ onLogin }) => {
-  const [email, setEmail] = useState('pachu.mgd@gmail.com');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
