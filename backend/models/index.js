@@ -701,6 +701,7 @@ module.exports = {
   Company,
   Affiliate,
   User,
+  RefreshToken,
   UserCompany,
   Subscription,
   Customer,
