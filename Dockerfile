@@ -20,8 +20,26 @@ RUN cd backend && npm install --omit=dev
 COPY admin/backend/package.json admin/backend/package-lock.json ./admin/backend/
 RUN cd admin/backend && npm install --omit=dev
 
+# Copy frontend package files (for build)
+COPY frontend/package.json frontend/package-lock.json ./frontend/
+RUN cd frontend && npm install
+
+# Copy admin frontend package files (for build)
+COPY admin/frontend/package.json admin/frontend/package-lock.json ./admin/frontend/
+RUN cd admin/frontend && npm install
+
 # Copy the rest of the source code
 COPY . .
+
+# Build main frontend
+RUN cd frontend && npm run build
+
+# Build admin frontend  
+RUN cd admin/frontend && npm run build
+
+# Clean up dev dependencies to reduce image size
+RUN cd frontend && npm prune --omit=dev
+RUN cd admin/frontend && npm prune --omit=dev
 
 EXPOSE 3000
 
