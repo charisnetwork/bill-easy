@@ -27,11 +27,6 @@ const {
 // Cookie parser for refresh token handling
 router.use(cookieParser());
 
-// Handle OPTIONS preflight for all auth routes
-router.options('*', (req, res) => {
-  res.status(200).end();
-});
-
 /* ===============================
    PUBLIC ROUTES
 ================================ */
