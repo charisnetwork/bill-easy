@@ -151,6 +151,20 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Bill Easy API Gateway',
+    status: 'running',
+    port: PORT,
+    endpoints: {
+      health: '/health',
+      api: '/api',
+      adminApi: '/admin/api'
+    }
+  });
+});
+
 // 404 handler for API routes - MUST be last
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
