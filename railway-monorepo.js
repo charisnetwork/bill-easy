@@ -173,6 +173,11 @@ const startGateway = async () => {
   app.use('/admin/api', adminProxy);
   // Main API routes
   app.use('/api', mainProxy);
+  
+  // IMPORTANT: Add explicit handler to prevent API routes from falling through to static files
+  app.use(['/api', '/admin/api'], (req, res) => {
+    res.status(404).json({ error: 'API endpoint not found', path: req.path });
+  });
 
   // Gateway health check (before static files)
   app.get('/health', (req, res) => {
@@ -212,12 +217,19 @@ const startGateway = async () => {
   if (fs.existsSync(mainFrontendPath) && fs.existsSync(path.join(mainFrontendPath, 'index.html'))) {
     console.log('✅ Main frontend found');
     
-    // Serve static files
-    app.use(express.static(mainFrontendPath, {
-      maxAge: '1d',
-      etag: true,
-      lastModified: true
-    }));
+    // Serve static files (but NOT for API routes)
+    app.use((req, res, next) => {
+      // Skip API routes - let them fall through to the 404 handler
+      if (req.url.startsWith('/api') || req.url.startsWith('/admin/api')) {
+        return next();
+      }
+      // Serve static files for non-API routes
+      express.static(mainFrontendPath, {
+        maxAge: '1d',
+        etag: true,
+        lastModified: true
+      })(req, res, next);
+    });
     
     // SPA fallback - must be after API routes
     app.get('*', (req, res, next) => {
