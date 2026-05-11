@@ -102,9 +102,25 @@ app.use('/uploads', express.static(path.join(__dirname, 'backend/uploads')));
 const adminFrontendPath = path.join(__dirname, 'admin/frontend/dist');
 if (fs.existsSync(adminFrontendPath)) {
   // Admin frontend found
+  
+  // Serve at /admin-portal path
   app.use('/admin-portal', express.static(adminFrontendPath));
   app.get('/admin-portal/*', (req, res) => {
     res.sendFile(path.join(adminFrontendPath, 'index.html'));
+  });
+  
+  // Also serve at root for admin subdomain (admin.charisbilleasy.store)
+  app.use((req, res, next) => {
+    const host = req.headers.host || '';
+    if (host.startsWith('admin.')) {
+      // Serve admin frontend for admin subdomain
+      if (req.path === '/' || req.path === '/index.html') {
+        return res.sendFile(path.join(adminFrontendPath, 'index.html'));
+      }
+      // Serve static files from admin frontend
+      return express.static(adminFrontendPath)(req, res, next);
+    }
+    next();
   });
 }
 
