@@ -142,19 +142,18 @@ if (fs.existsSync(mainFrontendPath)) {
   });
 }
 
-// 404 handler for API routes
-app.use((req, res) => {
-  // 404 Route not found
-  res.status(404).json({ error: 'Route not found' });
-});
-
-// Health Check
+// Health Check - MUST be defined before 404 handler
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'gateway-ok',
     frontend: fs.existsSync(mainFrontendPath) ? 'available' : 'not-found',
     timestamp: new Date().toISOString()
   });
+});
+
+// 404 handler for API routes - MUST be last
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
