@@ -10,7 +10,15 @@ import {
 } from 'recharts';
 import Login from './components/Login';
 
-const API_BASE_URL = (import.meta.env.ADMIN_BACKEND_KEY || import.meta.env.VITE_ADMIN_API_URL || import.meta.env.VITE_ADMIN_BACKEND_URL || 'http://localhost:3025') + '/api';
+// Detect if we're running through the main gateway or standalone
+const isGateway = window.location.pathname.startsWith('/admin-portal') || 
+                  window.location.host === 'charisbilleasy.store' ||
+                  window.location.host === 'www.charisbilleasy.store';
+
+const API_BASE_URL = isGateway 
+  ? '/admin/api'  // Through gateway - use relative path
+  : (import.meta.env.ADMIN_BACKEND_KEY || import.meta.env.VITE_ADMIN_API_URL || import.meta.env.VITE_ADMIN_BACKEND_URL || 'http://localhost:3025') + '/api';
+
 const SAAS_URL = import.meta.env.VITE_SAAS_URL || 'https://charisbilleasy.store';
 
 const AdminApp = () => {

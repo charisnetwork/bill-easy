@@ -55,6 +55,7 @@ const ALLOWED_ORIGINS = [
   // Production custom domain (if using)
   'https://charisbilleasy.store',
   'https://www.charisbilleasy.store',
+  'https://admin.charisbilleasy.store',
   // Local development
   'http://localhost:3000',
   'http://localhost:5173',
