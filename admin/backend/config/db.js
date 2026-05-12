@@ -35,12 +35,12 @@ let adminUrl = (
 
 if (!saasUrl) {
   console.error('[DB Config] CRITICAL: DATABASE_URL or DATABASE_URL_SaaS is missing!');
-  throw new Error('No DATABASE_URL found in environment variables');
+  saasUrl = 'postgres://dummy:dummy@localhost:5432/dummy'; // Fallback so it doesn't crash on load
 }
 
 if (!adminUrl) {
   console.error('[DB Config] CRITICAL: DATABASE_URL or DATABASE_URL_ADMIN is missing!');
-  throw new Error('No DATABASE_URL found for Admin DB');
+  adminUrl = 'postgres://dummy:dummy@localhost:5432/dummy'; // Fallback so it doesn't crash on load
 }
 
 // Validate and clean URLs
