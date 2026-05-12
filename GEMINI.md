@@ -14,12 +14,9 @@ MyBillBook is a comprehensive full-stack SaaS billing and inventory management p
 
 ## Deployment Guide
 
-### Railway (Backend & PostgreSQL)
-You have two options on Railway:
-1. **Separate Services (Recommended for performance):** Create two separate backend services on Railway, one pointing to `/backend` and another to `/admin/backend`. Set `DATABASE_URL` for each accordingly.
-2. **Monorepo Gateway (Recommended for 1-backend slot):** Point Railway to the root directory. It will use the root `package.json` to start `railway-monorepo.js`, which launches both backends and proxies them:
-   - Main API: `YOUR_RAILWAY_URL/api`
-   - Admin API: `YOUR_RAILWAY_URL/admin/api`
+### Railway (Backend & Admin Backend)
+Deploy the backend services on Railway using a single service that runs both the main backend and the admin backend on different ports.
+- **PostgreSQL:** Run PostgreSQL as a separate service on Railway (or another provider) and connect to it using the `DATABASE_URL` environment variables.
 
 **Required Environment Variables (Railway):**
 - `DATABASE_URL`: Your main PostgreSQL connection string.
@@ -28,12 +25,12 @@ You have two options on Railway:
 - `JWT_SECRET`: Random long string.
 - `ADMIN_SECRET`: Secret for admin authentication.
 
-### Vercel (Frontend & Admin Frontend)
-Deploy as two separate projects on Vercel:
+### Cloudflare (Frontend & Admin Frontend)
+Deploy as two separate projects on Cloudflare Pages:
 1. **Main Frontend:** Point to `/frontend`.
-   - Set `VITE_BACKEND_URL` to your Railway URL.
+   - Set `VITE_BACKEND_URL` to your Railway Backend URL with its respective port.
 2. **Admin Frontend:** Point to `/admin/frontend`.
-   - Set `VITE_ADMIN_BACKEND_URL` to your Railway URL (e.g., `https://.../admin` if using monorepo).
+   - Set `VITE_ADMIN_BACKEND_URL` to your Railway Admin Backend URL with its respective port.
 
 ---
 
