@@ -3,8 +3,8 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-# Cache bust: 2026-05-11T18:05:00Z
-# Force rebuild to get latest gateway fixes
+# Cache bust: 2026-05-12T22:15:00Z
+# Force rebuild to fix CORS and health check issues
 
 # Install build dependencies
 RUN apk add --no-cache python3 make g++

@@ -34,7 +34,10 @@ adminBackend.on('error', (err) => {
 });
 
 app.use(cors({
-  origin: '*',
+  origin: (origin, callback) => {
+    // Allow all origins
+    callback(null, true);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-secret', 'x-admin-token']
@@ -86,8 +89,9 @@ if (fs.existsSync(adminFrontendPath) && fs.existsSync(path.join(adminFrontendPat
 app.use('/uploads', express.static(path.join(__dirname, 'backend/uploads')));
 
 app.get('/health', (req, res) => {
-  res.json({
-    status: 'admin-gateway-ok',
+  res.status(200).json({
+    status: 'ok',
+    service: 'admin-gateway',
     backend: `http://localhost:${ADMIN_BACKEND_PORT}`,
     saas_links: {
       railway: process.env.RAILWAY_SAAS_LINK || 'not_set',

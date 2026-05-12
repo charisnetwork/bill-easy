@@ -47,8 +47,9 @@ app.use((req, res, next) => {
 // 1. HEALTH CHECK - IMMEDIATE (no dependencies)
 // =========================================
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'gateway-ok',
+  res.status(200).json({ 
+    status: 'ok',
+    service: 'monorepo-gateway',
     frontend: fs.existsSync(path.join(__dirname, 'frontend/dist')) ? 'available' : 'not-found',
     backends: backendHealth,
     timestamp: new Date().toISOString()
