@@ -10,10 +10,10 @@ cmds = ["echo 'Building with cache bust'"]
 nixPkgs = ["nodejs_22"]
 
 [start]
-cmd = "echo 'Gateway starting on port 3000' && node railway-monorepo.js"
+cmd = "node railway-monorepo.js"
 
 [deploy]
-startCommand = "echo 'Gateway starting on port 3000' && node railway-monorepo.js"
+startCommand = "node railway-monorepo.js"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
 healthcheckPath = "/health"

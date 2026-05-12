@@ -6,8 +6,16 @@ const path = require('path');
 const fs = require('fs');
 const http = require('http');
 
+// Catch unhandled exceptions to prevent silent crashes
+process.on('uncaughtException', (err) => {
+  console.error('CRITICAL UNCAUGHT EXCEPTION in Gateway:', err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('CRITICAL UNHANDLED REJECTION in Gateway:', reason);
+});
+
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT || '3000', 10);
 
 app.set('trust proxy', 1);
 
@@ -224,7 +232,7 @@ app.use((req, res) => {
 // =========================================
 // START SERVER IMMEDIATELY (don't wait for backends)
 // =========================================
-const server = app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, () => {
   console.log(`\n🚀 Monorepo Gateway running on port ${PORT}`);
   console.log(`   - Health: http://localhost:${PORT}/health`);
   console.log(`   - Main API: http://localhost:${PORT}/api`);
