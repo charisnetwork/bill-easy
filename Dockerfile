@@ -1,10 +1,10 @@
-# Use Node 22 LTS for compatibility with Vite 6+ and React Router 7
+# Use Node 22 LTS for compatibility
 FROM node:22-alpine
 
 WORKDIR /app
 
-# Cache bust: 2026-05-12T22:15:00Z
-# Force rebuild to fix CORS and health check issues
+# Cache bust: 2026-05-12T23:00:00Z
+# Force rebuild without frontend to speed up and save memory on Railway
 
 # Install build dependencies
 RUN apk add --no-cache python3 make g++
@@ -23,28 +23,9 @@ RUN cd backend && npm install --omit=dev
 COPY admin/backend/package.json admin/backend/package-lock.json ./admin/backend/
 RUN cd admin/backend && npm install --omit=dev
 
-# Copy frontend package files (for build)
-COPY frontend/package.json frontend/package-lock.json ./frontend/
-RUN cd frontend && npm install --legacy-peer-deps
-
-# Copy admin frontend package files (for build)
-COPY admin/frontend/package.json admin/frontend/package-lock.json ./admin/frontend/
-RUN cd admin/frontend && npm install --legacy-peer-deps
-
-# Copy the rest of the source code
+# Copy the rest of the source code (frontends are excluded via .dockerignore)
 COPY . .
-
-# Build main frontend
-RUN cd frontend && npm run build
-
-# Build admin frontend  
-RUN cd admin/frontend && npm run build
-
-# Clean up dev dependencies to reduce image size
-RUN cd frontend && npm prune --omit=dev
-RUN cd admin/frontend && npm prune --omit=dev
 
 EXPOSE 3000
 
 CMD ["node", "railway-monorepo.js"]
-
