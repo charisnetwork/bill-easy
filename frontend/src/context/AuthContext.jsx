@@ -28,23 +28,68 @@ const API_BASE_URL = (() => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [company, setCompany] = useState(null);
+  const [companies, setCompanies] = useState([]);
+  const [subscription, setSubscription] = useState(null);
+  const [maxBusinesses, setMaxBusinesses] = useState(1);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const refreshAttempts = useRef(0);
   const MAX_REFRESH_ATTEMPTS = 3;
+
+  // Helper to check plan features
+  const hasFeature = useCallback((featureName) => {
+    const plan = subscription?.plan || subscription?.Plan;
+    if (!plan) return false;
+    
+    const planName = plan.plan_name || '';
+    
+    // Feature matrix based on plan
+    const featureMatrix = {
+      'eway_bills': ['Premium', 'Enterprise'],
+      'staff_payroll': ['Premium', 'Enterprise'],
+      'multi_godowns': ['Premium', 'Enterprise'],
+      'multi_business_ui': ['Enterprise'],
+      'activity_tracker': ['Enterprise'],
+      'priority_support': ['Enterprise'],
+    };
+    
+    const allowedPlans = featureMatrix[featureName];
+    if (!allowedPlans) return false;
+    
+    return allowedPlans.includes(planName);
+  }, [subscription]);
+
+  // Helper to populate all state from an API response
+  const populateState = useCallback((data) => {
+    if (data.user) setUser(data.user);
+    if (data.company !== undefined) setCompany(data.company);
+    if (data.companies !== undefined) setCompanies(data.companies || []);
+    if (data.subscription !== undefined) setSubscription(data.subscription);
+    if (data.maxBusinesses !== undefined) setMaxBusinesses(data.maxBusinesses);
+  }, []);
+
+  // Clear all auth state
+  const clearState = useCallback(() => {
+    accessToken = null;
+    setUser(null);
+    setCompany(null);
+    setCompanies([]);
+    setSubscription(null);
+    setMaxBusinesses(1);
+    setIsAuthenticated(false);
+  }, []);
 
   // Register auth handlers with API service
   useEffect(() => {
     setAuthHandlers(
       () => accessToken,
       () => {
-        accessToken = null;
-        setUser(null);
-        setIsAuthenticated(false);
+        clearState();
         window.location.href = '/login';
       }
     );
-  }, []);
+  }, [clearState]);
 
   // Validate token and get user info on mount
   useEffect(() => {
@@ -58,26 +103,24 @@ export const AuthProvider = ({ children }) => {
         accessToken = response.data.accessToken;
         refreshAttempts.current = 0;
         
-        // Get user info
-        const userRes = await axios.get(`${API_BASE_URL}/api/auth/me`, {
+        // Get user info — backend route is /api/auth/profile (not /me)
+        const userRes = await axios.get(`${API_BASE_URL}/api/auth/profile`, {
           headers: { Authorization: `Bearer ${accessToken}` }
         });
         
-        setUser(userRes.data.user);
+        populateState(userRes.data);
         setIsAuthenticated(true);
       } catch (error) {
         // No valid refresh token - user needs to login
         console.log('Not authenticated');
-        accessToken = null;
-        setUser(null);
-        setIsAuthenticated(false);
+        clearState();
       } finally {
         setLoading(false);
       }
     };
     
     initAuth();
-  }, []);
+  }, [populateState, clearState]);
 
   // Set up axios interceptors
   useEffect(() => {
@@ -155,9 +198,7 @@ export const AuthProvider = ({ children }) => {
       refreshAttempts.current = 0;
       return response.data;
     } catch (error) {
-      accessToken = null;
-      setUser(null);
-      setIsAuthenticated(false);
+      clearState();
       throw error;
     }
   };
@@ -173,11 +214,13 @@ export const AuthProvider = ({ children }) => {
     
     accessToken = response.data.accessToken;
     refreshAttempts.current = 0;
-    setUser(response.data.user);
+    
+    // Populate all state from login response
+    populateState(response.data);
     setIsAuthenticated(true);
     
     return response.data;
-  }, []);
+  }, [populateState]);
 
   // Register
   const register = useCallback(async (userData) => {
@@ -187,11 +230,13 @@ export const AuthProvider = ({ children }) => {
     
     accessToken = response.data.accessToken;
     refreshAttempts.current = 0;
-    setUser(response.data.user);
+    
+    // Populate all state from register response
+    populateState(response.data);
     setIsAuthenticated(true);
     
     return response.data;
-  }, []);
+  }, [populateState]);
 
   // Logout
   const logout = useCallback(async () => {
@@ -202,11 +247,9 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      accessToken = null;
-      setUser(null);
-      setIsAuthenticated(false);
+      clearState();
     }
-  }, []);
+  }, [clearState]);
 
   // Logout from all sessions
   const logoutAll = useCallback(async () => {
@@ -214,10 +257,8 @@ export const AuthProvider = ({ children }) => {
       withCredentials: true
     });
     
-    accessToken = null;
-    setUser(null);
-    setIsAuthenticated(false);
-  }, []);
+    clearState();
+  }, [clearState]);
 
   // Change password
   const changePassword = useCallback(async (currentPassword, newPassword) => {
@@ -235,14 +276,15 @@ export const AuthProvider = ({ children }) => {
       withCredentials: true
     });
     
-    // Refresh user data after switching
-    const userRes = await axios.get(`${API_BASE_URL}/api/auth/me`, {
+    // Refresh user data after switching — use /profile (not /me)
+    const userRes = await axios.get(`${API_BASE_URL}/api/auth/profile`, {
       withCredentials: true
     });
-    setUser(userRes.data.user);
+    
+    populateState(userRes.data);
     
     return response.data;
-  }, []);
+  }, [populateState]);
 
   // Get active sessions
   const getSessions = useCallback(async () => {
@@ -270,6 +312,11 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     user,
+    company,
+    companies,
+    subscription,
+    maxBusinesses,
+    hasFeature,
     loading,
     isAuthenticated,
     login,
