@@ -3,11 +3,10 @@
 // =========================================
 
 // Railway backend URL - Production Backend
-const RAILWAY_BACKEND_URL = 'https://bill-easy-production.up.railway.app';
+const RAILWAY_BACKEND_URL = 'https://bill-easy-production-v4.up.railway.app';
 
 // Get backend URL from environment (HIGHEST PRIORITY)
 let envBackendUrl = 
-  import.meta.env?.MAIN_SAAS_BACKEND ||
   import.meta.env?.VITE_BACKEND_URL ||
   import.meta.env?.REACT_APP_BACKEND_URL;
 

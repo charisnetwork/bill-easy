@@ -11,6 +11,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { setAuthHandlers } from '../services/api';
+import { BACKEND_URL } from '../config/api';
 
 const AuthContext = createContext(null);
 
@@ -18,8 +19,8 @@ const AuthContext = createContext(null);
 let accessToken = null;
 let refreshPromise = null;
 
-// Get API base URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+// Use centralized backend URL from config/api.js (handles env vars + production fallback)
+const API_BASE_URL = BACKEND_URL;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);

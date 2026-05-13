@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { User, Company, Plan, Subscription, UserCompany } = require('../models');
 const tokenService = require('../services/tokenService');
-const { logAuthAttempt, clearBruteForce } = require('../middleware/rateLimit');
+const { incrementBruteForce, clearBruteForce } = require('../middleware/rateLimit');
 const { logSecurityEvent, EVENT_TYPES, SEVERITY } = require('../services/auditService');
 
 // Cookie configuration
@@ -150,30 +150,29 @@ const login = async (req, res) => {
     });
 
     if (!user) {
-      await logAuthAttempt(req, false, null, { message: 'User not found' });
+      incrementBruteForce(email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     if (!user.is_active) {
-      await logAuthAttempt(req, false, user, { message: 'Account deactivated' });
+      incrementBruteForce(email);
       return res.status(401).json({ error: 'Account is deactivated' });
     }
 
     if (!user.password) {
-      await logAuthAttempt(req, false, user, { message: 'No password set' });
+      incrementBruteForce(email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const validPassword = await bcrypt.compare(password, user.password);
 
     if (!validPassword) {
-      await logAuthAttempt(req, false, user, { message: 'Invalid password' });
+      incrementBruteForce(email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     // Successful login - clear brute force counter
     clearBruteForce(email);
-    await logAuthAttempt(req, true, user);
 
     // Fetch all companies this user has access to
     const userCompanies = await UserCompany.findAll({
@@ -253,7 +252,6 @@ const login = async (req, res) => {
 
   } catch (error) {
     console.error('Login error:', error);
-    await logAuthAttempt(req, false, null, error);
     res.status(500).json({ error: 'Login failed' });
   }
 };

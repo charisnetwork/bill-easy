@@ -23,8 +23,8 @@ const isStaticHost = host.includes('pages.dev') || host.includes('netlify.app') 
 const API_BASE_URL = isGateway 
   ? '/admin/api'  // Through gateway - use relative path
   : isStaticHost
-    ? 'https://bill-easy-production.up.railway.app/admin/api'  // Cloudflare Pages → Railway
-    : (import.meta.env.VITE_ADMIN_API_URL || 'http://localhost:3025') + '/api';
+    ? 'https://bill-easy-production-v4.up.railway.app/admin/api'  // Cloudflare Pages → Railway
+    : (import.meta.env.VITE_ADMIN_BACKEND_URL || 'http://localhost:3025') + '/api';
 
 const SAAS_URL = import.meta.env.VITE_SAAS_URL || 'https://charisbilleasy.store';
 
@@ -329,11 +329,7 @@ const AdminApp = () => {
 
   return (
     <>
-      {/* DEBUG BANNER - Remove after fixing */}
-      <div style={{position:'fixed',top:0,left:0,right:0,zIndex:9999,background:'red',color:'white',padding:'10px',fontSize:'12px'}}>
-        DEBUG: API_BASE_URL = {API_BASE_URL} | ADMIN_BACKEND_KEY = {import.meta.env.ADMIN_BACKEND_KEY || 'NOT SET'}
-      </div>
-      <div className="flex h-screen bg-slate-950 text-slate-300 font-sans selection:bg-indigo-500/30" style={{marginTop:'40px'}}>
+      <div className="flex h-screen bg-slate-950 text-slate-300 font-sans selection:bg-indigo-500/30">
         {/* Sidebar */}
         <aside className="w-64 bg-slate-950 border-r border-slate-800 flex flex-col p-6">
         <div className="mb-10">
