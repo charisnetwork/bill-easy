@@ -35,7 +35,10 @@ app.use((req, res, next) => {
 
 // Enable CORS for all routes - MUST be before other middleware
 app.use(cors({
-  origin: '*',
+  origin: (origin, callback) => {
+    // Allow all origins but reflect them (required for credentials: true)
+    callback(null, true);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-token', 'x-admin-secret', 'x-company-id']
