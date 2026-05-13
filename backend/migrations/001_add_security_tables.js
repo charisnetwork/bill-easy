@@ -10,11 +10,14 @@ module.exports = {
     const { DataTypes } = Sequelize;
     
     // 1. Add token_version to users table
-    await queryInterface.addColumn('users', 'token_version', {
-      type: DataTypes.INTEGER,
-      defaultValue: 1,
-      allowNull: false
-    });
+    const userTableInfo = await queryInterface.describeTable('users');
+    if (!userTableInfo.token_version) {
+      await queryInterface.addColumn('users', 'token_version', {
+        type: DataTypes.INTEGER,
+        defaultValue: 1,
+        allowNull: false
+      });
+    }
     
     // 2. Create refresh_tokens table
     await queryInterface.createTable('refresh_tokens', {
