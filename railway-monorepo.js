@@ -47,7 +47,10 @@ app.options('*', cors());
 // Request logging middleware
 app.use((req, res, next) => {
   const host = req.headers.host || 'unknown';
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - Host: ${host}`);
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  console.log(`  > Host: ${host}`);
+  console.log(`  > Origin: ${req.headers.origin || 'none'}`);
+  console.log(`  > User-Agent: ${req.headers['user-agent'] || 'none'}`);
   next();
 });
 
