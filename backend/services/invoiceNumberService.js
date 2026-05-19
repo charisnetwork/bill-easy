@@ -53,9 +53,9 @@ const generateInvoiceNumber = async (companyId, existingTransaction = null) => {
 
       invoiceNumber = `${prefix}-${counter.last_number}`;
 
-      // Check if this number is already taken (handles desync from rollbacks)
+      // Check globally — the DB constraint is not company-scoped
       const existing = await Invoice.findOne({
-        where: { invoice_number: invoiceNumber, company_id: companyId },
+        where: { invoice_number: invoiceNumber },
         transaction: t,
       });
 
@@ -113,8 +113,9 @@ const generateQuotationNumber = async (companyId, existingTransaction = null) =>
 
       quotationNumber = `QTN-${counter.last_number}`;
 
+      // Check globally
       const existing = await Quotation.findOne({
-        where: { quotation_number: quotationNumber, company_id: companyId },
+        where: { quotation_number: quotationNumber },
         transaction: t,
       });
 

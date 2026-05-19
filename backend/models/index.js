@@ -206,7 +206,7 @@ const Invoice = sequelize.define('Invoice',{
   company_id: { type: DataTypes.UUID, allowNull: false },
   customer_id: { type: DataTypes.UUID, allowNull: false },
   godown_id: { type: DataTypes.UUID },
-  invoice_number:{ type:DataTypes.STRING, allowNull:false, unique:true },
+  invoice_number:{ type:DataTypes.STRING, allowNull:false }, // unique enforced via compound index below
   invoice_date:{ type:DataTypes.DATE, defaultValue:DataTypes.NOW },
   due_date:{ type:DataTypes.DATE },
   subtotal:{ type:DataTypes.DECIMAL(12,2), defaultValue:0 },
@@ -230,7 +230,12 @@ const Invoice = sequelize.define('Invoice',{
   industry_metadata:{ type:DataTypes.JSONB, defaultValue:{} },
   eway_bill_number:{ type:DataTypes.STRING },
   wallet_amount:{ type:DataTypes.DECIMAL(12,2), defaultValue:0 }
-}, { tableName: 'invoices' });
+}, { 
+  tableName: 'invoices',
+  indexes: [
+    { unique: true, fields: ['invoice_number', 'company_id'], name: 'invoices_number_company_unique' }
+  ]
+});
 
 const TaxSetting = sequelize.define('TaxSetting', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
