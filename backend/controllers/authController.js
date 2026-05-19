@@ -7,12 +7,13 @@ const { logSecurityEvent, EVENT_TYPES, SEVERITY } = require('../services/auditSe
 
 // Cookie configuration
 const REFRESH_COOKIE_NAME = 'refreshToken';
+const isProduction = process.env.NODE_ENV === 'production';
 const REFRESH_COOKIE_OPTIONS = {
   httpOnly: true,        // Not accessible via JavaScript
-  secure: process.env.NODE_ENV === 'production',  // HTTPS only in production
-  sameSite: 'strict',    // CSRF protection
+  secure: true,          // Always use secure (HTTPS) - required for sameSite 'none'
+  sameSite: isProduction ? 'none' : 'lax',  // 'none' required for cross-origin cookies (Cloudflare→Railway)
   maxAge: 7 * 24 * 60 * 60 * 1000,  // 7 days
-  path: '/api/auth/refresh'  // Only sent to refresh endpoint
+  path: '/'              // Available on all auth paths (refresh, logout, etc.)
 };
 
 /* ===============================
@@ -321,7 +322,7 @@ const refreshToken = async (req, res) => {
     console.error('Token refresh error:', error);
     
     // Clear cookie on error
-    res.clearCookie(REFRESH_COOKIE_NAME, { path: '/api/auth/refresh' });
+    res.clearCookie(REFRESH_COOKIE_NAME, { path: '/' });
     
     if (error.message.includes('reuse detected')) {
       await logSecurityEvent(EVENT_TYPES.TOKEN_REUSE_DETECTED, {
@@ -352,7 +353,7 @@ const logout = async (req, res) => {
     }
     
     // Clear cookie
-    res.clearCookie(REFRESH_COOKIE_NAME, { path: '/api/auth/refresh' });
+    res.clearCookie(REFRESH_COOKIE_NAME, { path: '/' });
     
     // Log logout
     if (req.user) {

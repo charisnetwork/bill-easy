@@ -170,8 +170,7 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
       const product = products.find(p => p.id === value);
       if (product) {
         if (product.type === 'product' && parseFloat(product.stock_quantity) <= 0) {
-          toast.error(`${product.name} is out of stock!`);
-          return;
+          toast.warning(`${product.name} is out of stock — you can still add it`);
         }
         newItems[index][field] = value;
         newItems[index].unit_price = parseFloat(product.sale_price);
@@ -181,11 +180,9 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
       const product = products.find(p => p.id === newItems[index].product_id);
       if (product && product.type === 'product') {
         if (parseFloat(value) > parseFloat(product.stock_quantity)) {
-          toast.error(`Only ${product.stock_quantity} units available in stock`);
-          newItems[index][field] = product.stock_quantity;
-        } else {
-          newItems[index][field] = value;
+          toast.warning(`Only ${product.stock_quantity} units in stock — selling more than available`);
         }
+        newItems[index][field] = value;
       } else {
         newItems[index][field] = value;
       }

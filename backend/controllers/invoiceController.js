@@ -152,7 +152,8 @@ const createInvoice = async (req, res) => {
       // If still no godown_id, it will be null (optional)
     }
 
-    // Stock Validation
+    // Stock Validation (soft check — warns but doesn't block)
+    const stockWarnings = [];
     for (const item of items) {
       const qty = parseFloat(item.quantity) || 0;
       const product = await Product.findByPk(item.product_id, { transaction });
@@ -161,19 +162,21 @@ const createInvoice = async (req, res) => {
         throw new Error(`Product with ID ${item.product_id} not found`);
       }
 
-      // Check global stock
+      // Soft check global stock — warn but allow
       if (parseFloat(product.stock_quantity) < qty) {
-        throw new Error(`Insufficient global stock for ${product.name}. Available: ${product.stock_quantity}`);
+        stockWarnings.push(`Low stock: ${product.name} (Available: ${product.stock_quantity}, Requested: ${qty})`);
+        console.warn(`[STOCK WARNING] ${product.name}: available ${product.stock_quantity}, requested ${qty}`);
       }
 
-      // If godown specified, check godown stock
+      // Godown stock check — only block if godown stock is explicitly tracked and positive
       if (godown_id) {
         const stock = await StockLevel.findOne({
           where: { product_id: item.product_id, godown_id },
           transaction
         });
-        if (!stock || parseFloat(stock.quantity) < qty) {
-          throw new Error(`Insufficient stock for ${product.name} in selected godown. Available: ${stock?.quantity || 0}`);
+        if (stock && parseFloat(stock.quantity) > 0 && parseFloat(stock.quantity) < qty) {
+          stockWarnings.push(`Low godown stock: ${product.name} (Godown available: ${stock.quantity})`);
+          console.warn(`[GODOWN STOCK WARNING] ${product.name}: godown stock ${stock.quantity}, requested ${qty}`);
         }
       }
     }
@@ -283,7 +286,8 @@ const createInvoice = async (req, res) => {
     await transaction.commit();
     res.status(201).json({
       message: "Invoice created successfully",
-      invoice
+      invoice,
+      warnings: stockWarnings.length > 0 ? stockWarnings : undefined
     });
   } catch (error) {
     if (transaction) await transaction.rollback();

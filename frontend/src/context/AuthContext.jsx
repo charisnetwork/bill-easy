@@ -310,6 +310,19 @@ export const AuthProvider = ({ children }) => {
     return response.data;
   }, []);
 
+  // Refresh profile - re-fetch all user/company/subscription data from backend
+  const refreshProfile = useCallback(async () => {
+    try {
+      const userRes = await axios.get(`${API_BASE_URL}/api/auth/profile`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        withCredentials: true
+      });
+      populateState(userRes.data);
+    } catch (error) {
+      console.error('Failed to refresh profile:', error);
+    }
+  }, [populateState]);
+
   const value = {
     user,
     company,
@@ -328,6 +341,7 @@ export const AuthProvider = ({ children }) => {
     getSessions,
     revokeSession,
     updateProfile,
+    refreshProfile,
     refreshAccessToken
   };
 

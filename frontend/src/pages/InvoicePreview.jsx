@@ -28,9 +28,6 @@ import {
   ArrowLeft,
   Phone,
   Mail,
-  MapPin,
-  Calendar,
-  FileText,
   Building2,
   CreditCard,
   History,
@@ -42,6 +39,10 @@ import { format } from "date-fns";
 import { cn } from "../lib/utils";
 import { toast } from "sonner";
 import { getIndustryConfig } from "../lib/industryConfig";
+import ModernTemplate from "../components/invoice-templates/ModernTemplate";
+import ClassicTemplate from "../components/invoice-templates/ClassicTemplate";
+import MinimalTemplate from "../components/invoice-templates/MinimalTemplate";
+import GstStandardTemplate from "../components/invoice-templates/GstStandardTemplate";
 
 const InvoicePreview = () => {
   const { id } = useParams();
@@ -315,6 +316,17 @@ const InvoicePreview = () => {
         <div className="lg:col-span-3">
           <Card className="border border-slate-100 shadow-2xl rounded-2xl overflow-hidden print:shadow-none print:border print:m-0 bg-white">
             <CardContent className="p-0">
+              {/* Template Switcher */}
+              {template === 'classic' && (
+                <ClassicTemplate invoice={invoice} company={company} industryConfig={industryConfig} balanceDue={balanceDue} paymentProgress={paymentProgress} />
+              )}
+              {template === 'minimal' && (
+                <MinimalTemplate invoice={invoice} company={company} industryConfig={industryConfig} balanceDue={balanceDue} paymentProgress={paymentProgress} />
+              )}
+              {template === 'gst-standard' && (
+                <GstStandardTemplate invoice={invoice} company={company} industryConfig={industryConfig} balanceDue={balanceDue} paymentProgress={paymentProgress} />
+              )}
+              {(template === 'modern' || !template) && (
               <div className="p-10 md:p-16 space-y-10">
                 {/* Header (Logo Top-Left, aligned with Name) */}
                 <div className="flex flex-row items-start justify-between border-b border-slate-100 pb-10">
@@ -526,6 +538,7 @@ const InvoicePreview = () => {
                    </div>
                 </div>
               </div>
+              )}
             </CardContent>
           </Card>
         </div>

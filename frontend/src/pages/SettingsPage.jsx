@@ -1275,11 +1275,101 @@ export const SettingsPage = () => {
                 )}
 
                 {['invoice-print'].includes(activeSection) && (
-                  <div className="flex flex-col items-center justify-center h-[400px] text-slate-400 space-y-4">
-                    <Settings className="w-12 h-12 opacity-20" />
-                    <p className="text-lg font-medium">Settings for {activeSection.replace('-', ' ')} coming soon.</p>
+                  <div className="space-y-8">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3"><Printer className="w-6 h-6 text-indigo-600" /><h3 className="text-xl font-bold">Print &amp; PDF Template</h3></div>
+                      <p className="text-sm text-slate-500">Choose how your invoices look when printed or downloaded as PDF. The same template applies to both.</p>
+                    </div>
+                    <Form {...customForm}>
+                      <form onSubmit={customForm.handleSubmit(handleCustomSubmit)} className="space-y-6">
+                        <FormField
+                          control={customForm.control}
+                          name="template_id"
+                          render={({ field }) => (
+                            <FormItem>
+                              <div className="grid grid-cols-2 gap-4">
+                                {[
+                                  { id: 'modern', name: 'Modern Professional', desc: 'Dark header, structured layout. Bold & impactful.', color: 'bg-slate-900', accent: 'border-slate-900' },
+                                  { id: 'classic', name: 'Classic Compact', desc: 'Traditional bordered layout with blue accent. Timeless.', color: 'bg-blue-800', accent: 'border-blue-800' },
+                                  { id: 'minimal', name: 'Minimalist', desc: 'Clean whitespace, monochrome. Modern startup feel.', color: 'bg-slate-400', accent: 'border-slate-400' },
+                                  { id: 'gst-standard', name: 'GST Standard', desc: 'Full CGST/SGST breakdown. Government-compliant format.', color: 'bg-emerald-700', accent: 'border-emerald-700' },
+                                ].map((tmpl) => (
+                                  <button
+                                    key={tmpl.id}
+                                    type="button"
+                                    onClick={() => { field.onChange(tmpl.id); customForm.setValue('template_id', tmpl.id, { shouldDirty: true }); }}
+                                    className={cn(
+                                      "relative text-left border-2 rounded-xl overflow-hidden transition-all hover:shadow-lg",
+                                      field.value === tmpl.id ? `${tmpl.accent} shadow-md ring-2 ring-offset-2 ring-indigo-400` : "border-slate-200"
+                                    )}
+                                  >
+                                    {/* Mini preview header */}
+                                    <div className={cn("h-10 w-full flex items-center px-4", tmpl.color)}>
+                                      <div className="w-6 h-6 bg-white/20 rounded mr-2"></div>
+                                      <div className="space-y-1 flex-1">
+                                        <div className="h-1.5 bg-white/60 rounded w-20"></div>
+                                        <div className="h-1 bg-white/30 rounded w-12"></div>
+                                      </div>
+                                      <div className="text-white text-[8px] font-bold uppercase tracking-wider border border-white/40 px-1.5 py-0.5 rounded">Invoice</div>
+                                    </div>
+                                    {/* Mini preview body */}
+                                    <div className="p-3 bg-white space-y-1.5">
+                                      <div className="grid grid-cols-2 gap-1">
+                                        <div className="space-y-1">
+                                          <div className="h-1 bg-slate-200 rounded w-10"></div>
+                                          <div className="h-1.5 bg-slate-300 rounded w-16"></div>
+                                          <div className="h-1 bg-slate-100 rounded w-12"></div>
+                                        </div>
+                                        <div className="space-y-1">
+                                          <div className="h-1 bg-slate-200 rounded w-8"></div>
+                                          <div className="h-1.5 bg-slate-300 rounded w-14"></div>
+                                          <div className="h-1 bg-slate-100 rounded w-10"></div>
+                                        </div>
+                                      </div>
+                                      <div className={cn("h-4 rounded flex items-center px-2", tmpl.color)}>
+                                        <div className="h-1 bg-white/60 rounded flex-1"></div>
+                                        <div className="h-1 bg-white/60 rounded w-6 ml-2"></div>
+                                      </div>
+                                      {[1,2,3].map(r => (
+                                        <div key={r} className="flex gap-2">
+                                          <div className="h-1 bg-slate-100 rounded flex-1"></div>
+                                          <div className="h-1 bg-slate-100 rounded w-8"></div>
+                                          <div className="h-1 bg-slate-200 rounded w-10"></div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                    {/* Label */}
+                                    <div className="px-3 pb-3">
+                                      <div className="flex items-center justify-between">
+                                        <div>
+                                          <p className="text-sm font-bold text-slate-900">{tmpl.name}</p>
+                                          <p className="text-[11px] text-slate-500 leading-snug mt-0.5">{tmpl.desc}</p>
+                                        </div>
+                                        {field.value === tmpl.id && (
+                                          <div className="w-5 h-5 rounded-full bg-indigo-600 flex items-center justify-center shrink-0 ml-2">
+                                            <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <div className="flex items-center gap-4 pt-2">
+                          <Button type="submit" disabled={submitting || !customForm.formState.isDirty} className="bg-indigo-600 hover:bg-indigo-700 text-white min-w-[140px]">
+                            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4 mr-2" />Save Template</>}
+                          </Button>
+                          <p className="text-xs text-slate-500">This template applies to both <strong>Print</strong> and <strong>PDF download</strong>.</p>
+                        </div>
+                      </form>
+                    </Form>
                   </div>
                 )}
+
 
               </CardContent>
             </Card>
