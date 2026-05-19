@@ -14,7 +14,10 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '../components/ui/table';
-import { ArrowLeft, Plus, Trash2, Save, Calendar, Wallet } from 'lucide-react';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
+} from '../components/ui/dialog';
+import { ArrowLeft, Plus, Trash2, Save, Wallet, UserPlus, Loader2 } from 'lucide-react';
 import { Switch } from '../components/ui/switch';
 import { toast } from 'sonner';
 
@@ -31,6 +34,11 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
   const { id } = useParams();
   const location = useLocation();
   const [loading, setLoading] = useState(false);
+
+  // Quick-create customer dialog
+  const [showNewCustomer, setShowNewCustomer] = useState(false);
+  const [newCustomerData, setNewCustomerData] = useState({ name: '', phone: '', email: '', gstin: '' });
+  const [savingCustomer, setSavingCustomer] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
   const [invoiceNumber, setInvoiceNumber] = useState('');
@@ -145,6 +153,27 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
     };
     fetchData();
   }, [id, isEdit]);
+
+  const handleCreateCustomer = async () => {
+    if (!newCustomerData.name.trim()) {
+      toast.error('Customer name is required');
+      return;
+    }
+    setSavingCustomer(true);
+    try {
+      const res = await customerAPI.create(newCustomerData);
+      const created = res.data.customer || res.data;
+      setCustomers(prev => [created, ...prev]);
+      setFormData(prev => ({ ...prev, customer_id: created.id }));
+      setShowNewCustomer(false);
+      setNewCustomerData({ name: '', phone: '', email: '', gstin: '' });
+      toast.success(`Customer "${created.name}" created and selected!`);
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Failed to create customer'));
+    } finally {
+      setSavingCustomer(false);
+    }
+  };
 
   const addItem = () => {
     setFormData({
@@ -348,7 +377,17 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
             <CardContent>
               <div className="form-grid">
                 <div className="form-field form-field-full">
-                  <Label className="form-label">Customer *</Label>
+                  <div className="flex items-center justify-between mb-1">
+                    <Label className="form-label mb-0">Customer *</Label>
+                    <button
+                      type="button"
+                      onClick={() => setShowNewCustomer(true)}
+                      className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+                    >
+                      <UserPlus className="w-3.5 h-3.5" />
+                      New Customer
+                    </button>
+                  </div>
                   <Select
                     value={formData.customer_id}
                     onValueChange={(value) => setFormData({ ...formData, customer_id: value })}
@@ -359,7 +398,7 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                     <SelectContent>
                       {customers.map((customer) => (
                         <SelectItem key={customer.id} value={customer.id}>
-                          {customer.name}
+                          {customer.name}{customer.phone ? ` · ${customer.phone}` : ''}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -807,6 +846,62 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
           </Button>
         </div>
       </form>
+
+      {/* Quick Create Customer Dialog */}
+      <Dialog open={showNewCustomer} onOpenChange={setShowNewCustomer}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="w-5 h-5 text-indigo-600" />
+              New Customer
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label className="form-label">Name *</Label>
+              <Input
+                placeholder="Customer name"
+                value={newCustomerData.name}
+                onChange={(e) => setNewCustomerData(p => ({ ...p, name: e.target.value }))}
+                onKeyDown={(e) => e.key === 'Enter' && handleCreateCustomer()}
+                autoFocus
+              />
+            </div>
+            <div>
+              <Label className="form-label">Phone</Label>
+              <Input
+                placeholder="Mobile number"
+                value={newCustomerData.phone}
+                onChange={(e) => setNewCustomerData(p => ({ ...p, phone: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label className="form-label">Email</Label>
+              <Input
+                type="email"
+                placeholder="email@example.com"
+                value={newCustomerData.email}
+                onChange={(e) => setNewCustomerData(p => ({ ...p, email: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label className="form-label">GSTIN <span className="text-slate-400 font-normal">(optional)</span></Label>
+              <Input
+                placeholder="22AAAAA0000A1Z5"
+                value={newCustomerData.gstin}
+                onChange={(e) => setNewCustomerData(p => ({ ...p, gstin: e.target.value }))}
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowNewCustomer(false)}>Cancel</Button>
+            <Button onClick={handleCreateCustomer} disabled={savingCustomer} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+              {savingCustomer ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <UserPlus className="w-4 h-4 mr-2" />}
+              {savingCustomer ? 'Creating...' : 'Create & Select'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
