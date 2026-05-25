@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WattVision - Monitoreo Eléctrico</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <i data-lucide="zap" class="logo-icon"></i>
+            <h1>WattVision</h1>
+        </div>
+        <div class="status">
+            <span class="status-dot"></span>
+            En vivo
+        </div>
+    </header>
+
+    <main class="dashboard-grid">
+        <!-- KPI Row -->
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <h3>Consumo Actual</h3>
+                <i data-lucide="activity" class="icon-cyan"></i>
+            </div>
+            <div class="kpi-value">
+                <span class="number">1,245</span> <span class="unit">W</span>
+            </div>
+            <p class="kpi-subtitle text-green">Normal - Promedio doméstico</p>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <h3>Energía Hoy</h3>
+                <i data-lucide="zap" class="icon-cyan"></i>
+            </div>
+            <div class="kpi-value">
+                <span class="number">8.4</span> <span class="unit">kWh</span>
+            </div>
+            <p class="kpi-subtitle">Equivalente a <span class="currency">Bs. 6.30</span></p>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <h3>Pico Máximo (Hoy)</h3>
+                <i data-lucide="trending-up" class="icon-red"></i>
+            </div>
+            <div class="kpi-value">
+                <span class="number">3,100</span> <span class="unit">W</span>
+            </div>
+            <p class="kpi-subtitle">14:30 - Horno Eléctrico</p>
+        </div>
+
+        <!-- Main Chart -->
+        <div class="chart-card span-8">
+            <div class="card-header">
+                <h2>Perfil de Consumo (Últimas 24h)</h2>
+                <div class="chart-actions">
+                    <button class="btn active">Día</button>
+                    <button class="btn">Semana</button>
+                    <button class="btn">Mes</button>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="consumptionChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Alerts Panel -->
+        <div class="alerts-card span-4">
+            <div class="card-header">
+                <h2>Alertas Recientes</h2>
+            </div>
+            <div class="alerts-list">
+                <div class="alert-item danger">
+                    <i data-lucide="plug-zap" class="alert-icon"></i>
+                    <div class="alert-content">
+                        <h4>Pico Inusual Detectado</h4>
+                        <p>Consumo superó 3,000 W a las 14:30. Revise equipos pesados.</p>
+                        <span class="alert-time">Hace 2 horas</span>
+                    </div>
+                </div>
+                
+                <div class="alert-item warning">
+                    <i data-lucide="power-off" class="alert-icon"></i>
+                    <div class="alert-content">
+                        <h4>Posible Consumo Vampiro</h4>
+                        <p>Consumo base nocturno de 150 W es superior al promedio.</p>
+                        <span class="alert-time">Hace 8 horas</span>
+                    </div>
+                </div>
+
+                <div class="alert-item info">
+                    <i data-lucide="info" class="alert-icon"></i>
+                    <div class="alert-content">
+                        <h4>Corte de Energía</h4>
+                        <p>Micro-corte detectado en la red principal (2 segundos).</p>
+                        <span class="alert-time">Ayer, 21:00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Devices Table -->
+        <div class="table-card span-12">
+            <div class="card-header">
+                <h2>Análisis de Dispositivos (Estimado)</h2>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Dispositivo</th>
+                            <th>Estado</th>
+                            <th>Consumo Promedio</th>
+                            <th>Energía (Hoy)</th>
+                            <th>Costo Estimado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Refrigerador</td>
+                            <td><span class="badge active">Activo</span></td>
+                            <td>250 W</td>
+                            <td>3.2 kWh</td>
+                            <td>Bs. 2.40</td>
+                        </tr>
+                        <tr>
+                            <td>Horno Eléctrico</td>
+                            <td><span class="badge inactive">Inactivo</span></td>
+                            <td>2,000 W</td>
+                            <td>1.5 kWh</td>
+                            <td>Bs. 1.12</td>
+                        </tr>
+                        <tr>
+                            <td>Iluminación (Total)</td>
+                            <td><span class="badge active">Activo</span></td>
+                            <td>120 W</td>
+                            <td>0.8 kWh</td>
+                            <td>Bs. 0.60</td>
+                        </tr>
+                        <tr>
+                            <td>TV / Entretenimiento</td>
+                            <td><span class="badge inactive">Inactivo</span></td>
+                            <td>150 W</td>
+                            <td>0.6 kWh</td>
+                            <td>Bs. 0.45</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+      lucide.createIcons();
+    </script>
+</body>
+</html>

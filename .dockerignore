@@ -1,0 +1,21 @@
+node_modules
+npm-debug.log
+Dockerfile
+.dockerignore
+.git
+.gitignore
+README.md
+
+# Ignore frontends completely for Railway deployments
+frontend/
+admin/frontend/
+
+# Ignore unused files
+unused_files/
+desktop-app/
+wattvision/
+output_project/
+*.sql
+*.zip
+devai.py
+node_modules_bad/

@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Bill Easy - Windows Desktop App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --primary-light: #e0e7ff;
+            --secondary: #64748b;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            font-size: 1.25rem;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-light);
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .nav-links a.active {
+            color: var(--primary);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 5rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .version-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        /* Download Cards */
+        .download-section {
+            margin-bottom: 4rem;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-header h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-header p {
+            color: var(--text-light);
+            font-size: 1.125rem;
+        }
+
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .download-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow);
+            border: 2px solid var(--border);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .download-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-light);
+        }
+
+        .download-card.featured {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, var(--card-bg) 0%, var(--primary-light) 100%);
+        }
+
+        .download-card.featured::before {
+            content: 'Recommended';
+            position: absolute;
+            top: 1rem;
+            right: -3rem;
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 3rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            transform: rotate(45deg);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .platform-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        .platform-icon.windows {
+            background: linear-gradient(135deg, #00a4ef, #0078d4);
+            color: white;
+        }
+
+        .card-header h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .card-header p {
+            color: var(--text-light);
+            font-size: 0.875rem;
+        }
+
+        .card-features {
+            list-style: none;
+            margin: 1.5rem 0;
+            padding: 0;
+        }
+
+        .card-features li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+            color: var(--text-light);
+        }
+
+        .card-features li::before {
+            content: '✓';
+            width: 20px;
+            height: 20px;
+            background: var(--success);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .file-info {
+            display: flex;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: 12px;
+            font-size: 0.875rem;
+        }
+
+        .file-info span {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-light);
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            width: 100%;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.4);
+        }
+
+        .download-btn.secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 2px solid var(--border);
+        }
+
+        .download-btn.secondary:hover {
+            background: var(--border);
+        }
+
+        /* System Requirements */
+        .requirements {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: var(--shadow);
+            margin-top: 3rem;
+        }
+
+        .requirements h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .requirements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .requirement-item {
+            padding: 1.5rem;
+            background: var(--bg);
+            border-radius: 12px;
+        }
+
+        .requirement-item h4 {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .requirement-item p {
+            color: var(--text-light);
+            font-size: 0.875rem;
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+            padding: 3rem 2rem;
+            text-align: center;
+            margin-top: 4rem;
+        }
+
+        .footer p {
+            color: var(--text-light);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .footer-links a {
+            color: var(--text-light);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .download-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .requirements {
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="index.html" class="logo">
+                <div class="logo-icon">B</div>
+                <span class="logo-text">Bill Easy</span>
+            </a>
+            <nav class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="features.html">Features</a>
+                <a href="downloads.html" class="active">Downloads</a>
+                <a href="https://charisbilleasy.store" target="_blank">Web App</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="version-badge">
+                <span>🚀</span> Version 2.0.0 - Offline-First Desktop App
+            </div>
+            <h1>Download Bill Easy</h1>
+            <p>Get the best GST billing experience with our offline-first desktop application. Works on Windows with seamless cloud sync.</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Windows Downloads -->
+        <section class="download-section">
+            <div class="section-header">
+                <h2>🖥️ Windows Downloads</h2>
+                <p>Choose the version that works best for your system</p>
+            </div>
+
+            <div class="download-grid">
+                <!-- Windows 64-bit (Recommended) -->
+                <div class="download-card featured">
+                    <div class="card-header">
+                        <div class="platform-icon windows">🪟</div>
+                        <div>
+                            <h3>Windows 64-bit</h3>
+                            <p>Recommended for most users</p>
+                        </div>
+                    </div>
+                    <ul class="card-features">
+                        <li>Full offline functionality</li>
+                        <li>Automatic cloud sync</li>
+                        <li>SQLite database</li>
+                        <li>Works on Windows 10/11</li>
+                        <li>Auto-updates enabled</li>
+                    </ul>
+                    <div class="file-info">
+                        <span>📦 Installer</span>
+                        <span>💾 ~15 MB</span>
+                        <span>✓ Version 2.0.0</span>
+                    </div>
+                    <a href="desktop-app/dist/Bill-Easy_2.0.0_x64-setup.exe" class="download-btn" download>
+                        <span>⬇️</span> Download for Windows (64-bit)
+                    </a>
+                </div>
+
+                <!-- Windows 32-bit -->
+                <div class="download-card">
+                    <div class="card-header">
+                        <div class="platform-icon windows">🪟</div>
+                        <div>
+                            <h3>Windows 32-bit</h3>
+                            <p>For older systems</p>
+                        </div>
+                    </div>
+                    <ul class="card-features">
+                        <li>Compatible with older PCs</li>
+                        <li>Same offline features</li>
+                        <li>Lightweight performance</li>
+                        <li>Works on Windows 7/8/10</li>
+                    </ul>
+                    <div class="file-info">
+                        <span>📦 Installer</span>
+                        <span>💾 ~12 MB</span>
+                        <span>✓ Version 2.0.0</span>
+                    </div>
+                    <a href="desktop-app/dist/Bill-Easy_2.0.0_x86-setup.exe" class="download-btn secondary" download>
+                        <span>⬇️</span> Download for Windows (32-bit)
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Portable Version -->
+        <section class="download-section">
+            <div class="section-header">
+                <h2>💼 Portable Versions</h2>
+                <p>No installation required - run directly from USB drive</p>
+            </div>
+
+            <div class="download-grid">
+                <div class="download-card">
+                    <div class="card-header">
+                        <div class="platform-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white;">💾</div>
+                        <div>
+                            <h3>Portable (64-bit)</h3>
+                            <p>Extract and run anywhere</p>
+                        </div>
+                    </div>
+                    <ul class="card-features">
+                        <li>No installation needed</li>
+                        <li>Run from USB drive</li>
+                        <li>Same features as installer</li>
+                        <li>Leaves no traces on PC</li>
+                    </ul>
+                    <div class="file-info">
+                        <span>📦 ZIP Archive</span>
+                        <span>💾 ~18 MB</span>
+                        <span>✓ Version 2.0.0</span>
+                    </div>
+                    <a href="desktop-app/dist/Bill-Easy_2.0.0_x64-portable.zip" class="download-btn secondary" download>
+                        <span>⬇️</span> Download Portable (64-bit)
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- System Requirements -->
+        <section class="requirements">
+            <h3>📋 System Requirements</h3>
+            <div class="requirements-grid">
+                <div class="requirement-item">
+                    <h4>Operating System</h4>
+                    <p>Windows 10 or Windows 11 (64-bit recommended)<br>Windows 7/8 supported (32-bit)</p>
+                </div>
+                <div class="requirement-item">
+                    <h4>Processor</h4>
+                    <p>Intel Core i3 or equivalent<br>AMD Ryzen 3 or better recommended</p>
+                </div>
+                <div class="requirement-item">
+                    <h4>Memory</h4>
+                    <p>4 GB RAM minimum<br>8 GB RAM recommended</p>
+                </div>
+                <div class="requirement-item">
+                    <h4>Storage</h4>
+                    <p>100 MB for application<br>Additional space for database</p>
+                </div>
+                <div class="requirement-item">
+                    <h4>Internet</h4>
+                    <p>Required for initial setup<br>Optional for cloud sync</p>
+                </div>
+                <div class="requirement-item">
+                    <h4>Display</h4>
+                    <p>Minimum 1280x720 resolution<br>Recommended 1920x1080 or higher</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>© 2025 Bill Easy by Charis Network. All rights reserved.</p>
+        <div class="footer-links">
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="terms.html">Terms of Service</a>
+            <a href="support.html">Support</a>
+        </div>
+    </footer>
+</body>
+</html>

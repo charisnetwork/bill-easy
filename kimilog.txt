@@ -1,0 +1,1057 @@
+2026-04-21 11:29:28.619 | INFO     | kimi_cli.cli:_run:571 |  - Created new session: b3e091a1-2f25-4522-8ba7-a7bcdd313533
+2026-04-21 11:29:28.651 | INFO     | kimi_cli.app:create:160 |  - Loaded config: is_from_default_location=True source_file=PosixPath('/root/.kimi/config.toml') default_model='moonshot-ai/kimi-k2.5' default_thinking=True default_yolo=False default_plan_mode=False default_editor='' theme='dark' show_thinking_stream=True models={'moonshot-ai/kimi-k2-thinking-turbo': LLMModel(provider='managed:moonshot-ai', model='kimi-k2-thinking-turbo', max_context_size=262144, capabilities={'thinking', 'always_thinking'}), 'moonshot-ai/kimi-k2-turbo-preview': LLMModel(provider='managed:moonshot-ai', model='kimi-k2-turbo-preview', max_context_size=262144, capabilities=None), 'moonshot-ai/kimi-k2-thinking': LLMModel(provider='managed:moonshot-ai', model='kimi-k2-thinking', max_context_size=262144, capabilities={'thinking', 'always_thinking'}), 'moonshot-ai/kimi-k2-0711-preview': LLMModel(provider='managed:moonshot-ai', model='kimi-k2-0711-preview', max_context_size=131072, capabilities=None), 'moonshot-ai/kimi-k2.5': LLMModel(provider='managed:moonshot-ai', model='kimi-k2.5', max_context_size=262144, capabilities={'thinking', 'video_in', 'image_in'}), 'moonshot-ai/kimi-k2-0905-preview': LLMModel(provider='managed:moonshot-ai', model='kimi-k2-0905-preview', max_context_size=262144, capabilities=None)} providers={'managed:moonshot-ai': LLMProvider(type='kimi', base_url='https://api.moonshot.ai/v1', api_key=SecretStr('**********'), env=None, custom_headers=None, oauth=None)} loop_control=LoopControl(max_steps_per_turn=100, max_retries_per_step=3, max_ralph_iterations=0, reserved_context_size=50000, compaction_trigger_ratio=0.85) background=BackgroundConfig(max_running_tasks=4, read_max_bytes=30000, notification_tail_lines=20, notification_tail_chars=3000, wait_poll_interval_ms=500, worker_heartbeat_interval_ms=5000, worker_stale_after_ms=15000, kill_grace_period_ms=2000, keep_alive_on_exit=False, agent_task_timeout_s=900) notifications=NotificationConfig(claim_stale_after_ms=15000) services=Services(moonshot_search=None, moonshot_fetch=None) mcp=MCPConfig(client=MCPClientConfig(tool_call_timeout_ms=60000)) hooks=[] merge_all_available_skills=False
+2026-04-21 11:29:29.407 | INFO     | kimi_cli.app:create:204 |  - Using LLM provider: type='kimi' base_url='https://api.moonshot.ai/v1' api_key=SecretStr('**********') env=None custom_headers=None oauth=None
+2026-04-21 11:29:29.407 | INFO     | kimi_cli.app:create:205 |  - Using LLM model: provider='managed:moonshot-ai' model='kimi-k2.5' max_context_size=262144 capabilities={'thinking', 'video_in', 'image_in'}
+2026-04-21 11:29:29.407 | INFO     | kimi_cli.app:create:206 |  - Thinking mode: True
+2026-04-21 11:29:29.411 | INFO     | kimi_cli.soul.agent:load_agents_md:145 |  - No AGENTS.md found from /home/pachu/Documents/bill easy to /home/pachu/Documents/bill easy
+2026-04-21 11:29:29.491 | INFO     | kimi_cli.soul.agent:create:248 |  - Discovered 2 skill(s)
+2026-04-21 11:29:29.492 | INFO     | kimi_cli.soul.agent:load_agent:412 |  - Loading agent: /root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/agents/default/agent.yaml
+2026-04-21 11:29:29.498 | INFO     | kimi_cli.soul.agent:_load_system_prompt:507 |  - Loading system prompt: /root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/agents/default/system.md
+2026-04-21 11:29:30.526 | INFO     | kimi_cli.soul.toolset:load_tools:334 |  - Skipping tool: kimi_cli.tools.web:SearchWeb
+2026-04-21 11:29:30.565 | INFO     | kimi_cli.soul.toolset:load_tools:341 |  - Loaded tools: ['kimi_cli.tools.agent:Agent', 'kimi_cli.tools.ask_user:AskUserQuestion', 'kimi_cli.tools.todo:SetTodoList', 'kimi_cli.tools.shell:Shell', 'kimi_cli.tools.background:TaskList', 'kimi_cli.tools.background:TaskOutput', 'kimi_cli.tools.background:TaskStop', 'kimi_cli.tools.file:ReadFile', 'kimi_cli.tools.file:ReadMediaFile', 'kimi_cli.tools.file:Glob', 'kimi_cli.tools.file:Grep', 'kimi_cli.tools.file:WriteFile', 'kimi_cli.tools.file:StrReplaceFile', 'kimi_cli.tools.web:FetchURL', 'kimi_cli.tools.plan:ExitPlanMode', 'kimi_cli.tools.plan.enter:EnterPlanMode']
+2026-04-21 11:29:30.611 | INFO     | kimi_cli.ui.shell.update:_do_update:239 |  - Checking for updates...
+2026-04-21 11:29:40.643 | INFO     | kimi_cli.ui.shell.update:_do_update:258 |  - Update available: current=1.36.0, latest=1.37.0
+2026-04-21 11:37:39.189 | INFO     | kimi_cli.ui.shell:run_soul_command:741 |  - Running soul with user input: [TextPart(type='text', text='gemini "Update the CSS for all forms across the application (Auth and Dashboard).\n1. Standardize form inputs with a consistent border-radius (8px), padding, and a focus ring using the brand blue.\n2. Apply the \'glassmorphism\' effect to login/signup cards (semi-transparent background with blur).\n3. Update internal dashboard forms (Company Profile, Inventory, Sales) to use a clean 2-column grid layout for better readability.\n4. Ensure the \'Save/Submit\' buttons use the primary brand color with a subtle hover transition.\n5. Fix the spacing between labels and inputs to prevent cramped layouts on mobile.\nCommit as: \'ui: standardize form styles and layouts across auth and dashboard\'."')]
+2026-04-21 11:37:54.156 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Glob completed in 0.1s (call_id=Glob:0)
+2026-04-21 11:37:55.185 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Glob completed in 0.0s (call_id=Glob:1)
+2026-04-21 11:37:55.894 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 16.6s (input=10729, output=197)
+2026-04-21 11:37:55.931 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Grep completed in 0.0s (call_id=Grep:2)
+2026-04-21 11:38:09.234 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 13.3s (input=11019, output=114)
+2026-04-21 11:39:30.980 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Shell completed in 82.6s (call_id=Shell:3)
+2026-04-21 11:39:30.981 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Shell completed in 81.7s (call_id=Shell:4)
+2026-04-21 11:39:42.206 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:5)
+2026-04-21 11:39:42.297 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:6)
+2026-04-21 11:39:42.549 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:7)
+2026-04-21 11:39:43.841 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:8)
+2026-04-21 11:39:43.957 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 12.9s (input=12336, output=202)
+2026-04-21 11:39:44.040 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:9)
+2026-04-21 11:39:44.110 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.2s (call_id=ReadFile:10)
+2026-04-21 11:39:55.319 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.3s (call_id=ReadFile:11)
+2026-04-21 11:39:55.680 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 11.5s (input=22120, output=97)
+2026-04-21 11:39:55.818 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.3s (call_id=ReadFile:12)
+2026-04-21 11:39:55.938 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.3s (call_id=ReadFile:13)
+2026-04-21 11:40:15.533 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.3s (call_id=ReadFile:14)
+2026-04-21 11:40:15.857 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:15)
+2026-04-21 11:40:17.085 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:16)
+2026-04-21 11:40:17.287 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 21.3s (input=52017, output=118)
+2026-04-21 11:40:17.342 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:17)
+2026-04-21 11:40:45.536 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 28.1s (input=60098, output=558)
+2026-04-21 11:40:45.540 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool SetTodoList completed in 0.0s (call_id=SetTodoList:18)
+2026-04-21 11:42:01.996 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 76.4s (input=60686, output=2442)
+2026-04-21 11:42:22.320 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 20.3s (call_id=StrReplaceFile:19)
+2026-04-21 11:42:33.460 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 11.0s (input=63168, output=149)
+2026-04-21 11:42:33.464 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool SetTodoList completed in 0.0s (call_id=SetTodoList:20)
+2026-04-21 11:43:33.437 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 59.9s (input=63347, output=1942)
+2026-04-21 11:43:33.473 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.0s (call_id=StrReplaceFile:21)
+2026-04-21 11:43:43.558 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 9.9s (input=65329, output=153)
+2026-04-21 11:43:43.562 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool SetTodoList completed in 0.0s (call_id=SetTodoList:22)
+2026-04-21 11:45:22.652 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 99.0s (input=65512, output=3383)
+2026-04-21 11:45:22.690 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.0s (call_id=StrReplaceFile:23)
+2026-04-21 11:45:39.401 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 16.3s (input=68935, output=158)
+2026-04-21 11:45:39.405 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool SetTodoList completed in 0.0s (call_id=SetTodoList:24)
+2026-04-21 11:45:58.776 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 19.3s (input=69123, output=463)
+2026-04-21 11:45:58.845 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.1s (call_id=StrReplaceFile:25)
+2026-04-21 11:46:28.316 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 29.4s (input=69626, output=774)
+2026-04-21 11:46:28.377 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.1s (call_id=StrReplaceFile:26)
+2026-04-21 11:46:39.470 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 11.0s (input=70440, output=117)
+2026-04-21 11:46:39.499 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.0s (call_id=StrReplaceFile:27)
+2026-04-21 11:46:59.284 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 19.7s (input=70597, output=423)
+2026-04-21 11:46:59.315 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.0s (call_id=StrReplaceFile:28)
+2026-04-21 11:47:20.176 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 20.8s (input=71060, output=480)
+2026-04-21 11:47:20.201 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.0s (call_id=StrReplaceFile:29)
+2026-04-21 11:47:36.158 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 15.9s (input=71580, output=173)
+2026-04-21 11:47:36.162 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool SetTodoList completed in 0.0s (call_id=SetTodoList:30)
+2026-04-21 11:49:03.425 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 87.2s (input=71783, output=2595)
+2026-04-21 11:49:03.489 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.1s (call_id=StrReplaceFile:31)
+2026-04-21 11:49:43.145 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 39.5s (input=74418, output=1112)
+2026-04-21 11:49:43.190 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.0s (call_id=StrReplaceFile:32)
+2026-04-21 11:49:53.390 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 10.1s (input=75570, output=64)
+2026-04-21 11:49:53.418 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Grep completed in 0.0s (call_id=Grep:33)
+2026-04-21 11:50:05.061 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 11.6s (input=75659, output=75)
+2026-04-21 11:50:05.094 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.0s (call_id=StrReplaceFile:34)
+2026-04-21 11:50:18.171 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 13.0s (input=75774, output=147)
+2026-04-21 11:50:18.174 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool SetTodoList completed in 0.0s (call_id=SetTodoList:35)
+2026-04-21 11:50:31.279 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 13.1s (input=75951, output=60)
+2026-04-21 11:50:31.365 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Shell completed in 0.1s (call_id=Shell:36)
+2026-04-21 11:50:46.284 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 14.9s (input=76073, output=156)
+2026-04-21 11:50:46.288 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool SetTodoList completed in 0.0s (call_id=SetTodoList:37)
+2026-04-21 11:50:57.087 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 10.7s (input=76259, output=45)
+2026-04-21 11:50:57.118 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Shell completed in 0.0s (call_id=Shell:38)
+2026-04-21 11:51:25.146 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 28.0s (input=76557, output=618)
+2026-04-21 11:53:13.797 | INFO     | kimi_cli.ui.shell:run_soul_command:741 |  - Running soul with user input: [TextPart(type='text', text='does it push push to git')]
+2026-04-21 11:53:41.147 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 27.3s (input=76172, output=69)
+2026-04-21 11:53:41.180 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Shell completed in 0.0s (call_id=Shell:39)
+2026-04-21 11:53:55.905 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 14.7s (input=76403, output=216)
+2026-04-21 11:54:02.073 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool AskUserQuestion completed in 6.2s (call_id=AskUserQuestion:40)
+2026-04-21 11:54:11.870 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 9.8s (input=76667, output=51)
+2026-04-21 11:54:15.974 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Shell completed in 4.1s (call_id=Shell:41)
+2026-04-21 11:54:28.268 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 12.3s (input=76772, output=58)
+2026-04-21 11:57:30.476 | INFO     | kimi_cli.ui.shell:run_soul_command:741 |  - Running soul with user input: [TextPart(type='text', text='"The frontend is still trying to connect to localhost. \n1. Update the API configuration in the frontend to use \'import.meta.env.VITE_BACKEND_URL\'.\n2. Ensure there is a fallback to \'https://industrious-harmony-production-1525.up.railway.app\' if the env variable is missing.\n3. In the backend, update the CORS settings to allow requests from your custom domain \'charisbilleasy.store\' and the Railway frontend URL.\nCommit as: \'fix: update frontend to use production backend URL\'.')]
+2026-04-21 11:57:46.869 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Grep completed in 0.1s (call_id=Grep:42)
+2026-04-21 11:57:47.111 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 16.6s (input=76774, output=189)
+2026-04-21 11:57:47.146 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Grep completed in 0.0s (call_id=Grep:43)
+2026-04-21 11:58:04.435 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:44)
+2026-04-21 11:58:05.543 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 18.3s (input=77939, output=91)
+2026-04-21 11:58:05.550 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Grep completed in 0.0s (call_id=Grep:45)
+2026-04-21 11:58:19.751 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:46)
+2026-04-21 11:58:20.087 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 14.5s (input=78813, output=146)
+2026-04-21 11:58:20.113 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Shell completed in 0.0s (call_id=Shell:47)
+2026-04-21 11:58:32.587 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.0s (call_id=ReadFile:48)
+2026-04-21 11:58:32.784 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 12.6s (input=79763, output=55)
+2026-04-21 11:58:32.881 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:49)
+2026-04-21 11:58:49.238 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 16.3s (input=80288, output=270)
+2026-04-21 11:58:49.241 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool SetTodoList completed in 0.0s (call_id=SetTodoList:50)
+2026-04-21 11:59:06.646 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 17.4s (input=80588, output=303)
+2026-04-21 11:59:06.671 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.0s (call_id=StrReplaceFile:51)
+2026-04-21 11:59:23.576 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 16.9s (input=80931, output=266)
+2026-04-21 11:59:23.578 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool WriteFile completed in 0.0s (call_id=WriteFile:52)
+2026-04-21 11:59:32.724 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 9.1s (input=81234, output=34)
+2026-04-21 11:59:32.774 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Shell completed in 0.0s (call_id=Shell:53)
+2026-04-21 11:59:48.630 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 15.8s (input=81294, output=256)
+2026-04-21 11:59:48.653 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool WriteFile completed in 0.0s (call_id=WriteFile:54)
+2026-04-21 12:00:00.241 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 11.5s (input=81583, output=154)
+2026-04-21 12:00:00.244 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool SetTodoList completed in 0.0s (call_id=SetTodoList:55)
+2026-04-21 12:00:14.158 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 13.9s (input=81767, output=124)
+2026-04-21 12:00:14.186 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.0s (call_id=StrReplaceFile:56)
+2026-04-21 12:00:25.215 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 11.0s (input=81931, output=41)
+2026-04-21 12:00:25.263 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.0s (call_id=ReadFile:57)
+2026-04-21 12:00:38.326 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 13.0s (input=82373, output=172)
+2026-04-21 12:00:38.369 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.0s (call_id=StrReplaceFile:58)
+2026-04-21 12:00:52.867 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 14.5s (input=82585, output=206)
+2026-04-21 12:00:52.870 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool SetTodoList completed in 0.0s (call_id=SetTodoList:59)
+2026-04-21 12:01:05.976 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 13.1s (input=82821, output=127)
+2026-04-21 12:01:06.005 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Grep completed in 0.0s (call_id=Grep:60)
+2026-04-21 12:01:21.392 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.3s (call_id=ReadFile:61)
+2026-04-21 12:01:21.953 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 15.9s (input=83053, output=90)
+2026-04-21 12:01:22.012 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:62)
+2026-04-21 12:01:40.723 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 18.7s (input=83861, output=360)
+2026-04-21 12:01:40.758 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.0s (call_id=StrReplaceFile:63)
+2026-04-21 12:01:50.026 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 9.2s (input=84261, output=43)
+2026-04-21 12:01:50.095 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:64)
+2026-04-21 12:02:05.983 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 15.9s (input=85559, output=279)
+2026-04-21 12:02:06.023 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.0s (call_id=StrReplaceFile:65)
+2026-04-21 12:02:15.818 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 9.7s (input=85878, output=63)
+2026-04-21 12:02:15.825 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Grep completed in 0.0s (call_id=Grep:66)
+2026-04-21 12:02:25.746 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 9.9s (input=85988, output=47)
+2026-04-21 12:02:25.857 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:67)
+2026-04-21 12:02:47.764 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 21.9s (input=86370, output=581)
+2026-04-21 12:02:47.792 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.0s (call_id=StrReplaceFile:68)
+2026-04-21 12:02:59.847 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 12.0s (input=86991, output=51)
+2026-04-21 12:02:59.943 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:69)
+2026-04-21 12:03:33.232 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 33.3s (input=87423, output=587)
+2026-04-21 12:03:33.295 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.1s (call_id=StrReplaceFile:70)
+2026-04-21 12:03:46.134 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 12.8s (input=88050, output=57)
+2026-04-21 12:03:46.282 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:71)
+2026-04-21 12:03:59.858 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 13.5s (input=88421, output=57)
+2026-04-21 12:03:59.865 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Grep completed in 0.0s (call_id=Grep:72)
+2026-04-21 12:04:28.943 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 29.0s (input=88746, output=644)
+2026-04-21 12:04:28.989 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.0s (call_id=StrReplaceFile:73)
+2026-04-21 12:04:38.992 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 9.9s (input=89430, output=48)
+2026-04-21 12:04:39.098 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:74)
+2026-04-21 12:04:49.218 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 10.1s (input=89833, output=59)
+2026-04-21 12:04:49.225 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Grep completed in 0.0s (call_id=Grep:75)
+2026-04-21 12:05:08.877 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 19.6s (input=89939, output=472)
+2026-04-21 12:05:08.902 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.0s (call_id=StrReplaceFile:76)
+2026-04-21 12:05:22.174 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 13.2s (input=90451, output=65)
+2026-04-21 12:05:22.363 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.2s (call_id=ReadFile:77)
+2026-04-21 12:05:34.972 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 12.6s (input=90971, output=63)
+2026-04-21 12:05:34.978 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Grep completed in 0.0s (call_id=Grep:78)
+2026-04-21 12:05:57.008 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 22.0s (input=91135, output=489)
+2026-04-21 12:05:57.055 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.0s (call_id=StrReplaceFile:79)
+2026-04-21 12:06:08.958 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 11.9s (input=91664, output=71)
+2026-04-21 12:06:08.965 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Grep completed in 0.0s (call_id=Grep:80)
+2026-04-21 12:06:18.723 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 9.7s (input=91870, output=47)
+2026-04-21 12:06:18.823 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:81)
+2026-04-21 12:06:39.406 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 20.6s (input=92162, output=465)
+2026-04-21 12:06:39.446 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.0s (call_id=StrReplaceFile:82)
+2026-04-21 12:06:48.419 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 8.9s (input=92667, output=62)
+2026-04-21 12:06:48.426 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Grep completed in 0.0s (call_id=Grep:83)
+2026-04-21 12:06:58.428 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 10.0s (input=92864, output=47)
+2026-04-21 12:06:58.539 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:84)
+2026-04-21 12:07:19.441 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 20.9s (input=93211, output=527)
+2026-04-21 12:07:19.540 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.1s (call_id=StrReplaceFile:85)
+2026-04-21 12:07:34.099 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 14.5s (input=93778, output=64)
+2026-04-21 12:07:34.105 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Grep completed in 0.0s (call_id=Grep:86)
+2026-04-21 12:07:54.372 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 20.2s (input=94134, output=431)
+2026-04-21 12:07:54.411 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.0s (call_id=StrReplaceFile:87)
+2026-04-21 12:08:06.646 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 12.2s (input=94605, output=171)
+2026-04-21 12:08:06.649 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool SetTodoList completed in 0.0s (call_id=SetTodoList:88)
+2026-04-21 12:08:30.721 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 24.0s (input=94806, output=511)
+2026-04-21 12:08:30.745 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.0s (call_id=StrReplaceFile:89)
+2026-04-21 12:08:48.153 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 17.3s (input=95357, output=169)
+2026-04-21 12:08:48.156 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool SetTodoList completed in 0.0s (call_id=SetTodoList:90)
+2026-04-21 12:09:03.400 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 15.2s (input=95556, output=42)
+2026-04-21 12:09:03.438 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Shell completed in 0.0s (call_id=Shell:91)
+2026-04-21 12:09:14.857 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 11.4s (input=95888, output=57)
+2026-04-21 12:09:14.914 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Shell completed in 0.1s (call_id=Shell:92)
+2026-04-21 12:09:27.774 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 12.8s (input=96016, output=43)
+2026-04-21 12:09:30.447 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Shell completed in 2.7s (call_id=Shell:93)
+2026-04-21 12:09:44.507 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 14.0s (input=96114, output=175)
+2026-04-21 12:09:44.510 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool SetTodoList completed in 0.0s (call_id=SetTodoList:94)
+2026-04-21 12:10:08.321 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 23.8s (input=96319, output=487)
+2026-04-21 12:10:58.915 | INFO     | kimi_cli.ui.shell:run_soul_command:741 |  - Running soul with user input: [TextPart(type='text', text='do i need to add 2 variables or only one')]
+2026-04-21 12:11:30.407 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 31.4s (input=95843, output=546)
+2026-04-21 12:21:14.313 | INFO     | kimi_cli.ui.shell:run_soul_command:741 |  - Running soul with user input: [TextPart(type='text', text='vendor-CkHKzDNO.js:13  POST https://industrious-harmony-production-1525.up.railway.app/api/auth/login net::ERR_NAME_NOT_RESOLVED')]
+2026-04-21 12:21:31.908 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 17.6s (input=96170, output=160)
+2026-04-21 12:21:33.135 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Shell completed in 1.2s (call_id=Shell:95)
+2026-04-21 12:21:49.511 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 16.3s (input=96506, output=144)
+2026-04-21 12:21:49.541 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Grep completed in 0.0s (call_id=Grep:96)
+2026-04-21 12:22:00.560 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 11.0s (input=96748, output=66)
+2026-04-21 12:22:01.378 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Shell completed in 0.8s (call_id=Shell:97)
+2026-04-21 12:22:16.119 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 14.7s (input=96983, output=225)
+2026-04-21 12:22:37.070 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool AskUserQuestion completed in 21.0s (call_id=AskUserQuestion:98)
+2026-04-21 12:22:52.758 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 15.7s (input=97258, output=256)
+2026-04-21 12:22:52.766 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.0s (call_id=StrReplaceFile:99)
+2026-04-21 12:23:09.363 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 16.6s (input=97554, output=288)
+2026-04-21 12:23:09.395 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.0s (call_id=StrReplaceFile:100)
+2026-04-21 12:23:20.303 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 10.9s (input=97882, output=46)
+2026-04-21 12:23:20.329 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Shell completed in 0.0s (call_id=Shell:101)
+2026-04-21 12:23:29.408 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 9.0s (input=97993, output=67)
+2026-04-21 12:23:31.717 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Shell completed in 2.3s (call_id=Shell:102)
+2026-04-21 12:23:47.885 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 16.1s (input=98155, output=255)
+2026-04-21 12:25:26.482 | INFO     | kimi_cli.ui.shell:run_soul_command:741 |  - Running soul with user input: [TextPart(type='text', text='vendor-CkHKzDNO.js:13  GET https://charisbilleasy.store/api/auth/profile 403 (Forbidden)\n(anonymous) @ vendor-CkHKzDNO.js:13\nxhr @ vendor-CkHKzDNO.js:13\nSa @ vendor-CkHKzDNO.js:15\nPromise.then\n_request @ vendor-CkHKzDNO.js:19\nrequest @ vendor-CkHKzDNO.js:15\nka.<computed> @ vendor-CkHKzDNO.js:19\n(anonymous) @ vendor-CkHKzDNO.js:11\n(anonymous) @ index-BA-R6Ejc.js:1\n(anonymous) @ index-BA-R6Ejc.js:1\nWc @ vendor-CkHKzDNO.js:8\nOl @ vendor-CkHKzDNO.js:8\nDl @ vendor-CkHKzDNO.js:8\nOl @ vendor-CkHKzDNO.js:8\nDl @ vendor-CkHKzDNO.js:8\nOl @ vendor-CkHKzDNO.js:8\nDl @ vendor-CkHKzDNO.js:8\nOl @ vendor-CkHKzDNO.js:8\nYu @ vendor-CkHKzDNO.js:8\n(anonymous) @ vendor-CkHKzDNO.js:8\nD @ vendor-CkHKzDNO.js:1\nindex-BA-R6Ejc.js:1 Failed to fetch profile: AxiosError: Request failed with status code 403\n    at Bi (vendor-CkHKzDNO.js:13:1071)\n    at XMLHttpRequest.g (vendor-CkHKzDNO.js:13:5656)')]
+2026-04-21 12:25:40.033 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 13.5s (input=98367, output=99)
+2026-04-21 12:25:40.154 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:103)
+2026-04-21 12:26:02.149 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 21.9s (input=98905, output=215)
+2026-04-21 12:26:26.959 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool AskUserQuestion completed in 24.8s (call_id=AskUserQuestion:104)
+2026-04-21 12:26:36.556 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 9.6s (input=99162, output=64)
+2026-04-21 12:26:36.561 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Shell completed in 0.0s (call_id=Shell:105)
+2026-04-21 12:26:49.661 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 13.1s (input=99280, output=99)
+2026-04-21 12:27:02.290 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool AskUserQuestion completed in 12.6s (call_id=AskUserQuestion:106)
+2026-04-21 12:27:35.469 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 33.1s (input=99428, output=797)
+2026-04-21 12:27:35.516 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.0s (call_id=StrReplaceFile:107)
+2026-04-21 12:27:46.998 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 11.4s (input=100265, output=81)
+2026-04-21 12:27:47.026 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Grep completed in 0.0s (call_id=Grep:108)
+2026-04-21 12:27:57.744 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 10.7s (input=100424, output=51)
+2026-04-21 12:27:57.858 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:109)
+2026-04-21 12:28:16.076 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 18.2s (input=100680, output=320)
+2026-04-21 12:28:16.103 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.0s (call_id=StrReplaceFile:110)
+2026-04-21 12:28:25.901 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 9.8s (input=101040, output=45)
+2026-04-21 12:28:25.911 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Shell completed in 0.0s (call_id=Shell:111)
+2026-04-21 12:28:35.562 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 9.6s (input=101555, output=71)
+2026-04-21 12:28:37.800 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Shell completed in 2.2s (call_id=Shell:112)
+2026-04-21 12:28:57.454 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 19.6s (input=101715, output=337)
+2026-04-21 12:34:04.415 | INFO     | kimi_cli.ui.shell:run_soul_command:741 |  - Running soul with user input: [TextPart(type='text', text='Please improve the registration form UI on the signup page.\n\nProblems to fix:\n1. Input icons are overlapping with placeholder/value text\n2. Inner spacing/padding inside form fields is not correct\n3. Check all fields, not just the first row\n4. Check password field and right-side eye icon alignment\n5. Make the form look cleaner, more modern, and more consistent\n6. Ensure labels, placeholders, icons, borders, heights, and spacing are visually balanced\n7. Verify desktop and mobile layouts\n8. Keep functionality unchanged; only improve UI/UX unless a layout bug must be fixed\n\nSpecifically inspect:\n- Company Name\n- Your Name\n- Email\n- Phone\n- GST Number\n- Password\n- Business Address\n\nTasks:\n- find the registration form component and related CSS/Tailwind styles\n- fix icon placement inside inputs\n- add proper left/right padding for fields with icons\n- ensure placeholder and typed text never overlap icons\n- align the password toggle icon vertically and horizontally\n- check focus, error, and filled states inside inputs\n- check border radius, field height, label spacing, and button spacing\n- inspect inside form spacing thoroughly\n- show me the exact files changed and a before/after summary')]
+2026-04-21 12:34:17.142 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 12.7s (input=101724, output=54)
+2026-04-21 12:34:17.248 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:113)
+2026-04-21 12:34:33.926 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 16.7s (input=105012, output=186)
+2026-04-21 12:34:33.934 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Grep completed in 0.0s (call_id=Grep:114)
+2026-04-21 12:34:47.238 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 13.3s (input=105513, output=39)
+2026-04-21 12:34:47.268 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.0s (call_id=ReadFile:115)
+2026-04-21 12:36:53.116 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 125.8s (input=105865, output=4226)
+2026-04-21 12:36:53.143 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool WriteFile completed in 0.0s (call_id=WriteFile:116)
+2026-04-21 12:37:06.291 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 12.9s (input=110125, output=45)
+2026-04-21 12:37:06.316 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Shell completed in 0.0s (call_id=Shell:117)
+2026-04-21 12:37:20.220 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 13.9s (input=110229, output=64)
+2026-04-21 12:37:23.094 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Shell completed in 2.9s (call_id=Shell:118)
+2026-04-21 12:38:00.359 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 37.2s (input=110386, output=931)
+2026-04-21 12:39:02.773 | INFO     | kimi_cli.ui.shell:run_soul_command:741 |  - Running soul with user input: [TextPart(type='text', text='we will use vercel for frontend and railway as backend so change things according to it. and guide me which variable need to add')]
+2026-04-21 12:39:29.234 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 26.4s (input=110806, output=238)
+2026-04-21 12:39:29.238 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool SetTodoList completed in 0.0s (call_id=SetTodoList:119)
+2026-04-21 12:39:46.232 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 16.9s (input=111074, output=49)
+2026-04-21 12:39:46.338 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:120)
+2026-04-21 12:40:33.493 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 47.1s (input=111721, output=1118)
+2026-04-21 12:40:33.530 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.0s (call_id=StrReplaceFile:121)
+2026-04-21 12:40:46.441 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 12.8s (input=112879, output=109)
+2026-04-21 12:40:46.445 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool SetTodoList completed in 0.0s (call_id=SetTodoList:122)
+2026-04-21 12:40:57.502 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 11.0s (input=113018, output=41)
+2026-04-21 12:40:57.557 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:123)
+2026-04-21 12:41:23.716 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 26.1s (input=113369, output=430)
+2026-04-21 12:41:23.744 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool WriteFile completed in 0.0s (call_id=WriteFile:124)
+2026-04-21 12:41:40.503 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 16.7s (input=113833, output=35)
+2026-04-21 12:41:40.534 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.0s (call_id=ReadFile:125)
+2026-04-21 12:42:04.268 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 23.7s (input=114382, output=481)
+2026-04-21 12:42:04.313 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool WriteFile completed in 0.0s (call_id=WriteFile:126)
+2026-04-21 12:42:31.325 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 26.9s (input=114897, output=100)
+2026-04-21 12:42:31.329 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool SetTodoList completed in 0.0s (call_id=SetTodoList:127)
+2026-04-21 12:43:35.744 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 64.4s (input=115027, output=1672)
+2026-04-21 12:43:35.750 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool WriteFile completed in 0.0s (call_id=WriteFile:128)
+2026-04-21 12:43:53.656 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 17.6s (input=116733, output=96)
+2026-04-21 12:43:53.659 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool SetTodoList completed in 0.0s (call_id=SetTodoList:129)
+2026-04-21 12:44:11.046 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 17.3s (input=116859, output=40)
+2026-04-21 12:44:11.067 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Shell completed in 0.0s (call_id=Shell:130)
+2026-04-21 12:44:33.551 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 22.5s (input=117060, output=66)
+2026-04-21 12:44:36.014 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Shell completed in 2.5s (call_id=Shell:131)
+2026-04-21 12:44:58.534 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 22.5s (input=117232, output=105)
+2026-04-21 12:44:58.538 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool SetTodoList completed in 0.0s (call_id=SetTodoList:132)
+2026-04-21 12:45:23.761 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 25.2s (input=117367, output=541)
+2026-04-21 13:03:43.610 | INFO     | kimi_cli.ui.shell:run_soul_command:741 |  - Running soul with user input: [TextPart(type='text', text='✓ 2419 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                   0.41 kB │ gzip:   0.28 kB\ndist/assets/index-D3K6bnps.css   15.00 kB │ gzip:   3.60 kB\ndist/assets/index-ChoQMsdP.js   600.15 kB │ gzip: 173.03 kB\n(!) Some chunks are larger than 500 kB after minification. Consider:\n- Using dynamic import() to code-split the application\n- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks\n- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.\n✓ built in 5.17s\nError: No Output Directory named "dist" found after the Build completed. Configure the Output Directory in your Project Settings. Alternatively, configure vercel.json#outputDirectory.\nLearn More: https://vercel.link/missing-public-directory')]
+2026-04-21 13:04:36.828 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 53.2s (input=117678, output=400)
+2026-04-21 13:04:36.865 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool WriteFile completed in 0.0s (call_id=WriteFile:133)
+2026-04-21 13:04:53.628 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 16.7s (input=118111, output=175)
+2026-04-21 13:04:53.667 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool WriteFile completed in 0.0s (call_id=WriteFile:134)
+2026-04-21 13:05:05.542 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 11.8s (input=118319, output=84)
+2026-04-21 13:05:07.624 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Shell completed in 2.1s (call_id=Shell:135)
+2026-04-21 13:05:32.749 | INFO     | kimi_cli.soul.kimisoul:_step:860 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 25.1s (input=118496, output=455)
+2026-04-21 13:09:08.940 | INFO     | kimi_cli.ui.shell:run_soul_command:741 |  - Running soul with user input: [TextPart(type='text', text='guide railway to use only backend folder')]
+2026-04-21 13:09:34.979 | WARNING  | kimi_cli.soul.kimisoul:_retry_log:1139 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Retrying step for the 1 time (last error: APIStatusError: Error code: 429 - {'error': {'message': 'The engine is currently overloaded, please try again later', 'type': 'engine_overloaded_error'}}). Waiting 0.523281952184228 seconds.
+2026-04-21 13:09:54.498 | WARNING  | kimi_cli.soul.kimisoul:_retry_log:1139 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Retrying step for the 2 time (last error: APIStatusError: Error code: 429 - {'error': {'message': 'The engine is currently overloaded, please try again later', 'type': 'engine_overloaded_error'}}). Waiting 0.8999244102711752 seconds.
+2026-04-21 13:10:15.111 | ERROR    | kimi_cli.soul.kimisoul:_agent_loop:729 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Agent step 1 failed: APIStatusError: Error code: 429 - {'error': {'message': 'The engine is currently overloaded, please try again later', 'type': 'engine_overloaded_error'}}
+2026-04-21 13:10:15.117 | ERROR    | kimi_cli.ui.shell:run_soul_command:876 |  - LLM provider error:
+Traceback (most recent call last):
+
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kosong/chat_provider/kimi.py", line 165, in generate
+    response = await self.client.chat.completions.create(
+                     │    │      │    │           └ <function AsyncCompletions.create at 0x7f6f924ea160>
+                     │    │      │    └ <openai.resources.chat.completions.completions.AsyncCompletions object at 0x7f6f9242acf0>
+                     │    │      └ <openai.resources.chat.chat.AsyncChat object at 0x7f6f9242aba0>
+                     │    └ <openai.AsyncOpenAI object at 0x7f6fa11c81a0>
+                     └ <kosong.chat_provider.kimi.Kimi object at 0x7f6fa1031f30>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/openai/resources/chat/completions/completions.py", line 2678, in create
+    return await self._post(
+                 │    └ <bound method AsyncAPIClient.post of <openai.AsyncOpenAI object at 0x7f6fa11c81a0>>
+                 └ <openai.resources.chat.completions.completions.AsyncCompletions object at 0x7f6f9242acf0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/openai/_base_client.py", line 1797, in post
+    return await self.request(cast_to, opts, stream=stream, stream_cls=stream_cls)
+                 │    │       │        │            │                  └ openai.AsyncStream[openai.types.chat.chat_completion_chunk.ChatCompletionChunk]
+                 │    │       │        │            └ True
+                 │    │       │        └ FinalRequestOptions(method='post', url='/chat/completions', params={}, headers=NOT_GIVEN, max_retries=NOT_GIVEN, timeout=NOT_...
+                 │    │       └ <class 'openai.types.chat.chat_completion.ChatCompletion'>
+                 │    └ <function AsyncAPIClient.request at 0x7f6fa1252660>
+                 └ <openai.AsyncOpenAI object at 0x7f6fa11c81a0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/openai/_base_client.py", line 1597, in request
+    raise self._make_status_error_from_response(err.response) from None
+          │    └ <function BaseClient._make_status_error_from_response at 0x7f6fa124b7e0>
+          └ <openai.AsyncOpenAI object at 0x7f6fa11c81a0>
+
+openai.RateLimitError: Error code: 429 - {'error': {'message': 'The engine is currently overloaded, please try again later', 'type': 'engine_overloaded_error'}}
+
+
+The above exception was the direct cause of the following exception:
+
+
+Traceback (most recent call last):
+
+  File "/root/.local/bin/kimi", line 10, in <module>
+    sys.exit(main())
+    │   │    └ <function main at 0x7f6fa6d540e0>
+    │   └ <built-in function exit>
+    └ <module 'sys' (built-in)>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/__main__.py", line 28, in main
+    return cli(args=args, prog_name=_prog_name())
+           │        │               └ <function _prog_name at 0x7f6fa6d47f60>
+           │        └ []
+           └ <typer.main.Typer object at 0x7f6fa6b4da90>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/typer/main.py", line 319, in __call__
+    return get_command(self)(*args, **kwargs)
+           │           │      │       └ {'args': [], 'prog_name': 'kimi'}
+           │           │      └ ()
+           │           └ <typer.main.Typer object at 0x7f6fa6b4da90>
+           └ <function get_command at 0x7f6fa6a318a0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/click/core.py", line 1485, in __call__
+    return self.main(*args, **kwargs)
+           │    │     │       └ {'args': [], 'prog_name': 'kimi'}
+           │    │     └ ()
+           │    └ <function TyperGroup.main at 0x7f6fa6a21940>
+           └ <LazySubcommandGroup >
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/typer/core.py", line 814, in main
+    return _main(
+           └ <function _main at 0x7f6fa6a204a0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/typer/core.py", line 190, in _main
+    rv = self.invoke(ctx)
+         │    │      └ <click.core.Context object at 0x7f6fa6824050>
+         │    └ <function Group.invoke at 0x7f6fa6b332e0>
+         └ <LazySubcommandGroup >
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/click/core.py", line 1851, in invoke
+    rv = super().invoke(ctx)
+                        └ <click.core.Context object at 0x7f6fa6824050>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/click/core.py", line 1269, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+           │   │      │    │           │   └ {'version': None, 'verbose': False, 'debug': False, 'local_work_dir': None, 'local_add_dirs': (), 'session_id': None, 'contin...
+           │   │      │    │           └ <click.core.Context object at 0x7f6fa6824050>
+           │   │      │    └ <function kimi at 0x7f6fa6a336a0>
+           │   │      └ <LazySubcommandGroup >
+           │   └ <function Context.invoke at 0x7f6fa6b31300>
+           └ <click.core.Context object at 0x7f6fa6824050>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/click/core.py", line 824, in invoke
+    return callback(*args, **kwargs)
+           │         │       └ {'version': None, 'verbose': False, 'debug': False, 'local_work_dir': None, 'local_add_dirs': (), 'session_id': None, 'contin...
+           │         └ ()
+           └ <function kimi at 0x7f6fa6a336a0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/typer/main.py", line 706, in wrapper
+    return callback(**use_params)
+           │          └ {'ctx': <click.core.Context object at 0x7f6fa6824050>, 'version': None, 'verbose': False, 'debug': False, 'local_work_dir': N...
+           └ <function kimi at 0x7f6fa6a32ca0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/cli/__init__.py", line 833, in kimi
+    switch_target, exit_code = asyncio.run(_reload_loop(session_id))
+                               │       │   │            └ None
+                               │       │   └ <function kimi.<locals>._reload_loop at 0x7f6fa2bcf060>
+                               │       └ <function run at 0x7f6fa6823a60>
+                               └ <module 'asyncio' from '/usr/lib/python3.13/asyncio/__init__.py'>
+  File "/usr/lib/python3.13/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           │      │   └ <coroutine object kimi.<locals>._reload_loop at 0x7f6fa4844580>
+           │      └ <function Runner.run at 0x7f6fa5f03240>
+           └ <asyncio.runners.Runner object at 0x7f6fa2b49160>
+  File "/usr/lib/python3.13/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           │    │     │                  └ <Task pending name='Task-1' coro=<kimi.<locals>._reload_loop() running at /root/.local/share/uv/tools/kimi-cli/lib/python3.13...
+           │    │     └ <function BaseEventLoop.run_until_complete at 0x7f6fa5f00cc0>
+           │    └ <_UnixSelectorEventLoop running=True closed=False debug=False>
+           └ <asyncio.runners.Runner object at 0x7f6fa2b49160>
+  File "/usr/lib/python3.13/asyncio/base_events.py", line 712, in run_until_complete
+    self.run_forever()
+    │    └ <function BaseEventLoop.run_forever at 0x7f6fa5f00c20>
+    └ <_UnixSelectorEventLoop running=True closed=False debug=False>
+  File "/usr/lib/python3.13/asyncio/base_events.py", line 683, in run_forever
+    self._run_once()
+    │    └ <function BaseEventLoop._run_once at 0x7f6fa5f02a20>
+    └ <_UnixSelectorEventLoop running=True closed=False debug=False>
+  File "/usr/lib/python3.13/asyncio/base_events.py", line 2042, in _run_once
+    handle._run()
+    │      └ <function Handle._run at 0x7f6fa5eac5e0>
+    └ <Handle Task.task_wakeup()>
+  File "/usr/lib/python3.13/asyncio/events.py", line 89, in _run
+    self._context.run(self._callback, *self._args)
+    │    │            │    │           │    └ <member '_args' of 'Handle' objects>
+    │    │            │    │           └ <Handle Task.task_wakeup()>
+    │    │            │    └ <member '_callback' of 'Handle' objects>
+    │    │            └ <Handle Task.task_wakeup()>
+    │    └ <member '_context' of 'Handle' objects>
+    └ <Handle Task.task_wakeup()>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/cli/__init__.py", line 748, in _reload_loop
+    last_session, exit_code = await _run(session_id, prefill_text=prefill_text)
+    │                               │    │                        └ None
+    │                               │    └ None
+    │                               └ <function kimi.<locals>._run at 0x7f6fa2bceca0>
+    └ None
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/cli/__init__.py", line 645, in _run
+    shell_ok = await instance.run_shell(prompt, prefill_text=prefill_text)
+                     │        │         │                    └ None
+                     │        │         └ None
+                     │        └ <function KimiCLI.run_shell at 0x7f6fa37fcfe0>
+                     └ <kimi_cli.app.KimiCLI object at 0x7f6fa10c06e0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/app.py", line 538, in run_shell
+    return await shell.run(command)
+                 │     │   └ None
+                 │     └ <function Shell.run at 0x7f6fa2babc40>
+                 └ <kimi_cli.ui.shell.Shell object at 0x7f6fa2b4a3c0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/ui/shell/__init__.py", line 618, in run
+    await self.run_soul_command(user_input.content)
+          │    │                │          └ [TextPart(type='text', text='guide railway to use only backend folder')]
+          │    │                └ UserInput(mode=<PromptMode.AGENT: 'agent'>, command='guide railway to use only backend folder', resolved_command='guide railw...
+          │    └ <function Shell.run_soul_command at 0x7f6fa2babe20>
+          └ <kimi_cli.ui.shell.Shell object at 0x7f6fa2b4a3c0>
+> File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/ui/shell/__init__.py", line 774, in run_soul_command
+    await run_soul(
+          └ <function run_soul at 0x7f6fa46fc360>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/soul/__init__.py", line 217, in run_soul
+    soul_task.result()  # this will raise if any exception was raised in the run task
+    │         └ <method 'result' of '_asyncio.Task' objects>
+    └ <Task finished name='Task-50186' coro=<KimiSoul.run() done, defined at /root/.local/share/uv/tools/kimi-cli/lib/python3.13/si...
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/soul/kimisoul.py", line 525, in run
+    await self._turn(user_message)
+          │    │     └ Message(role='user', name=None, content=[TextPart(type='text', text='guide railway to use only backend folder')], tool_calls=...
+          │    └ <function KimiSoul._turn at 0x7f6fa37dfd80>
+          └ <kimi_cli.soul.kimisoul.KimiSoul object at 0x7f6fa01b7230>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/soul/kimisoul.py", line 588, in _turn
+    return await self._agent_loop()
+                 │    └ <function KimiSoul._agent_loop at 0x7f6fa37fc0e0>
+                 └ <kimi_cli.soul.kimisoul.KimiSoul object at 0x7f6fa01b7230>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/soul/kimisoul.py", line 723, in _agent_loop
+    step_outcome = await self._step()
+                         │    └ <function KimiSoul._step at 0x7f6fa37fc180>
+                         └ <kimi_cli.soul.kimisoul.KimiSoul object at 0x7f6fa01b7230>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/soul/kimisoul.py", line 857, in _step
+    result = await _kosong_step_with_retry()
+                   └ <function KimiSoul._step.<locals>._kosong_step_with_retry at 0x7f6f906656c0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/tenacity/asyncio/__init__.py", line 189, in async_wrapped
+    return await copy(fn, *args, **kwargs)
+                 │    │    │       └ {}
+                 │    │    └ ()
+                 │    └ <function KimiSoul._step.<locals>._kosong_step_with_retry at 0x7f6f9066bba0>
+                 └ <AsyncRetrying object at 0x7f6f913b94f0 (stop=<tenacity.stop.stop_after_attempt object at 0x7f6f91327bb0>, wait=<tenacity.wai...
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/tenacity/asyncio/__init__.py", line 111, in __call__
+    do = await self.iter(retry_state=retry_state)
+               │    │                └ <RetryCallState 140117154707984: attempt #3; slept for 1.42; last result: failed (APIStatusError Error code: 429 - {'error': ...
+               │    └ <function AsyncRetrying.iter at 0x7f6fa37c1760>
+               └ <AsyncRetrying object at 0x7f6f913b94f0 (stop=<tenacity.stop.stop_after_attempt object at 0x7f6f91327bb0>, wait=<tenacity.wai...
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/tenacity/asyncio/__init__.py", line 153, in iter
+    result = await action(retry_state)
+                   │      └ <RetryCallState 140117154707984: attempt #3; slept for 1.42; last result: failed (APIStatusError Error code: 429 - {'error': ...
+                   └ <function wrap_to_async_func.<locals>.inner at 0x7f6f910b36a0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/tenacity/_utils.py", line 99, in inner
+    return call(*args, **kwargs)
+           │     │       └ {}
+           │     └ (<RetryCallState 140117154707984: attempt #3; slept for 1.42; last result: failed (APIStatusError Error code: 429 - {'error':...
+           └ <function BaseRetrying._post_stop_check_actions.<locals>.exc_check at 0x7f6f910b0360>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/tenacity/__init__.py", line 420, in exc_check
+    raise retry_exc.reraise()
+          │         └ <function RetryError.reraise at 0x7f6fa3792ca0>
+          └ RetryError(<Future at 0x7f6f904d1250 state=finished raised APIStatusError>)
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/tenacity/__init__.py", line 187, in reraise
+    raise self.last_attempt.result()
+          │    │            └ <function Future.result at 0x7f6fa68b20c0>
+          │    └ <Future at 0x7f6f904d1250 state=finished raised APIStatusError>
+          └ RetryError(<Future at 0x7f6f904d1250 state=finished raised APIStatusError>)
+  File "/usr/lib/python3.13/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           └ None
+  File "/usr/lib/python3.13/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+          └ None
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/tenacity/asyncio/__init__.py", line 114, in __call__
+    result = await fn(*args, **kwargs)
+                   │   │       └ {}
+                   │   └ ()
+                   └ <function KimiSoul._step.<locals>._kosong_step_with_retry at 0x7f6f9066bba0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/soul/kimisoul.py", line 850, in _kosong_step_with_retry
+    return await self._run_with_connection_recovery(
+                 │    └ <function KimiSoul._run_with_connection_recovery at 0x7f6fa37fc400>
+                 └ <kimi_cli.soul.kimisoul.KimiSoul object at 0x7f6fa01b7230>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/soul/kimisoul.py", line 1072, in _run_with_connection_recovery
+    return await operation()
+                 └ <function KimiSoul._step.<locals>._run_step_once at 0x7f6f90669bc0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/soul/kimisoul.py", line 833, in _run_step_once
+    return await kosong.step(
+                 │      └ <function step at 0x7f6fa49e49a0>
+                 └ <module 'kosong' from '/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kosong/__init__.py'>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kosong/__init__.py", line 158, in step
+    result = await generate(
+                   └ <function generate at 0x7f6fa484ff60>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kosong/_generate.py", line 53, in generate
+    stream = await chat_provider.generate(system_prompt, tools, history)
+                   │             │        │              │      └ [Message(role='user', name=None, content=[TextPart(type='text', text='gemini "Update the CSS for all forms across the applica...
+                   │             │        │              └ [Tool(name='Agent', description='Start a subagent instance to work on a focused task.\n\nThe Agent tool can either create a n...
+                   │             │        └ 'You are Kimi Code CLI, an interactive general AI agent running on a user\'s computer.\n\nYour primary goal is to help users ...
+                   │             └ <function Kimi.generate at 0x7f6fa11b6340>
+                   └ <kosong.chat_provider.kimi.Kimi object at 0x7f6fa1031f30>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kosong/chat_provider/kimi.py", line 175, in generate
+    raise convert_error(e) from e
+          └ <function convert_error at 0x7f6fa11b5ee0>
+
+kosong.chat_provider.APIStatusError: Error code: 429 - {'error': {'message': 'The engine is currently overloaded, please try again later', 'type': 'engine_overloaded_error'}}
+2026-04-21 13:22:00.233 | INFO     | kimi_cli.ui.shell:run_soul_command:741 |  - Running soul with user input: [TextPart(type='text', text='Unsafe attempt to load URL https://industrious-harmony-production-6331.up.railway.app/ from frame with URL chrome-error://chromewebdata/. Domains, protocols and ports must match.\ncors header added but still same error')]
+2026-04-21 13:22:21.515 | WARNING  | kimi_cli.soul.kimisoul:_retry_log:1139 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Retrying step for the 1 time (last error: APIStatusError: Error code: 429 - {'error': {'message': 'The engine is currently overloaded, please try again later', 'type': 'engine_overloaded_error'}}). Waiting 0.3428030143638888 seconds.
+2026-04-21 13:22:50.593 | WARNING  | kimi_cli.soul.kimisoul:_retry_log:1139 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Retrying step for the 2 time (last error: APIStatusError: Error code: 429 - {'error': {'message': 'The engine is currently overloaded, please try again later', 'type': 'engine_overloaded_error'}}). Waiting 0.8132143685092217 seconds.
+2026-04-21 13:24:55.703 | ERROR    | kimi_cli.soul.kimisoul:_agent_loop:729 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Agent step 1 failed: APIStatusError: Error code: 429 - {'error': {'message': 'The engine is currently overloaded, please try again later', 'type': 'engine_overloaded_error'}}
+2026-04-21 13:24:55.710 | ERROR    | kimi_cli.ui.shell:run_soul_command:876 |  - LLM provider error:
+Traceback (most recent call last):
+
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kosong/chat_provider/kimi.py", line 165, in generate
+    response = await self.client.chat.completions.create(
+                     │    │      │    │           └ <function AsyncCompletions.create at 0x7f6f924ea160>
+                     │    │      │    └ <openai.resources.chat.completions.completions.AsyncCompletions object at 0x7f6f9242acf0>
+                     │    │      └ <openai.resources.chat.chat.AsyncChat object at 0x7f6f9242aba0>
+                     │    └ <openai.AsyncOpenAI object at 0x7f6fa11c81a0>
+                     └ <kosong.chat_provider.kimi.Kimi object at 0x7f6fa1031f30>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/openai/resources/chat/completions/completions.py", line 2678, in create
+    return await self._post(
+                 │    └ <bound method AsyncAPIClient.post of <openai.AsyncOpenAI object at 0x7f6fa11c81a0>>
+                 └ <openai.resources.chat.completions.completions.AsyncCompletions object at 0x7f6f9242acf0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/openai/_base_client.py", line 1797, in post
+    return await self.request(cast_to, opts, stream=stream, stream_cls=stream_cls)
+                 │    │       │        │            │                  └ openai.AsyncStream[openai.types.chat.chat_completion_chunk.ChatCompletionChunk]
+                 │    │       │        │            └ True
+                 │    │       │        └ FinalRequestOptions(method='post', url='/chat/completions', params={}, headers=NOT_GIVEN, max_retries=NOT_GIVEN, timeout=NOT_...
+                 │    │       └ <class 'openai.types.chat.chat_completion.ChatCompletion'>
+                 │    └ <function AsyncAPIClient.request at 0x7f6fa1252660>
+                 └ <openai.AsyncOpenAI object at 0x7f6fa11c81a0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/openai/_base_client.py", line 1597, in request
+    raise self._make_status_error_from_response(err.response) from None
+          │    └ <function BaseClient._make_status_error_from_response at 0x7f6fa124b7e0>
+          └ <openai.AsyncOpenAI object at 0x7f6fa11c81a0>
+
+openai.RateLimitError: Error code: 429 - {'error': {'message': 'The engine is currently overloaded, please try again later', 'type': 'engine_overloaded_error'}}
+
+
+The above exception was the direct cause of the following exception:
+
+
+Traceback (most recent call last):
+
+  File "/root/.local/bin/kimi", line 10, in <module>
+    sys.exit(main())
+    │   │    └ <function main at 0x7f6fa6d540e0>
+    │   └ <built-in function exit>
+    └ <module 'sys' (built-in)>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/__main__.py", line 28, in main
+    return cli(args=args, prog_name=_prog_name())
+           │        │               └ <function _prog_name at 0x7f6fa6d47f60>
+           │        └ []
+           └ <typer.main.Typer object at 0x7f6fa6b4da90>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/typer/main.py", line 319, in __call__
+    return get_command(self)(*args, **kwargs)
+           │           │      │       └ {'args': [], 'prog_name': 'kimi'}
+           │           │      └ ()
+           │           └ <typer.main.Typer object at 0x7f6fa6b4da90>
+           └ <function get_command at 0x7f6fa6a318a0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/click/core.py", line 1485, in __call__
+    return self.main(*args, **kwargs)
+           │    │     │       └ {'args': [], 'prog_name': 'kimi'}
+           │    │     └ ()
+           │    └ <function TyperGroup.main at 0x7f6fa6a21940>
+           └ <LazySubcommandGroup >
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/typer/core.py", line 814, in main
+    return _main(
+           └ <function _main at 0x7f6fa6a204a0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/typer/core.py", line 190, in _main
+    rv = self.invoke(ctx)
+         │    │      └ <click.core.Context object at 0x7f6fa6824050>
+         │    └ <function Group.invoke at 0x7f6fa6b332e0>
+         └ <LazySubcommandGroup >
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/click/core.py", line 1851, in invoke
+    rv = super().invoke(ctx)
+                        └ <click.core.Context object at 0x7f6fa6824050>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/click/core.py", line 1269, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+           │   │      │    │           │   └ {'version': None, 'verbose': False, 'debug': False, 'local_work_dir': None, 'local_add_dirs': (), 'session_id': None, 'contin...
+           │   │      │    │           └ <click.core.Context object at 0x7f6fa6824050>
+           │   │      │    └ <function kimi at 0x7f6fa6a336a0>
+           │   │      └ <LazySubcommandGroup >
+           │   └ <function Context.invoke at 0x7f6fa6b31300>
+           └ <click.core.Context object at 0x7f6fa6824050>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/click/core.py", line 824, in invoke
+    return callback(*args, **kwargs)
+           │         │       └ {'version': None, 'verbose': False, 'debug': False, 'local_work_dir': None, 'local_add_dirs': (), 'session_id': None, 'contin...
+           │         └ ()
+           └ <function kimi at 0x7f6fa6a336a0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/typer/main.py", line 706, in wrapper
+    return callback(**use_params)
+           │          └ {'ctx': <click.core.Context object at 0x7f6fa6824050>, 'version': None, 'verbose': False, 'debug': False, 'local_work_dir': N...
+           └ <function kimi at 0x7f6fa6a32ca0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/cli/__init__.py", line 833, in kimi
+    switch_target, exit_code = asyncio.run(_reload_loop(session_id))
+                               │       │   │            └ None
+                               │       │   └ <function kimi.<locals>._reload_loop at 0x7f6fa2bcf060>
+                               │       └ <function run at 0x7f6fa6823a60>
+                               └ <module 'asyncio' from '/usr/lib/python3.13/asyncio/__init__.py'>
+  File "/usr/lib/python3.13/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           │      │   └ <coroutine object kimi.<locals>._reload_loop at 0x7f6fa4844580>
+           │      └ <function Runner.run at 0x7f6fa5f03240>
+           └ <asyncio.runners.Runner object at 0x7f6fa2b49160>
+  File "/usr/lib/python3.13/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           │    │     │                  └ <Task pending name='Task-1' coro=<kimi.<locals>._reload_loop() running at /root/.local/share/uv/tools/kimi-cli/lib/python3.13...
+           │    │     └ <function BaseEventLoop.run_until_complete at 0x7f6fa5f00cc0>
+           │    └ <_UnixSelectorEventLoop running=True closed=False debug=False>
+           └ <asyncio.runners.Runner object at 0x7f6fa2b49160>
+  File "/usr/lib/python3.13/asyncio/base_events.py", line 712, in run_until_complete
+    self.run_forever()
+    │    └ <function BaseEventLoop.run_forever at 0x7f6fa5f00c20>
+    └ <_UnixSelectorEventLoop running=True closed=False debug=False>
+  File "/usr/lib/python3.13/asyncio/base_events.py", line 683, in run_forever
+    self._run_once()
+    │    └ <function BaseEventLoop._run_once at 0x7f6fa5f02a20>
+    └ <_UnixSelectorEventLoop running=True closed=False debug=False>
+  File "/usr/lib/python3.13/asyncio/base_events.py", line 2042, in _run_once
+    handle._run()
+    │      └ <function Handle._run at 0x7f6fa5eac5e0>
+    └ <Handle Task.task_wakeup()>
+  File "/usr/lib/python3.13/asyncio/events.py", line 89, in _run
+    self._context.run(self._callback, *self._args)
+    │    │            │    │           │    └ <member '_args' of 'Handle' objects>
+    │    │            │    │           └ <Handle Task.task_wakeup()>
+    │    │            │    └ <member '_callback' of 'Handle' objects>
+    │    │            └ <Handle Task.task_wakeup()>
+    │    └ <member '_context' of 'Handle' objects>
+    └ <Handle Task.task_wakeup()>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/cli/__init__.py", line 748, in _reload_loop
+    last_session, exit_code = await _run(session_id, prefill_text=prefill_text)
+    │                               │    │                        └ None
+    │                               │    └ None
+    │                               └ <function kimi.<locals>._run at 0x7f6fa2bceca0>
+    └ None
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/cli/__init__.py", line 645, in _run
+    shell_ok = await instance.run_shell(prompt, prefill_text=prefill_text)
+                     │        │         │                    └ None
+                     │        │         └ None
+                     │        └ <function KimiCLI.run_shell at 0x7f6fa37fcfe0>
+                     └ <kimi_cli.app.KimiCLI object at 0x7f6fa10c06e0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/app.py", line 538, in run_shell
+    return await shell.run(command)
+                 │     │   └ None
+                 │     └ <function Shell.run at 0x7f6fa2babc40>
+                 └ <kimi_cli.ui.shell.Shell object at 0x7f6fa2b4a3c0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/ui/shell/__init__.py", line 618, in run
+    await self.run_soul_command(user_input.content)
+          │    │                │          └ [TextPart(type='text', text='Unsafe attempt to load URL https://industrious-harmony-production-6331.up.railway.app/ from fram...
+          │    │                └ UserInput(mode=<PromptMode.AGENT: 'agent'>, command='Unsafe attempt to load URL https://industrious-harmony-production-6331.u...
+          │    └ <function Shell.run_soul_command at 0x7f6fa2babe20>
+          └ <kimi_cli.ui.shell.Shell object at 0x7f6fa2b4a3c0>
+> File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/ui/shell/__init__.py", line 774, in run_soul_command
+    await run_soul(
+          └ <function run_soul at 0x7f6fa46fc360>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/soul/__init__.py", line 217, in run_soul
+    soul_task.result()  # this will raise if any exception was raised in the run task
+    │         └ <method 'result' of '_asyncio.Task' objects>
+    └ <Task finished name='Task-50535' coro=<KimiSoul.run() done, defined at /root/.local/share/uv/tools/kimi-cli/lib/python3.13/si...
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/soul/kimisoul.py", line 525, in run
+    await self._turn(user_message)
+          │    │     └ Message(role='user', name=None, content=[TextPart(type='text', text='Unsafe attempt to load URL https://industrious-harmony-p...
+          │    └ <function KimiSoul._turn at 0x7f6fa37dfd80>
+          └ <kimi_cli.soul.kimisoul.KimiSoul object at 0x7f6fa01b7230>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/soul/kimisoul.py", line 588, in _turn
+    return await self._agent_loop()
+                 │    └ <function KimiSoul._agent_loop at 0x7f6fa37fc0e0>
+                 └ <kimi_cli.soul.kimisoul.KimiSoul object at 0x7f6fa01b7230>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/soul/kimisoul.py", line 723, in _agent_loop
+    step_outcome = await self._step()
+                         │    └ <function KimiSoul._step at 0x7f6fa37fc180>
+                         └ <kimi_cli.soul.kimisoul.KimiSoul object at 0x7f6fa01b7230>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/soul/kimisoul.py", line 857, in _step
+    result = await _kosong_step_with_retry()
+                   └ <function KimiSoul._step.<locals>._kosong_step_with_retry at 0x7f6f906a05e0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/tenacity/asyncio/__init__.py", line 189, in async_wrapped
+    return await copy(fn, *args, **kwargs)
+                 │    │    │       └ {}
+                 │    │    └ ()
+                 │    └ <function KimiSoul._step.<locals>._kosong_step_with_retry at 0x7f6f906fa5c0>
+                 └ <AsyncRetrying object at 0x7f6f903f81b0 (stop=<tenacity.stop.stop_after_attempt object at 0x7f6f903e9f90>, wait=<tenacity.wai...
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/tenacity/asyncio/__init__.py", line 111, in __call__
+    do = await self.iter(retry_state=retry_state)
+               │    │                └ <RetryCallState 140117138179712: attempt #3; slept for 1.16; last result: failed (APIStatusError Error code: 429 - {'error': ...
+               │    └ <function AsyncRetrying.iter at 0x7f6fa37c1760>
+               └ <AsyncRetrying object at 0x7f6f903f81b0 (stop=<tenacity.stop.stop_after_attempt object at 0x7f6f903e9f90>, wait=<tenacity.wai...
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/tenacity/asyncio/__init__.py", line 153, in iter
+    result = await action(retry_state)
+                   │      └ <RetryCallState 140117138179712: attempt #3; slept for 1.16; last result: failed (APIStatusError Error code: 429 - {'error': ...
+                   └ <function wrap_to_async_func.<locals>.inner at 0x7f6f90669940>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/tenacity/_utils.py", line 99, in inner
+    return call(*args, **kwargs)
+           │     │       └ {}
+           │     └ (<RetryCallState 140117138179712: attempt #3; slept for 1.16; last result: failed (APIStatusError Error code: 429 - {'error':...
+           └ <function BaseRetrying._post_stop_check_actions.<locals>.exc_check at 0x7f6f906a3880>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/tenacity/__init__.py", line 420, in exc_check
+    raise retry_exc.reraise()
+          │         └ <function RetryError.reraise at 0x7f6fa3792ca0>
+          └ RetryError(<Future at 0x7f6f904144d0 state=finished raised APIStatusError>)
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/tenacity/__init__.py", line 187, in reraise
+    raise self.last_attempt.result()
+          │    │            └ <function Future.result at 0x7f6fa68b20c0>
+          │    └ <Future at 0x7f6f904144d0 state=finished raised APIStatusError>
+          └ RetryError(<Future at 0x7f6f904144d0 state=finished raised APIStatusError>)
+  File "/usr/lib/python3.13/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           └ None
+  File "/usr/lib/python3.13/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+          └ None
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/tenacity/asyncio/__init__.py", line 114, in __call__
+    result = await fn(*args, **kwargs)
+                   │   │       └ {}
+                   │   └ ()
+                   └ <function KimiSoul._step.<locals>._kosong_step_with_retry at 0x7f6f906fa5c0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/soul/kimisoul.py", line 850, in _kosong_step_with_retry
+    return await self._run_with_connection_recovery(
+                 │    └ <function KimiSoul._run_with_connection_recovery at 0x7f6fa37fc400>
+                 └ <kimi_cli.soul.kimisoul.KimiSoul object at 0x7f6fa01b7230>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/soul/kimisoul.py", line 1072, in _run_with_connection_recovery
+    return await operation()
+                 └ <function KimiSoul._step.<locals>._run_step_once at 0x7f6f906fbba0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/soul/kimisoul.py", line 833, in _run_step_once
+    return await kosong.step(
+                 │      └ <function step at 0x7f6fa49e49a0>
+                 └ <module 'kosong' from '/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kosong/__init__.py'>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kosong/__init__.py", line 158, in step
+    result = await generate(
+                   └ <function generate at 0x7f6fa484ff60>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kosong/_generate.py", line 53, in generate
+    stream = await chat_provider.generate(system_prompt, tools, history)
+                   │             │        │              │      └ [Message(role='user', name=None, content=[TextPart(type='text', text='gemini "Update the CSS for all forms across the applica...
+                   │             │        │              └ [Tool(name='Agent', description='Start a subagent instance to work on a focused task.\n\nThe Agent tool can either create a n...
+                   │             │        └ 'You are Kimi Code CLI, an interactive general AI agent running on a user\'s computer.\n\nYour primary goal is to help users ...
+                   │             └ <function Kimi.generate at 0x7f6fa11b6340>
+                   └ <kosong.chat_provider.kimi.Kimi object at 0x7f6fa1031f30>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kosong/chat_provider/kimi.py", line 175, in generate
+    raise convert_error(e) from e
+          └ <function convert_error at 0x7f6fa11b5ee0>
+
+kosong.chat_provider.APIStatusError: Error code: 429 - {'error': {'message': 'The engine is currently overloaded, please try again later', 'type': 'engine_overloaded_error'}}
+2026-04-21 13:28:59.931 | INFO     | kimi_cli.cli:_run:559 |  - Resuming session: b3e091a1-2f25-4522-8ba7-a7bcdd313533
+2026-04-21 13:28:59.954 | INFO     | kimi_cli.app:create:160 |  - Loaded config: is_from_default_location=True source_file=PosixPath('/root/.kimi/config.toml') default_model='moonshot-ai/kimi-k2.5' default_thinking=True default_yolo=False default_plan_mode=False default_editor='' theme='dark' show_thinking_stream=True models={'moonshot-ai/kimi-k2-thinking-turbo': LLMModel(provider='managed:moonshot-ai', model='kimi-k2-thinking-turbo', max_context_size=262144, capabilities={'thinking', 'always_thinking'}), 'moonshot-ai/kimi-k2-turbo-preview': LLMModel(provider='managed:moonshot-ai', model='kimi-k2-turbo-preview', max_context_size=262144, capabilities=None), 'moonshot-ai/kimi-k2-thinking': LLMModel(provider='managed:moonshot-ai', model='kimi-k2-thinking', max_context_size=262144, capabilities={'thinking', 'always_thinking'}), 'moonshot-ai/kimi-k2-0711-preview': LLMModel(provider='managed:moonshot-ai', model='kimi-k2-0711-preview', max_context_size=131072, capabilities=None), 'moonshot-ai/kimi-k2.5': LLMModel(provider='managed:moonshot-ai', model='kimi-k2.5', max_context_size=262144, capabilities={'thinking', 'image_in', 'video_in'}), 'moonshot-ai/kimi-k2-0905-preview': LLMModel(provider='managed:moonshot-ai', model='kimi-k2-0905-preview', max_context_size=262144, capabilities=None)} providers={'managed:moonshot-ai': LLMProvider(type='kimi', base_url='https://api.moonshot.ai/v1', api_key=SecretStr('**********'), env=None, custom_headers=None, oauth=None)} loop_control=LoopControl(max_steps_per_turn=100, max_retries_per_step=3, max_ralph_iterations=0, reserved_context_size=50000, compaction_trigger_ratio=0.85) background=BackgroundConfig(max_running_tasks=4, read_max_bytes=30000, notification_tail_lines=20, notification_tail_chars=3000, wait_poll_interval_ms=500, worker_heartbeat_interval_ms=5000, worker_stale_after_ms=15000, kill_grace_period_ms=2000, keep_alive_on_exit=False, agent_task_timeout_s=900) notifications=NotificationConfig(claim_stale_after_ms=15000) services=Services(moonshot_search=None, moonshot_fetch=None) mcp=MCPConfig(client=MCPClientConfig(tool_call_timeout_ms=60000)) hooks=[] merge_all_available_skills=False
+2026-04-21 13:29:00.671 | INFO     | kimi_cli.app:create:204 |  - Using LLM provider: type='kimi' base_url='https://api.moonshot.ai/v1' api_key=SecretStr('**********') env=None custom_headers=None oauth=None
+2026-04-21 13:29:00.671 | INFO     | kimi_cli.app:create:205 |  - Using LLM model: provider='managed:moonshot-ai' model='kimi-k2.5' max_context_size=262144 capabilities={'thinking', 'image_in', 'video_in'}
+2026-04-21 13:29:00.671 | INFO     | kimi_cli.app:create:206 |  - Thinking mode: True
+2026-04-21 13:29:00.676 | INFO     | kimi_cli.soul.agent:load_agents_md:145 |  - No AGENTS.md found from /home/pachu/Documents/bill easy to /home/pachu/Documents/bill easy
+2026-04-21 13:29:00.756 | INFO     | kimi_cli.soul.agent:create:248 |  - Discovered 2 skill(s)
+2026-04-21 13:29:00.757 | INFO     | kimi_cli.soul.agent:load_agent:412 |  - Loading agent: /root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/agents/default/agent.yaml
+2026-04-21 13:29:00.763 | INFO     | kimi_cli.soul.agent:_load_system_prompt:507 |  - Loading system prompt: /root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/agents/default/system.md
+2026-04-21 13:29:01.931 | INFO     | kimi_cli.soul.toolset:load_tools:334 |  - Skipping tool: kimi_cli.tools.web:SearchWeb
+2026-04-21 13:29:01.974 | INFO     | kimi_cli.soul.toolset:load_tools:341 |  - Loaded tools: ['kimi_cli.tools.agent:Agent', 'kimi_cli.tools.ask_user:AskUserQuestion', 'kimi_cli.tools.todo:SetTodoList', 'kimi_cli.tools.shell:Shell', 'kimi_cli.tools.background:TaskList', 'kimi_cli.tools.background:TaskOutput', 'kimi_cli.tools.background:TaskStop', 'kimi_cli.tools.file:ReadFile', 'kimi_cli.tools.file:ReadMediaFile', 'kimi_cli.tools.file:Glob', 'kimi_cli.tools.file:Grep', 'kimi_cli.tools.file:WriteFile', 'kimi_cli.tools.file:StrReplaceFile', 'kimi_cli.tools.web:FetchURL', 'kimi_cli.tools.plan:ExitPlanMode', 'kimi_cli.tools.plan.enter:EnterPlanMode']
+2026-04-21 13:29:15.550 | ERROR    | threading:run:994 |  - Downloading kimi-cli (5.3MiB)
+2026-04-21 13:29:21.741 | ERROR    | threading:run:994 |  -  Downloaded kimi-cli
+2026-04-21 13:29:21.844 | ERROR    | threading:run:994 |  - Updated kimi-cli v1.36.0 -> v1.37.0
+2026-04-21 13:29:21.849 | ERROR    | threading:run:994 |  -  - authlib==1.6.11
+2026-04-21 13:29:21.849 | ERROR    | threading:run:994 |  -  + authlib==1.7.0
+2026-04-21 13:29:21.849 | ERROR    | threading:run:994 |  -  + joserfc==1.6.4
+2026-04-21 13:29:21.850 | ERROR    | threading:run:994 |  -  - kimi-cli==1.36.0
+2026-04-21 13:29:21.850 | ERROR    | threading:run:994 |  -  + kimi-cli==1.37.0
+2026-04-21 13:29:21.850 | ERROR    | threading:run:994 |  -  - pydantic-settings==2.13.1
+2026-04-21 13:29:21.850 | ERROR    | threading:run:994 |  -  + pydantic-settings==2.14.0
+2026-04-21 13:29:21.868 | ERROR    | threading:run:994 |  - Installed 2 executables: kimi, kimi-cli
+2026-04-21 13:31:05.932 | INFO     | kimi_cli.cli:_run:559 |  - Resuming session: b3e091a1-2f25-4522-8ba7-a7bcdd313533
+2026-04-21 13:31:05.952 | INFO     | kimi_cli.app:create:187 |  - Loaded config: is_from_default_location=True source_file=PosixPath('/root/.kimi/config.toml') default_model='moonshot-ai/kimi-k2.5' default_thinking=True default_yolo=False default_plan_mode=False default_editor='' theme='dark' show_thinking_stream=True models={'moonshot-ai/kimi-k2-thinking-turbo': LLMModel(provider='managed:moonshot-ai', model='kimi-k2-thinking-turbo', max_context_size=262144, capabilities={'always_thinking', 'thinking'}, display_name=None), 'moonshot-ai/kimi-k2-turbo-preview': LLMModel(provider='managed:moonshot-ai', model='kimi-k2-turbo-preview', max_context_size=262144, capabilities=None, display_name=None), 'moonshot-ai/kimi-k2-thinking': LLMModel(provider='managed:moonshot-ai', model='kimi-k2-thinking', max_context_size=262144, capabilities={'always_thinking', 'thinking'}, display_name=None), 'moonshot-ai/kimi-k2-0711-preview': LLMModel(provider='managed:moonshot-ai', model='kimi-k2-0711-preview', max_context_size=131072, capabilities=None, display_name=None), 'moonshot-ai/kimi-k2.5': LLMModel(provider='managed:moonshot-ai', model='kimi-k2.5', max_context_size=262144, capabilities={'video_in', 'thinking', 'image_in'}, display_name=None), 'moonshot-ai/kimi-k2-0905-preview': LLMModel(provider='managed:moonshot-ai', model='kimi-k2-0905-preview', max_context_size=262144, capabilities=None, display_name=None)} providers={'managed:moonshot-ai': LLMProvider(type='kimi', base_url='https://api.moonshot.ai/v1', api_key=SecretStr('**********'), env=None, custom_headers=None, oauth=None)} loop_control=LoopControl(max_steps_per_turn=100, max_retries_per_step=3, max_ralph_iterations=0, reserved_context_size=50000, compaction_trigger_ratio=0.85) background=BackgroundConfig(max_running_tasks=4, read_max_bytes=30000, notification_tail_lines=20, notification_tail_chars=3000, wait_poll_interval_ms=500, worker_heartbeat_interval_ms=5000, worker_stale_after_ms=15000, kill_grace_period_ms=2000, keep_alive_on_exit=False, agent_task_timeout_s=900, print_wait_ceiling_s=3600) notifications=NotificationConfig(claim_stale_after_ms=15000) services=Services(moonshot_search=None, moonshot_fetch=None) mcp=MCPConfig(client=MCPClientConfig(tool_call_timeout_ms=60000)) hooks=[] merge_all_available_skills=False
+2026-04-21 13:31:06.587 | INFO     | kimi_cli.app:create:233 |  - Using LLM provider: type='kimi' base_url='https://api.moonshot.ai/v1' api_key=SecretStr('**********') env=None custom_headers=None oauth=None
+2026-04-21 13:31:06.587 | INFO     | kimi_cli.app:create:234 |  - Using LLM model: provider='managed:moonshot-ai' model='kimi-k2.5' max_context_size=262144 capabilities={'video_in', 'thinking', 'image_in'} display_name=None
+2026-04-21 13:31:06.587 | INFO     | kimi_cli.app:create:235 |  - Thinking mode: True
+2026-04-21 13:31:06.594 | INFO     | kimi_cli.soul.agent:load_agents_md:145 |  - No AGENTS.md found from /home/pachu/Documents/bill easy to /home/pachu/Documents/bill easy
+2026-04-21 13:31:06.666 | INFO     | kimi_cli.soul.agent:create:248 |  - Discovered 2 skill(s)
+2026-04-21 13:31:06.668 | INFO     | kimi_cli.soul.agent:load_agent:412 |  - Loading agent: /root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/agents/default/agent.yaml
+2026-04-21 13:31:06.674 | INFO     | kimi_cli.soul.agent:_load_system_prompt:507 |  - Loading system prompt: /root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/agents/default/system.md
+2026-04-21 13:31:07.656 | INFO     | kimi_cli.soul.toolset:load_tools:334 |  - Skipping tool: kimi_cli.tools.web:SearchWeb
+2026-04-21 13:31:07.701 | INFO     | kimi_cli.soul.toolset:load_tools:341 |  - Loaded tools: ['kimi_cli.tools.agent:Agent', 'kimi_cli.tools.ask_user:AskUserQuestion', 'kimi_cli.tools.todo:SetTodoList', 'kimi_cli.tools.shell:Shell', 'kimi_cli.tools.background:TaskList', 'kimi_cli.tools.background:TaskOutput', 'kimi_cli.tools.background:TaskStop', 'kimi_cli.tools.file:ReadFile', 'kimi_cli.tools.file:ReadMediaFile', 'kimi_cli.tools.file:Glob', 'kimi_cli.tools.file:Grep', 'kimi_cli.tools.file:WriteFile', 'kimi_cli.tools.file:StrReplaceFile', 'kimi_cli.tools.web:FetchURL', 'kimi_cli.tools.plan:ExitPlanMode', 'kimi_cli.tools.plan.enter:EnterPlanMode']
+2026-04-21 13:31:07.878 | INFO     | kimi_cli.ui.shell.update:_do_update:239 |  - Checking for updates...
+2026-04-21 13:31:15.672 | INFO     | kimi_cli.ui.shell:run_soul_command:747 |  - Running soul with user input: [TextPart(type='text', text='Fix the production auth issues in the frontend.\n\nProblems:\n1. GET /api/auth/profile returns 404\n2. POST /api/auth/register returns 404\n3. React crashes with minified React error #31 because an object with keys {code, message} is being rendered\n\nTasks:\n- inspect the frontend auth API base URL and endpoint paths\n- compare them against actual backend routes\n- fix any wrong /api prefix, host, or proxy mismatch\n- find where API error responses are stored in React state\n- ensure the UI never renders a raw error object\n- normalize API errors to a string message before rendering\n- show me the exact files changed and the precise root cause for both issues\n- keep the fix minimal and production-safe')]
+2026-04-21 13:32:05.496 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Glob completed in 0.0s (call_id=Glob:136)
+2026-04-21 13:32:06.720 | INFO     | kimi_cli.soul.kimisoul:_step:873 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 51.0s (input=118931, output=153)
+2026-04-21 13:32:06.793 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:137)
+2026-04-21 13:32:22.537 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.0s (call_id=ReadFile:138)
+2026-04-21 13:32:23.121 | INFO     | kimi_cli.soul.kimisoul:_step:873 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 16.3s (input=120010, output=75)
+2026-04-21 13:32:23.257 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:139)
+2026-04-21 13:32:40.222 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:140)
+2026-04-21 13:32:40.742 | INFO     | kimi_cli.soul.kimisoul:_step:873 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 17.4s (input=120825, output=142)
+2026-04-21 13:32:40.836 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:141)
+2026-04-21 13:33:04.491 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Grep completed in 0.0s (call_id=Grep:142)
+2026-04-21 13:33:04.688 | INFO     | kimi_cli.soul.kimisoul:_step:873 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 23.8s (input=122287, output=131)
+2026-04-21 13:33:04.756 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:143)
+2026-04-21 13:33:25.562 | INFO     | kimi_cli.soul.kimisoul:_step:873 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 20.8s (input=124054, output=59)
+2026-04-21 13:33:25.612 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.0s (call_id=ReadFile:144)
+2026-04-21 13:33:36.076 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Grep completed in 0.0s (call_id=Grep:145)
+2026-04-21 13:33:36.818 | INFO     | kimi_cli.soul.kimisoul:_step:873 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 11.2s (input=125039, output=134)
+2026-04-21 13:33:36.845 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Grep completed in 0.0s (call_id=Grep:146)
+2026-04-21 13:33:47.521 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool Grep completed in 0.0s (call_id=Grep:147)
+2026-04-21 13:33:48.467 | INFO     | kimi_cli.soul.kimisoul:_step:873 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 11.6s (input=125219, output=104)
+2026-04-21 13:33:48.607 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool ReadFile completed in 0.1s (call_id=ReadFile:148)
+2026-04-21 13:34:32.926 | INFO     | kimi_cli.soul.kimisoul:_step:873 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 44.3s (input=126269, output=759)
+2026-04-21 13:34:32.980 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool WriteFile completed in 0.1s (call_id=WriteFile:149)
+2026-04-21 13:35:01.920 | INFO     | kimi_cli.soul.kimisoul:_step:873 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - LLM step completed in 28.9s (input=127062, output=437)
+2026-04-21 13:35:01.952 | INFO     | kimi_cli.soul.toolset:_call:221 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Tool StrReplaceFile completed in 0.0s (call_id=StrReplaceFile:150)
+2026-04-21 13:35:22.209 | WARNING  | kimi_cli.soul.kimisoul:_retry_log:1152 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Retrying step for the 1 time (last error: APIStatusError: Error code: 429 - {'error': {'message': 'The engine is currently overloaded, please try again later', 'type': 'engine_overloaded_error'}}). Waiting 0.3906090610458583 seconds.
+2026-04-21 13:35:42.160 | WARNING  | kimi_cli.soul.kimisoul:_retry_log:1152 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Retrying step for the 2 time (last error: APIStatusError: Error code: 429 - {'error': {'message': 'The engine is currently overloaded, please try again later', 'type': 'engine_overloaded_error'}}). Waiting 0.8256676157793501 seconds.
+2026-04-21 13:36:03.426 | ERROR    | kimi_cli.soul.kimisoul:_agent_loop:741 | b3e091a1-2f25-4522-8ba7-a7bcdd313533 - Agent step 10 failed: APIStatusError: Error code: 429 - {'error': {'message': 'The engine is currently overloaded, please try again later', 'type': 'engine_overloaded_error'}}
+2026-04-21 13:36:03.433 | ERROR    | kimi_cli.ui.shell:run_soul_command:882 |  - LLM provider error:
+Traceback (most recent call last):
+
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kosong/chat_provider/kimi.py", line 165, in generate
+    response = await self.client.chat.completions.create(
+                     │    │      │    │           └ <function AsyncCompletions.create at 0x7efd3da59080>
+                     │    │      │    └ <openai.resources.chat.completions.completions.AsyncCompletions object at 0x7efd3d4d0050>
+                     │    │      └ <openai.resources.chat.chat.AsyncChat object at 0x7efd3dc9be00>
+                     │    └ <openai.AsyncOpenAI object at 0x7efd55b141a0>
+                     └ <kosong.chat_provider.kimi.Kimi object at 0x7efd55bb48a0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/openai/resources/chat/completions/completions.py", line 2678, in create
+    return await self._post(
+                 │    └ <bound method AsyncAPIClient.post of <openai.AsyncOpenAI object at 0x7efd55b141a0>>
+                 └ <openai.resources.chat.completions.completions.AsyncCompletions object at 0x7efd3d4d0050>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/openai/_base_client.py", line 1797, in post
+    return await self.request(cast_to, opts, stream=stream, stream_cls=stream_cls)
+                 │    │       │        │            │                  └ openai.AsyncStream[openai.types.chat.chat_completion_chunk.ChatCompletionChunk]
+                 │    │       │        │            └ True
+                 │    │       │        └ FinalRequestOptions(method='post', url='/chat/completions', params={}, headers=NOT_GIVEN, max_retries=NOT_GIVEN, timeout=NOT_...
+                 │    │       └ <class 'openai.types.chat.chat_completion.ChatCompletion'>
+                 │    └ <function AsyncAPIClient.request at 0x7efd55da40e0>
+                 └ <openai.AsyncOpenAI object at 0x7efd55b141a0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/openai/_base_client.py", line 1597, in request
+    raise self._make_status_error_from_response(err.response) from None
+          │    └ <function BaseClient._make_status_error_from_response at 0x7efd55d99260>
+          └ <openai.AsyncOpenAI object at 0x7efd55b141a0>
+
+openai.RateLimitError: Error code: 429 - {'error': {'message': 'The engine is currently overloaded, please try again later', 'type': 'engine_overloaded_error'}}
+
+
+The above exception was the direct cause of the following exception:
+
+
+Traceback (most recent call last):
+
+  File "/root/.local/bin/kimi", line 10, in <module>
+    sys.exit(main())
+    │   │    └ <function main at 0x7efd5b834180>
+    │   └ <built-in function exit>
+    └ <module 'sys' (built-in)>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/__main__.py", line 28, in main
+    return cli(args=args, prog_name=_prog_name())
+           │        │               └ <function _prog_name at 0x7efd5b8340e0>
+           │        └ ['-r', 'b3e091a1-2f25-4522-8ba7-a7bcdd313533']
+           └ <typer.main.Typer object at 0x7efd5b611a90>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/typer/main.py", line 319, in __call__
+    return get_command(self)(*args, **kwargs)
+           │           │      │       └ {'args': ['-r', 'b3e091a1-2f25-4522-8ba7-a7bcdd313533'], 'prog_name': 'kimi'}
+           │           │      └ ()
+           │           └ <typer.main.Typer object at 0x7efd5b611a90>
+           └ <function get_command at 0x7efd5b4f1940>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/click/core.py", line 1485, in __call__
+    return self.main(*args, **kwargs)
+           │    │     │       └ {'args': ['-r', 'b3e091a1-2f25-4522-8ba7-a7bcdd313533'], 'prog_name': 'kimi'}
+           │    │     └ ()
+           │    └ <function TyperGroup.main at 0x7efd5b4dd9e0>
+           └ <LazySubcommandGroup >
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/typer/core.py", line 814, in main
+    return _main(
+           └ <function _main at 0x7efd5b4dc540>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/typer/core.py", line 190, in _main
+    rv = self.invoke(ctx)
+         │    │      └ <click.core.Context object at 0x7efd5b2e8050>
+         │    └ <function Group.invoke at 0x7efd5b5fb380>
+         └ <LazySubcommandGroup >
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/click/core.py", line 1851, in invoke
+    rv = super().invoke(ctx)
+                        └ <click.core.Context object at 0x7efd5b2e8050>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/click/core.py", line 1269, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+           │   │      │    │           │   └ {'version': None, 'session_id': 'b3e091a1-2f25-4522-8ba7-a7bcdd313533', 'verbose': False, 'debug': False, 'local_work_dir': N...
+           │   │      │    │           └ <click.core.Context object at 0x7efd5b2e8050>
+           │   │      │    └ <function kimi at 0x7efd5b4f37e0>
+           │   │      └ <LazySubcommandGroup >
+           │   └ <function Context.invoke at 0x7efd5b5f93a0>
+           └ <click.core.Context object at 0x7efd5b2e8050>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/click/core.py", line 824, in invoke
+    return callback(*args, **kwargs)
+           │         │       └ {'version': None, 'session_id': 'b3e091a1-2f25-4522-8ba7-a7bcdd313533', 'verbose': False, 'debug': False, 'local_work_dir': N...
+           │         └ ()
+           └ <function kimi at 0x7efd5b4f37e0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/typer/main.py", line 706, in wrapper
+    return callback(**use_params)
+           │          └ {'ctx': <click.core.Context object at 0x7efd5b2e8050>, 'version': None, 'verbose': False, 'debug': False, 'local_work_dir': N...
+           └ <function kimi at 0x7efd5b4f2de0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/cli/__init__.py", line 834, in kimi
+    switch_target, exit_code = asyncio.run(_reload_loop(session_id))
+                               │       │   │            └ 'b3e091a1-2f25-4522-8ba7-a7bcdd313533'
+                               │       │   └ <function kimi.<locals>._reload_loop at 0x7efd5725cb80>
+                               │       └ <function run at 0x7efd5b2e3ba0>
+                               └ <module 'asyncio' from '/usr/lib/python3.13/asyncio/__init__.py'>
+  File "/usr/lib/python3.13/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           │      │   └ <coroutine object kimi.<locals>._reload_loop at 0x7efd59360190>
+           │      └ <function Runner.run at 0x7efd5a9cb380>
+           └ <asyncio.runners.Runner object at 0x7efd573f9160>
+  File "/usr/lib/python3.13/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           │    │     │                  └ <Task pending name='Task-1' coro=<kimi.<locals>._reload_loop() running at /root/.local/share/uv/tools/kimi-cli/lib/python3.13...
+           │    │     └ <function BaseEventLoop.run_until_complete at 0x7efd5a9c8e00>
+           │    └ <_UnixSelectorEventLoop running=True closed=False debug=False>
+           └ <asyncio.runners.Runner object at 0x7efd573f9160>
+  File "/usr/lib/python3.13/asyncio/base_events.py", line 712, in run_until_complete
+    self.run_forever()
+    │    └ <function BaseEventLoop.run_forever at 0x7efd5a9c8d60>
+    └ <_UnixSelectorEventLoop running=True closed=False debug=False>
+  File "/usr/lib/python3.13/asyncio/base_events.py", line 683, in run_forever
+    self._run_once()
+    │    └ <function BaseEventLoop._run_once at 0x7efd5a9cab60>
+    └ <_UnixSelectorEventLoop running=True closed=False debug=False>
+  File "/usr/lib/python3.13/asyncio/base_events.py", line 2042, in _run_once
+    handle._run()
+    │      └ <function Handle._run at 0x7efd5a96c720>
+    └ <Handle Task.task_wakeup()>
+  File "/usr/lib/python3.13/asyncio/events.py", line 89, in _run
+    self._context.run(self._callback, *self._args)
+    │    │            │    │           │    └ <member '_args' of 'Handle' objects>
+    │    │            │    │           └ <Handle Task.task_wakeup()>
+    │    │            │    └ <member '_callback' of 'Handle' objects>
+    │    │            └ <Handle Task.task_wakeup()>
+    │    └ <member '_context' of 'Handle' objects>
+    └ <Handle Task.task_wakeup()>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/cli/__init__.py", line 749, in _reload_loop
+    last_session, exit_code = await _run(session_id, prefill_text=prefill_text)
+    │                               │    │                        └ None
+    │                               │    └ 'b3e091a1-2f25-4522-8ba7-a7bcdd313533'
+    │                               └ <function kimi.<locals>._run at 0x7efd5725c7c0>
+    └ None
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/cli/__init__.py", line 645, in _run
+    shell_ok = await instance.run_shell(prompt, prefill_text=prefill_text)
+                     │        │         │                    └ None
+                     │        │         └ None
+                     │        └ <function KimiCLI.run_shell at 0x7efd580c2480>
+                     └ <kimi_cli.app.KimiCLI object at 0x7efd55a0cec0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/app.py", line 674, in run_shell
+    return await shell.run(command)
+                 │     │   └ None
+                 │     └ <function Shell.run at 0x7efd57271940>
+                 └ <kimi_cli.ui.shell.Shell object at 0x7efd573fa660>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/ui/shell/__init__.py", line 624, in run
+    await self.run_soul_command(user_input.content)
+          │    │                │          └ [TextPart(type='text', text='Fix the production auth issues in the frontend.\n\nProblems:\n1. GET /api/auth/profile returns 4...
+          │    │                └ UserInput(mode=<PromptMode.AGENT: 'agent'>, command='[Pasted text #1 +16 lines]', resolved_command='Fix the production auth i...
+          │    └ <function Shell.run_soul_command at 0x7efd57271b20>
+          └ <kimi_cli.ui.shell.Shell object at 0x7efd573fa660>
+> File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/ui/shell/__init__.py", line 780, in run_soul_command
+    await run_soul(
+          └ <function run_soul at 0x7efd58f8f560>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/soul/__init__.py", line 231, in run_soul
+    soul_task.result()  # this will raise if any exception was raised in the run task
+    │         └ <method 'result' of '_asyncio.Task' objects>
+    └ <Task finished name='Task-198' coro=<KimiSoul.run() done, defined at /root/.local/share/uv/tools/kimi-cli/lib/python3.13/site...
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/soul/kimisoul.py", line 537, in run
+    await self._turn(user_message)
+          │    │     └ Message(role='user', name=None, content=[TextPart(type='text', text='Fix the production auth issues in the frontend.\n\nProbl...
+          │    └ <function KimiSoul._turn at 0x7efd580c1080>
+          └ <kimi_cli.soul.kimisoul.KimiSoul object at 0x7efd3e994590>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/soul/kimisoul.py", line 600, in _turn
+    return await self._agent_loop()
+                 │    └ <function KimiSoul._agent_loop at 0x7efd580c13a0>
+                 └ <kimi_cli.soul.kimisoul.KimiSoul object at 0x7efd3e994590>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/soul/kimisoul.py", line 735, in _agent_loop
+    step_outcome = await self._step()
+                         │    └ <function KimiSoul._step at 0x7efd580c1440>
+                         └ <kimi_cli.soul.kimisoul.KimiSoul object at 0x7efd3e994590>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/soul/kimisoul.py", line 870, in _step
+    result = await _kosong_step_with_retry()
+                   └ <function KimiSoul._step.<locals>._kosong_step_with_retry at 0x7efd3d447600>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/tenacity/asyncio/__init__.py", line 189, in async_wrapped
+    return await copy(fn, *args, **kwargs)
+                 │    │    │       └ {}
+                 │    │    └ ()
+                 │    └ <function KimiSoul._step.<locals>._kosong_step_with_retry at 0x7efd3d1e8cc0>
+                 └ <AsyncRetrying object at 0x7efd3d4868e0 (stop=<tenacity.stop.stop_after_attempt object at 0x7efd3d4ff050>, wait=<tenacity.wai...
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/tenacity/asyncio/__init__.py", line 111, in __call__
+    do = await self.iter(retry_state=retry_state)
+               │    │                └ <RetryCallState 139626120471376: attempt #3; slept for 1.22; last result: failed (APIStatusError Error code: 429 - {'error': ...
+               │    └ <function AsyncRetrying.iter at 0x7efd5821a980>
+               └ <AsyncRetrying object at 0x7efd3d4868e0 (stop=<tenacity.stop.stop_after_attempt object at 0x7efd3d4ff050>, wait=<tenacity.wai...
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/tenacity/asyncio/__init__.py", line 153, in iter
+    result = await action(retry_state)
+                   │      └ <RetryCallState 139626120471376: attempt #3; slept for 1.22; last result: failed (APIStatusError Error code: 429 - {'error': ...
+                   └ <function wrap_to_async_func.<locals>.inner at 0x7efd3d0aa480>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/tenacity/_utils.py", line 99, in inner
+    return call(*args, **kwargs)
+           │     │       └ {}
+           │     └ (<RetryCallState 139626120471376: attempt #3; slept for 1.22; last result: failed (APIStatusError Error code: 429 - {'error':...
+           └ <function BaseRetrying._post_stop_check_actions.<locals>.exc_check at 0x7efd3d0ab560>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/tenacity/__init__.py", line 420, in exc_check
+    raise retry_exc.reraise()
+          │         └ <function RetryError.reraise at 0x7efd58243ec0>
+          └ RetryError(<Future at 0x7efd3d1c7e30 state=finished raised APIStatusError>)
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/tenacity/__init__.py", line 187, in reraise
+    raise self.last_attempt.result()
+          │    │            └ <function Future.result at 0x7efd5b372200>
+          │    └ <Future at 0x7efd3d1c7e30 state=finished raised APIStatusError>
+          └ RetryError(<Future at 0x7efd3d1c7e30 state=finished raised APIStatusError>)
+  File "/usr/lib/python3.13/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           └ None
+  File "/usr/lib/python3.13/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+          └ None
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/tenacity/asyncio/__init__.py", line 114, in __call__
+    result = await fn(*args, **kwargs)
+                   │   │       └ {}
+                   │   └ ()
+                   └ <function KimiSoul._step.<locals>._kosong_step_with_retry at 0x7efd3d1e8cc0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/soul/kimisoul.py", line 863, in _kosong_step_with_retry
+    return await self._run_with_connection_recovery(
+                 │    └ <function KimiSoul._run_with_connection_recovery at 0x7efd580c16c0>
+                 └ <kimi_cli.soul.kimisoul.KimiSoul object at 0x7efd3e994590>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/soul/kimisoul.py", line 1085, in _run_with_connection_recovery
+    return await operation()
+                 └ <function KimiSoul._step.<locals>._run_step_once at 0x7efd3d1e9580>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kimi_cli/soul/kimisoul.py", line 846, in _run_step_once
+    return await kosong.step(
+                 │      └ <function step at 0x7efd594e9080>
+                 └ <module 'kosong' from '/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kosong/__init__.py'>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kosong/__init__.py", line 158, in step
+    result = await generate(
+                   └ <function generate at 0x7efd59358540>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kosong/_generate.py", line 53, in generate
+    stream = await chat_provider.generate(system_prompt, tools, history)
+                   │             │        │              │      └ [Message(role='user', name=None, content=[TextPart(type='text', text='gemini "Update the CSS for all forms across the applica...
+                   │             │        │              └ [Tool(name='Agent', description='Start a subagent instance to work on a focused task.\n\nThe Agent tool can either create a n...
+                   │             │        └ 'You are Kimi Code CLI, an interactive general AI agent running on a user\'s computer.\n\nYour primary goal is to help users ...
+                   │             └ <function Kimi.generate at 0x7efd55b07d80>
+                   └ <kosong.chat_provider.kimi.Kimi object at 0x7efd55bb48a0>
+  File "/root/.local/share/uv/tools/kimi-cli/lib/python3.13/site-packages/kosong/chat_provider/kimi.py", line 175, in generate
+    raise convert_error(e) from e
+          └ <function convert_error at 0x7efd55b07920>
+
+kosong.chat_provider.APIStatusError: Error code: 429 - {'error': {'message': 'The engine is currently overloaded, please try again later', 'type': 'engine_overloaded_error'}}

@@ -1,0 +1,17 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+.env
+.DS_Store
+
+# Backups
+*.sql
+*.log
+
+# System
+.git/
+.gemini/
+
+# Note: frontend/ and admin/frontend/ are NOT ignored
+# because we need them for the monorepo build process

@@ -1,0 +1,11 @@
+nohup: ignoring input
+
+> frontend@0.1.0 start
+> vite
+
+
+  VITE v8.0.0  ready in 392 ms
+
+  ➜  Local:   http://localhost:3000/
+  ➜  Network: http://10.177.93.31:3000/
+  ➜  Network: http://192.168.160.1:3000/
