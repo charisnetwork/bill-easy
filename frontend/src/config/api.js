@@ -1,31 +1,26 @@
 // =========================================
-// API Configuration for Vercel + Railway Setup
+// API Configuration — Cloudflare Pages + Railway
 // =========================================
 
-// Railway backend URL - Production Backend
-const RAILWAY_BACKEND_URL = 'https://bill-easy-production-v4.up.railway.app';
-
-// Get backend URL from environment (HIGHEST PRIORITY)
-let envBackendUrl = 
+// Get backend URL from environment variable (set in Cloudflare Pages dashboard)
+let envBackendUrl =
   import.meta.env?.VITE_BACKEND_URL ||
-  import.meta.env?.REACT_APP_BACKEND_URL;
+  import.meta.env?.REACT_APP_BACKEND_URL ||
+  '';
 
-// Environment configuration loaded silently
-
-// Sanitize: Remove trailing slash if present
+// Sanitize: Remove trailing slash
 if (envBackendUrl && envBackendUrl.endsWith('/')) {
   envBackendUrl = envBackendUrl.slice(0, -1);
 }
 
-// Ensure URL has protocol (https://)
+// Ensure URL has protocol
 if (envBackendUrl && !envBackendUrl.startsWith('http')) {
   envBackendUrl = 'https://' + envBackendUrl;
 }
 
-// PRIORITY: 1. Env variable, 2. Hardcoded fallback
-// FORCE PRODUCTION: If env is localhost/empty, use production
-if (!envBackendUrl || envBackendUrl.includes('localhost')) {
-  envBackendUrl = RAILWAY_BACKEND_URL;
+// Fallback to localhost only in local dev (never hardcode production URLs)
+if (!envBackendUrl || envBackendUrl.includes('localhost:')) {
+  envBackendUrl = 'http://localhost:8001';
 }
 
 export const BACKEND_URL = envBackendUrl;
