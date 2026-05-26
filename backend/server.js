@@ -151,47 +151,61 @@ app.get('/health', (req, res) => {
 
 /* =========================================
    ADMIN GATEWAY PROXY
-   Forwards /admin/api/* → admin backend (port 3001)
-   Allows admin.charisbilleasy.store to reach admin backend
+   Forwards /admin/api/* → admin backend service
+   Uses ADMIN_BACKEND_URL env var (supports separate Railway services)
 ========================================= */
 
 app.use('/admin/api', (req, res) => {
-  const adminPort = parseInt(process.env.ADMIN_PORT || '3001');
+  // Support both separate service (ADMIN_BACKEND_URL) and same-host (localhost:ADMIN_PORT)
+  const adminBaseUrl = process.env.ADMIN_BACKEND_URL || `http://localhost:${process.env.ADMIN_PORT || 3001}`;
   const targetPath = '/api' + (req.url || '/');
+  const fullUrl = adminBaseUrl.replace(/\/$/, '') + targetPath;
 
-  const options = {
-    hostname: 'localhost',
-    port: adminPort,
-    path: targetPath,
-    method: req.method,
-    headers: {
-      ...req.headers,
-      host: `localhost:${adminPort}`
+  console.log(`[Admin Proxy] ${req.method} ${req.url} → ${fullUrl}`);
+
+  try {
+    const urlObj = new URL(fullUrl);
+    const isHttps = urlObj.protocol === 'https:';
+    const transport = isHttps ? require('https') : http;
+
+    const options = {
+      hostname: urlObj.hostname,
+      port: urlObj.port || (isHttps ? 443 : 80),
+      path: urlObj.pathname + urlObj.search,
+      method: req.method,
+      headers: {
+        ...req.headers,
+        host: urlObj.hostname
+      }
+    };
+
+    // Remove headers that cause issues
+    delete options.headers['content-length'];
+
+    const proxyReq = transport.request(options, (proxyRes) => {
+      res.writeHead(proxyRes.statusCode, proxyRes.headers);
+      proxyRes.pipe(res, { end: true });
+    });
+
+    proxyReq.on('error', (err) => {
+      console.error('[Admin Proxy] Connection error:', err.message);
+      if (!res.headersSent) {
+        res.status(502).json({ error: 'Admin backend unavailable', detail: err.message });
+      }
+    });
+
+    // Forward body — express.json() already parsed it, so re-stringify
+    if (req.body && Object.keys(req.body).length > 0) {
+      const bodyStr = JSON.stringify(req.body);
+      proxyReq.setHeader('Content-Type', 'application/json');
+      proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyStr));
+      proxyReq.write(bodyStr);
     }
-  };
-
-  const proxyReq = http.request(options, (proxyRes) => {
-    // Forward status and headers
-    res.writeHead(proxyRes.statusCode, proxyRes.headers);
-    proxyRes.pipe(res, { end: true });
-  });
-
-  proxyReq.on('error', (err) => {
-    console.error('[Admin Proxy] Error:', err.message);
-    if (!res.headersSent) {
-      res.status(502).json({ error: 'Admin backend unavailable', detail: err.message });
-    }
-  });
-
-  // Forward body — express.json() already parsed it, so re-stringify
-  if (req.body && Object.keys(req.body).length > 0) {
-    const bodyStr = JSON.stringify(req.body);
-    proxyReq.setHeader('Content-Type', 'application/json');
-    proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyStr));
-    proxyReq.write(bodyStr);
     proxyReq.end();
-  } else {
-    req.pipe(proxyReq, { end: true });
+
+  } catch (err) {
+    console.error('[Admin Proxy] URL error:', err.message);
+    res.status(500).json({ error: 'Admin proxy configuration error' });
   }
 });
 
