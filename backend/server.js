@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const http = require('http');
 
 const { rateLimit } = require('express-rate-limit');
 
@@ -146,6 +147,52 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     service: 'main-backend'
   });
+});
+
+/* =========================================
+   ADMIN GATEWAY PROXY
+   Forwards /admin/api/* → admin backend (port 3001)
+   Allows admin.charisbilleasy.store to reach admin backend
+========================================= */
+
+app.use('/admin/api', (req, res) => {
+  const adminPort = parseInt(process.env.ADMIN_PORT || '3001');
+  const targetPath = '/api' + (req.url || '/');
+
+  const options = {
+    hostname: 'localhost',
+    port: adminPort,
+    path: targetPath,
+    method: req.method,
+    headers: {
+      ...req.headers,
+      host: `localhost:${adminPort}`
+    }
+  };
+
+  const proxyReq = http.request(options, (proxyRes) => {
+    // Forward status and headers
+    res.writeHead(proxyRes.statusCode, proxyRes.headers);
+    proxyRes.pipe(res, { end: true });
+  });
+
+  proxyReq.on('error', (err) => {
+    console.error('[Admin Proxy] Error:', err.message);
+    if (!res.headersSent) {
+      res.status(502).json({ error: 'Admin backend unavailable', detail: err.message });
+    }
+  });
+
+  // Forward body — express.json() already parsed it, so re-stringify
+  if (req.body && Object.keys(req.body).length > 0) {
+    const bodyStr = JSON.stringify(req.body);
+    proxyReq.setHeader('Content-Type', 'application/json');
+    proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyStr));
+    proxyReq.write(bodyStr);
+    proxyReq.end();
+  } else {
+    req.pipe(proxyReq, { end: true });
+  }
 });
 
 /* =========================================

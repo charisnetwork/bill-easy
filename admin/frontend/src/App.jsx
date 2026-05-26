@@ -17,14 +17,10 @@ const isGateway = window.location.pathname.startsWith('/admin-portal') ||
                   host === 'www.charisbilleasy.store' ||
                   host === 'admin.charisbilleasy.store';
 
-// For Cloudflare Pages or other static hosts, use the production backend
-const isStaticHost = host.includes('pages.dev') || host.includes('netlify.app') || host.includes('vercel.app');
-
+// Admin API URL: gateway mode uses relative path, otherwise use env var
 const API_BASE_URL = isGateway 
-  ? '/admin/api'  // Through gateway - use relative path
-  : isStaticHost
-    ? 'https://bill-easy-production-v4.up.railway.app/admin/api'  // Cloudflare Pages → Railway
-    : (import.meta.env.VITE_ADMIN_BACKEND_URL || 'http://localhost:3025') + '/api';
+  ? '/admin/api'  // Through gateway - proxied by main backend
+  : (import.meta.env.VITE_ADMIN_BACKEND_URL || 'http://localhost:3001') + '/api';
 
 const SAAS_URL = import.meta.env.VITE_SAAS_URL || 'https://charisbilleasy.store';
 
