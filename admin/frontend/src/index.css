@@ -26,24 +26,24 @@ body {
 
   .form-input {
     @apply w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white font-bold 
-           focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all
+           focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all
            placeholder:text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .form-select {
     @apply w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white font-bold 
-           focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all
+           focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all
            appearance-none cursor-pointer;
   }
 
   .form-checkbox {
-    @apply w-4 h-4 rounded border-slate-800 bg-slate-950 text-indigo-600 focus:ring-indigo-500 
+    @apply w-4 h-4 rounded border-slate-800 bg-slate-950 text-blue-600 focus:ring-blue-500 
            focus:ring-offset-slate-900 transition-all cursor-pointer;
   }
 
   .btn-primary {
-    @apply bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3 px-6 rounded-xl text-xs 
-           transition-all shadow-lg shadow-indigo-900/50 flex items-center justify-center gap-2
+    @apply bg-blue-600 hover:bg-blue-500 text-white font-black py-3 px-6 rounded-xl text-xs 
+           transition-all shadow-lg shadow-blue-900/50 flex items-center justify-center gap-2
            active:scale-95 disabled:opacity-50;
   }
 
