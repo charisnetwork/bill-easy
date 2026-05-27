@@ -14,9 +14,7 @@ const isStaticHost = host.includes('pages.dev') || host.includes('netlify.app') 
 
 const API_BASE_URL = isGateway 
   ? '/admin/api'  // Through gateway - use relative path
-  : isStaticHost
-    ? 'https://bill-easy-production-v4.up.railway.app/admin/api'  // Cloudflare Pages → Railway
-    : (import.meta.env.VITE_ADMIN_BACKEND_URL || 'http://localhost:3025') + '/api';
+  : (import.meta.env.VITE_ADMIN_BACKEND_URL || 'http://localhost:3025') + '/api';
 
 const Login = ({ onLogin }) => {
   const [email, setEmail] = useState('');
