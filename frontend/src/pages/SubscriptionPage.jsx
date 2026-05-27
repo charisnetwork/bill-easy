@@ -224,6 +224,7 @@ export const SubscriptionPage = () => {
           Upgrade your plan to unlock more features and grow your business.
         </p>
       </div>
+      </div>
 
       <div className="flex justify-center mb-10">
         <div className="bg-slate-100 p-1.5 rounded-xl inline-flex shadow-inner">
