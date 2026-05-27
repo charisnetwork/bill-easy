@@ -20,7 +20,7 @@ const isGateway = window.location.pathname.startsWith('/admin-portal') ||
 // Admin API URL: gateway mode uses relative path, otherwise use env var
 const API_BASE_URL = isGateway 
   ? '/admin/api'  // Through gateway - proxied by main backend
-  : (import.meta.env.VITE_ADMIN_BACKEND_URL || 'http://localhost:3001') + '/api';
+  : ((import.meta.env.VITE_ADMIN_BACKEND_URL || 'http://localhost:3001').replace(/\/+$/, '')) + '/api';
 
 const SAAS_URL = import.meta.env.VITE_SAAS_URL || 'https://charisbilleasy.store';
 

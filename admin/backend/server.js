@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3001;
 
 // Admin credentials - only pachu.mgd@gmail.com is allowed
 const ADMIN_EMAIL = 'pachu.mgd@gmail.com';
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH; // bcrypt hash of the password
+const ADMIN_SECRET_PIN = process.env.ADMIN_SECRET_PIN || process.env.ADMIN_SECRET; // Simple PIN-based auth
 const JWT_SECRET = process.env.JWT_SECRET || process.env.ADMIN_SECRET; // Use JWT_SECRET or fallback to ADMIN_SECRET
 const JWT_EXPIRES_IN = '24h';
 
@@ -126,42 +126,31 @@ app.post('/api/auth/login', async (req, res) => {
   
   console.log('[Login] Attempt:', email);
   console.log('[Login] ADMIN_EMAIL configured:', ADMIN_EMAIL);
-  console.log('[Login] ADMIN_PASSWORD_HASH configured:', ADMIN_PASSWORD_HASH ? 'Yes (length: ' + ADMIN_PASSWORD_HASH.length + ')' : 'NO');
+  console.log('[Login] ADMIN_SECRET_PIN configured:', ADMIN_SECRET_PIN ? 'Yes' : 'NO');
   
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required.' });
   }
   
   // Only allow the specific admin email
-  if (email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
-    console.log('[Login] Email mismatch');
-    return res.status(401).json({ error: 'Invalid credentials.' });
+  if (email.toLowerCase().trim() !== ADMIN_EMAIL.toLowerCase()) {
+    console.log('[Login] Email mismatch:', email.toLowerCase().trim(), '!==', ADMIN_EMAIL.toLowerCase());
+    return res.status(401).json({ error: 'Invalid credentials. Only authorized admin can login.' });
   }
   
-  // Check if password hash is configured
-  if (!ADMIN_PASSWORD_HASH) {
-    console.error('[Login] ADMIN_PASSWORD_HASH not set');
-    return res.status(500).json({ error: 'Server configuration error.' });
+  // Check if ADMIN_SECRET_PIN is configured
+  if (!ADMIN_SECRET_PIN) {
+    console.error('[Login] ADMIN_SECRET_PIN not set in environment');
+    return res.status(500).json({ error: 'Server configuration error. ADMIN_SECRET_PIN not set.' });
   }
   
-  // Verify password
-  console.log('[Login] Comparing password...');
-  let isPasswordValid = false;
-  
-  if (ADMIN_PASSWORD_HASH) {
-    isPasswordValid = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
-  }
-  
-  // Also allow ADMIN_SECRET as fallback
-  if (!isPasswordValid && process.env.ADMIN_SECRET) {
-    isPasswordValid = (password === process.env.ADMIN_SECRET);
-    if (isPasswordValid) console.log('[Login] Authenticated via ADMIN_SECRET');
-  }
+  // Simple comparison: password must match ADMIN_SECRET_PIN
+  const isPasswordValid = (password === ADMIN_SECRET_PIN);
   
   console.log('[Login] Password valid:', isPasswordValid);
   
   if (!isPasswordValid) {
-    return res.status(401).json({ error: 'Invalid credentials.' });
+    return res.status(401).json({ error: 'Wrong password.' });
   }
   
   // Generate JWT token
@@ -230,9 +219,9 @@ const startServer = async () => {
         console.warn('⚠️ WARNING: JWT_SECRET is not set. Using fallback - this is insecure!');
       }
       
-      if (!ADMIN_PASSWORD_HASH) {
-        console.warn('⚠️ WARNING: ADMIN_PASSWORD_HASH is not set. Login will not work!');
-        console.log('💡 To set up admin password, generate a bcrypt hash and set ADMIN_PASSWORD_HASH env variable');
+      if (!ADMIN_SECRET_PIN) {
+        console.warn('⚠️ WARNING: ADMIN_SECRET_PIN is not set. Login will not work!');
+        console.log('💡 Set ADMIN_SECRET_PIN env variable to enable admin login');
       }
 
       // Authenticate SaaS DB (Read-Only access recommended)
