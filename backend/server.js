@@ -196,6 +196,86 @@ app.use('/enquiries', enquiryRoutes);
 app.use('/staff', require('./routes/staff'));
 app.use("/utilities", require("./routes/utilities"));
 
+/* =========================================
+   ADMIN AUTH ROUTES (for admin portal)
+   Since Railway exposes only one port, the admin
+   backend (port 3001) is NOT reachable externally.
+   These routes let the admin frontend authenticate
+   through the main backend.
+========================================= */
+
+const jwt = require('jsonwebtoken');
+const ADMIN_EMAIL = 'pachu.mgd@gmail.com';
+const ADMIN_SECRET_PIN = process.env.ADMIN_SECRET_PIN || process.env.ADMIN_SECRET;
+const ADMIN_JWT_SECRET = process.env.JWT_SECRET || process.env.ADMIN_SECRET || 'admin-fallback-secret';
+
+// Admin login
+app.post('/admin/api/auth/login', (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required.' });
+  }
+
+  if (email.toLowerCase().trim() !== ADMIN_EMAIL) {
+    return res.status(401).json({ error: 'Invalid credentials. Only authorized admin can login.' });
+  }
+
+  if (!ADMIN_SECRET_PIN) {
+    return res.status(500).json({ error: 'Server config error: ADMIN_SECRET_PIN not set.' });
+  }
+
+  if (password !== ADMIN_SECRET_PIN) {
+    return res.status(401).json({ error: 'Wrong password.' });
+  }
+
+  const token = jwt.sign(
+    { email: ADMIN_EMAIL, role: 'superadmin', iat: Math.floor(Date.now() / 1000) },
+    ADMIN_JWT_SECRET,
+    { expiresIn: '24h' }
+  );
+
+  res.json({
+    success: true,
+    message: 'Login successful',
+    token,
+    user: { email: ADMIN_EMAIL, name: 'Platform Administrator', role: 'superadmin' }
+  });
+});
+
+// Admin auth middleware
+const adminAuthMiddleware = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'No token provided.' });
+  try {
+    req.user = jwt.verify(token, ADMIN_JWT_SECRET);
+    if (req.user.email !== ADMIN_EMAIL) throw new Error('Not admin');
+    next();
+  } catch (err) {
+    return res.status(403).json({ error: 'Invalid or expired token.' });
+  }
+};
+
+// Admin get current user
+app.get('/admin/api/auth/me', adminAuthMiddleware, (req, res) => {
+  res.json({ email: ADMIN_EMAIL, name: 'Platform Administrator', role: 'superadmin' });
+});
+
+// Admin logout
+app.post('/admin/api/auth/logout', adminAuthMiddleware, (req, res) => {
+  res.json({ success: true, message: 'Logged out successfully' });
+});
+
+// Proxy all other admin API routes to the admin backend (if running)
+// For now, forward to the internal admin backend routes
+try {
+  const adminRoutes = require('../admin/backend/routes/adminRoutes');
+  app.use('/admin/api', adminAuthMiddleware, adminRoutes);
+} catch (e) {
+  console.log('Admin routes not available (standalone mode)');
+}
+
 app.use("/uploads", express.static("uploads"));
 
 /* =========================================

@@ -9,12 +9,11 @@ const isGateway = window.location.pathname.startsWith('/admin-portal') ||
                   host === 'www.charisbilleasy.store' ||
                   host === 'admin.charisbilleasy.store';
 
-// For Cloudflare Pages or other static hosts, use the production backend
-const isStaticHost = host.includes('pages.dev') || host.includes('netlify.app') || host.includes('vercel.app');
-
+// All API calls go through the main backend with /admin/api prefix
+// Railway only exposes one port, so admin routes are served from main backend
 const API_BASE_URL = isGateway 
   ? '/admin/api'  // Through gateway - use relative path
-  : ((import.meta.env.VITE_ADMIN_BACKEND_URL || 'http://localhost:3025').replace(/\/+$/, '')) + '/api';
+  : ((import.meta.env.VITE_ADMIN_BACKEND_URL || 'http://localhost:8001').replace(/\/+$/, '')) + '/admin/api';
 
 const Login = ({ onLogin }) => {
   const [email, setEmail] = useState('');
