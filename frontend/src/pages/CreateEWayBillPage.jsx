@@ -107,7 +107,7 @@ const CreateEWayBillPage = () => {
                   <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input 
                     id="transporter_name" 
-                    className="pl-10"
+                    style={{ paddingLeft: '2.5rem' }}
                     placeholder="e.g. Blue Dart"
                     value={formData.transporter_name}
                     onChange={(e) => setFormData({...formData, transporter_name: e.target.value})}
@@ -133,7 +133,8 @@ const CreateEWayBillPage = () => {
                   <Truck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input 
                     id="vehicle_number" 
-                    className="pl-10 uppercase"
+                    className="uppercase"
+                    style={{ paddingLeft: '2.5rem' }}
                     placeholder="MH 12 AB 1234"
                     value={formData.vehicle_number}
                     onChange={(e) => setFormData({...formData, vehicle_number: e.target.value})}
@@ -148,7 +149,7 @@ const CreateEWayBillPage = () => {
                   <Input 
                     id="distance" 
                     type="number"
-                    className="pl-10"
+                    style={{ paddingLeft: '2.5rem' }}
                     placeholder="e.g. 250"
                     value={formData.distance}
                     onChange={(e) => setFormData({...formData, distance: e.target.value})}
@@ -165,7 +166,7 @@ const CreateEWayBillPage = () => {
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input 
                     id="from_place" 
-                    className="pl-10"
+                    style={{ paddingLeft: '2.5rem' }}
                     placeholder="City Name"
                     value={formData.from_place}
                     onChange={(e) => setFormData({...formData, from_place: e.target.value})}
@@ -179,7 +180,7 @@ const CreateEWayBillPage = () => {
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input 
                     id="to_place" 
-                    className="pl-10"
+                    style={{ paddingLeft: '2.5rem' }}
                     placeholder="City Name"
                     value={formData.to_place}
                     onChange={(e) => setFormData({...formData, to_place: e.target.value})}

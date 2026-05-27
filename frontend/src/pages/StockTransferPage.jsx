@@ -142,7 +142,8 @@ export const StockTransferPage = () => {
                     min="0.01"
                     max={sourceStock}
                     placeholder="0.00"
-                    className="pl-10 font-bold text-lg"
+                    className="font-bold text-lg"
+                    style={{ paddingLeft: '2.5rem' }}
                     value={formData.quantity}
                     onChange={(e) => setFormData({...formData, quantity: e.target.value})}
                   />

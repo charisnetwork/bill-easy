@@ -174,7 +174,7 @@ const AddBusinessPage = () => {
                         <FormControl>
                           <div className="relative">
                             <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                            <Input className="pl-10" placeholder="e.g. Acme Solutions" {...field} />
+                            <Input style={{ paddingLeft: '2.5rem' }} placeholder="e.g. Acme Solutions" {...field} />
                           </div>
                         </FormControl>
                         <FormMessage />
@@ -192,7 +192,7 @@ const AddBusinessPage = () => {
                           <FormControl>
                             <div className="relative">
                               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                              <Input className="pl-10" placeholder="contact@acme.com" {...field} />
+                              <Input style={{ paddingLeft: '2.5rem' }} placeholder="contact@acme.com" {...field} />
                             </div>
                           </FormControl>
                           <FormMessage />
@@ -208,7 +208,7 @@ const AddBusinessPage = () => {
                           <FormControl>
                             <div className="relative">
                               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                              <Input className="pl-10" placeholder="+91 98765 43210" {...field} />
+                              <Input style={{ paddingLeft: '2.5rem' }} placeholder="+91 98765 43210" {...field} />
                             </div>
                           </FormControl>
                           <FormMessage />
@@ -235,7 +235,7 @@ const AddBusinessPage = () => {
                         <FormControl>
                           <div className="relative">
                             <MapPin className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-                            <Input className="pl-10" placeholder="Plot No. 123, Street Name..." {...field} />
+                            <Input style={{ paddingLeft: '2.5rem' }} placeholder="Plot No. 123, Street Name..." {...field} />
                           </div>
                         </FormControl>
                         <FormMessage />
@@ -305,7 +305,7 @@ const AddBusinessPage = () => {
                           <FormControl>
                             <div className="relative">
                               <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                              <Input className="pl-10 pr-12 uppercase font-mono" placeholder="27AAAAA0000A1Z5" {...field} />
+                              <Input className="pr-12 uppercase font-mono" style={{ paddingLeft: '2.5rem' }} placeholder="27AAAAA0000A1Z5" {...field} />
                               <Button
                                 type="button"
                                 variant="ghost"

@@ -526,7 +526,9 @@ const importProducts = async (req, res) => {
       return res.status(400).json({ error: 'File is empty or contains only headers' });
     }
 
-    const headers = rows[0].map(h => String(h || '').toLowerCase().trim());
+    // Normalize headers: lowercase, trim, replace underscores/hyphens with spaces
+    const rawHeaders = rows[0].map(h => String(h || '').toLowerCase().trim());
+    const headers = rawHeaders.map(h => h.replace(/[_\-]+/g, ' ').trim());
     const dataRows = rows.slice(1);
 
     const companyId = req.companyId;
@@ -534,19 +536,34 @@ const importProducts = async (req, res) => {
     
     // Column Mapping Logic (Fuzzy/Multi-alias)
     const mappingSchema = {
-      name: ['item name', 'product name', 'name', 'item', 'product', 'description'],
-      hsn_code: ['hsn code', 'hsn', 'hsncode'],
-      sale_price: ['sale price', 'selling price', 'mrp', 'rate', 'price'],
-      purchase_price: ['purchase price', 'buy price', 'cost price', 'cost'],
-      stock_quantity: ['opening stock', 'stock', 'quantity', 'qty'],
-      gst_rate: ['gst %', 'gst', 'tax %', 'tax', 'gst rate'],
-      category_name: ['category', 'group', 'type']
+      name: ['item name', 'product name', 'name', 'item', 'product', 'product description', 'material', 'part name', 'part', 'goods'],
+      sku: ['sku', 'item id', 'item code', 'product code', 'product id', 'part number', 'part no', 'material code', 'code', 'barcode'],
+      hsn_code: ['hsn code', 'hsn', 'hsncode', 'hsn sac', 'hsn/sac', 'sac code', 'sac'],
+      sale_price: ['sale price', 'selling price', 'mrp', 'rate', 'price', 'unit price', 'unit price inr', 'sp', 'selling rate', 'retail price'],
+      purchase_price: ['purchase price', 'buy price', 'cost price', 'cost', 'buying price', 'pp', 'purchase rate', 'cp', 'landed cost'],
+      stock_quantity: ['opening stock', 'stock', 'quantity', 'qty', 'stock qty', 'stock quantity', 'opening qty', 'available stock', 'available qty', 'on hand', 'current stock'],
+      gst_rate: ['gst %', 'gst', 'tax %', 'tax', 'gst rate', 'tax rate', 'igst', 'cgst', 'sgst', 'vat'],
+      category_name: ['category', 'group', 'type', 'product group', 'item group', 'item category', 'product type', 'item type', 'department', 'section'],
+      brand: ['brand', 'manufacturer', 'make', 'brand name', 'company', 'oem'],
+      unit: ['unit', 'uom', 'unit of measure', 'measurement', 'unit type'],
+      description: ['description', 'remarks', 'notes', 'details', 'product description', 'item description']
     };
 
-    // Map header names to their indices
+    // Map header names to their indices using normalized headers
     const colMap = {};
     Object.keys(mappingSchema).forEach(key => {
-      const index = headers.findIndex(h => mappingSchema[key].includes(h));
+      // First try exact match on normalized headers
+      let index = headers.findIndex(h => mappingSchema[key].includes(h));
+      // Also try matching against original headers (with underscores) 
+      if (index === -1) {
+        index = rawHeaders.findIndex(h => mappingSchema[key].includes(h));
+      }
+      // Try partial/contains match as last resort for common fields
+      if (index === -1) {
+        index = headers.findIndex(h => {
+          return mappingSchema[key].some(alias => h.includes(alias) || alias.includes(h));
+        });
+      }
       if (index !== -1) colMap[key] = index;
     });
 
@@ -590,18 +607,31 @@ const importProducts = async (req, res) => {
         }
       }
 
+      // Build product name, optionally prepend brand
+      let productName = String(itemName).trim();
+      const brandValue = colMap.brand !== undefined ? String(row[colMap.brand] || '').trim() : '';
+      
+      // If sale_price is not mapped but purchase_price is, use purchase_price as sale_price
+      const salePrice = colMap.sale_price !== undefined ? parseFloat(row[colMap.sale_price]) || 0 : 0;
+      const purchasePrice = colMap.purchase_price !== undefined ? parseFloat(row[colMap.purchase_price]) || 0 : 0;
+      const unitValue = colMap.unit !== undefined ? String(row[colMap.unit] || 'Units').trim() : 'Units';
+      const descValue = colMap.description !== undefined ? String(row[colMap.description] || '').trim() : '';
+      const skuValue = colMap.sku !== undefined ? String(row[colMap.sku] || '').trim() : '';
+
       const item = {
         company_id: companyId,
         type: 'product',
-        unit: 'Units',
-        name: String(itemName).trim(),
+        unit: unitValue || 'Units',
+        name: productName,
+        sku: skuValue,
         category_id: categoryId,
         hsn_code: colMap.hsn_code !== undefined ? String(row[colMap.hsn_code] || '') : '',
-        sale_price: colMap.sale_price !== undefined ? parseFloat(row[colMap.sale_price]) || 0 : 0,
-        purchase_price: colMap.purchase_price !== undefined ? parseFloat(row[colMap.purchase_price]) || 0 : 0,
+        sale_price: salePrice || purchasePrice,
+        purchase_price: purchasePrice || salePrice,
         stock_quantity: colMap.stock_quantity !== undefined ? parseFloat(row[colMap.stock_quantity]) || 0 : 0,
         gst_rate: colMap.gst_rate !== undefined ? parseFloat(row[colMap.gst_rate]) || 0 : 0,
-        low_stock_alert: 10
+        low_stock_alert: 10,
+        description: brandValue ? `Brand: ${brandValue}${descValue ? ' | ' + descValue : ''}` : descValue
       };
 
       itemsToInsert.push(item);
