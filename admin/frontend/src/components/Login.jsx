@@ -9,11 +9,13 @@ const isGateway = window.location.pathname.startsWith('/admin-portal') ||
                   host === 'www.charisbilleasy.store' ||
                   host === 'admin.charisbilleasy.store';
 
-// All API calls go through the main backend with /admin/api prefix
-// Railway only exposes one port, so admin routes are served from main backend
+// All admin API calls go through the main backend at /api/admin/*
+// Railway only exposes one port, admin routes are served from main backend
 const API_BASE_URL = isGateway 
   ? '/admin/api'  // Through gateway - use relative path
-  : ((import.meta.env.VITE_ADMIN_BACKEND_URL || 'http://localhost:8001').replace(/\/+$/, '')) + '/admin/api';
+  : ((import.meta.env.VITE_ADMIN_BACKEND_URL || 'http://localhost:8001').replace(/\/+$/, '')) + '/api/admin';
+
+console.log('[Admin Login] API_BASE_URL:', API_BASE_URL, '| Host:', host, '| isGateway:', isGateway);
 
 const Login = ({ onLogin }) => {
   const [email, setEmail] = useState('');

@@ -197,11 +197,9 @@ app.use('/staff', require('./routes/staff'));
 app.use("/utilities", require("./routes/utilities"));
 
 /* =========================================
-   ADMIN AUTH ROUTES (for admin portal)
-   Since Railway exposes only one port, the admin
-   backend (port 3001) is NOT reachable externally.
-   These routes let the admin frontend authenticate
-   through the main backend.
+   ADMIN PORTAL ROUTES
+   Mounted at /api/admin/* so Express can see them
+   regardless of Railway proxy/path stripping.
 ========================================= */
 
 const jwt = require('jsonwebtoken');
@@ -209,8 +207,11 @@ const ADMIN_EMAIL = 'pachu.mgd@gmail.com';
 const ADMIN_SECRET_PIN = process.env.ADMIN_SECRET_PIN || process.env.ADMIN_SECRET;
 const ADMIN_JWT_SECRET = process.env.JWT_SECRET || process.env.ADMIN_SECRET || 'admin-fallback-secret';
 
-// Admin login
-app.post('/admin/api/auth/login', (req, res) => {
+// Build a single admin router with auth + data routes
+const adminRouter = express.Router();
+
+// --- Public: Admin Login ---
+adminRouter.post('/auth/login', (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -243,8 +244,8 @@ app.post('/admin/api/auth/login', (req, res) => {
   });
 });
 
-// Admin auth middleware
-const adminAuthMiddleware = (req, res, next) => {
+// --- Admin JWT Auth Middleware ---
+const adminAuth = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'No token provided.' });
@@ -257,24 +258,27 @@ const adminAuthMiddleware = (req, res, next) => {
   }
 };
 
-// Admin get current user
-app.get('/admin/api/auth/me', adminAuthMiddleware, (req, res) => {
+// --- Protected: Admin Me & Logout ---
+adminRouter.get('/auth/me', adminAuth, (req, res) => {
   res.json({ email: ADMIN_EMAIL, name: 'Platform Administrator', role: 'superadmin' });
 });
 
-// Admin logout
-app.post('/admin/api/auth/logout', adminAuthMiddleware, (req, res) => {
+adminRouter.post('/auth/logout', adminAuth, (req, res) => {
   res.json({ success: true, message: 'Logged out successfully' });
 });
 
-// Proxy all other admin API routes to the admin backend (if running)
-// For now, forward to the internal admin backend routes
+// --- Protected: Admin Data Routes (dashboard, coupons, etc.) ---
 try {
-  const adminRoutes = require('../admin/backend/routes/adminRoutes');
-  app.use('/admin/api', adminAuthMiddleware, adminRoutes);
+  const adminDataRoutes = require('../admin/backend/routes/adminRoutes');
+  adminRouter.use('/', adminAuth, adminDataRoutes);
 } catch (e) {
-  console.log('Admin routes not available (standalone mode)');
+  console.log('ℹ️ Admin data routes not available (standalone mode)');
 }
+
+// Mount at ALL possible paths so it works regardless of Railway proxy config
+app.use('/api/admin', adminRouter);     // Standard: frontend calls /api/admin/auth/login
+app.use('/admin/api', adminRouter);     // Gateway: frontend calls /admin/api/auth/login
+app.use('/admin', adminRouter);         // Fallback: if Railway strips /api prefix
 
 app.use("/uploads", express.static("uploads"));
 
