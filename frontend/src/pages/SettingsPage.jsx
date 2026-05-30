@@ -104,7 +104,9 @@ import {
   Bell,
   Gift,
   HelpCircle,
-  Info
+  Info,
+  ArrowLeft,
+  MessageCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '../lib/utils';
@@ -670,59 +672,39 @@ export const SettingsPage = () => {
     }
   };
 
-  // --- Navigation Items ---
+  // --- Navigation Items (Flat like MyBillBook) ---
 
   const navItems = [
-    {
-      id: 'account',
-      label: 'Account Settings',
-      icon: User,
-      subItems: [
-        { id: 'account-profile', label: 'Profile', icon: UserCog },
-        { id: 'account-security', label: 'Security', icon: ShieldCheck },
-      ]
-    },
-    {
-      id: 'business',
-      label: 'Business Settings',
-      icon: Building2,
-      subItems: [
-        { id: 'business-details', label: 'Company Details', icon: FileText },
-        { id: 'business-tax', label: 'Tax & GST', icon: Settings2 },
-        { id: 'business-godowns', label: 'Godowns', icon: Warehouse },
-      ]
-    },
-    {
-      id: 'invoice',
-      label: 'Invoice Settings',
-      icon: FileText,
-      subItems: [
-        { id: 'invoice-customization', label: 'Customization', icon: Palette },
-        { id: 'invoice-print', label: 'Print Settings', icon: Printer },
-      ]
-    },
-    { id: 'payments', label: 'Payment & Bank Settings', icon: CreditCard },
-    { id: 'team', label: 'Team/Users', icon: Users },
+    { id: 'account-profile', label: 'Account', icon: User },
+    { id: 'business-details', label: 'Manage Business', icon: Building2 },
+    { id: 'invoice-customization', label: 'Invoice Settings', icon: FileText },
+    { id: 'invoice-print', label: 'Print Settings', icon: Printer },
+    { id: 'team', label: 'Manage Users', icon: Users },
+    { id: 'business-tax', label: 'Tax & GST', icon: Settings2 },
+    { id: 'business-godowns', label: 'Godowns', icon: Warehouse },
+    { id: 'payments', label: 'Payment & Bank', icon: CreditCard },
     { id: 'reminders', label: 'Reminders', icon: Bell },
     { id: 'refer', label: 'Refer & Earn', icon: Gift },
-    { id: 'help', label: 'Help & Support', icon: HelpCircle },
+    { id: 'help', label: 'Help And Support', icon: HelpCircle },
   ];
 
-  const getBreadcrumbs = () => {
-    let parts = ['Settings'];
-    navItems.forEach(item => {
-      if (item.id === activeSection) parts.push(item.label);
-      if (item.subItems) {
-        item.subItems.forEach(sub => {
-          if (sub.id === activeSection) {
-            parts.push(item.label.split(' ')[0]);
-            parts.push(sub.label);
-          }
-        });
-      }
-    });
-    return parts.join(' > ');
+  // Section title mapping
+  const sectionTitles = {
+    'account-profile': { title: 'Account', subtitle: 'Manage your profile and security' },
+    'account-security': { title: 'Security', subtitle: 'Change your password' },
+    'business-details': { title: 'Business Settings', subtitle: 'Edit Your Company Settings And Information' },
+    'business-tax': { title: 'Tax & GST Settings', subtitle: 'Manage your tax configuration' },
+    'business-godowns': { title: 'Godown Management', subtitle: 'Manage your inventory locations' },
+    'invoice-customization': { title: 'Invoice Settings', subtitle: 'Customize your invoice appearance' },
+    'invoice-print': { title: 'Print Settings', subtitle: 'Choose your invoice template' },
+    'payments': { title: 'Payment & Bank Settings', subtitle: 'Manage banking and payment details' },
+    'team': { title: 'Manage Users', subtitle: 'Add and manage team members' },
+    'reminders': { title: 'Reminders', subtitle: 'Set up automated reminders' },
+    'refer': { title: 'Refer & Earn', subtitle: 'Share Bill Easy and earn rewards' },
+    'help': { title: 'Help And Support', subtitle: 'Get help with Bill Easy' },
   };
+
+  const currentSection = sectionTitles[activeSection] || { title: 'Settings', subtitle: '' };
 
   const currentForm = useMemo(() => {
     if (activeSection === 'account-profile') return profileForm;
@@ -745,116 +727,115 @@ export const SettingsPage = () => {
 
   if (loading) return (
     <div className="flex h-[calc(100vh-80px)] items-center justify-center">
-      <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      <Loader2 className="w-8 h-8 animate-spin text-[#4F46E5]" />
     </div>
   );
 
   return (
-    <div className="flex h-[calc(100vh-80px)] -m-4 md:-m-6 lg:-m-8 bg-slate-50 overflow-hidden">
+    <div className="flex h-[calc(100vh-80px)] -m-4 md:-m-6 lg:-m-8 bg-white overflow-hidden">
       
-      {/* Sub-Sidebar Navigation */}
-      <aside className="w-72 bg-slate-50 border-r border-slate-200 flex flex-col shrink-0 overflow-y-auto">
-        <div className="p-6 pt-8 space-y-2 flex-1">
-          {navItems.map((item) => (
-            <div key={item.id} className="space-y-1">
-              {item.subItems ? (
-                <>
-                  <button
-                    onClick={() => toggleMenu(item.id)}
-                    className="w-full flex items-center justify-between px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <item.icon className="w-4 h-4 text-slate-400" />
-                      {item.label}
-                    </div>
-                    <ChevronDown className={cn("w-4 h-4 text-slate-400 transition-transform", !expandedMenus.includes(item.id) && "-rotate-90")} />
-                  </button>
-                  {expandedMenus.includes(item.id) && (
-                    <div className="ml-4 space-y-1 mt-1 border-l border-slate-200">
-                      {item.subItems.map((sub) => (
-                        <button
-                          key={sub.id}
-                          onClick={() => setSearchParams({ section: sub.id })}
-                          className={cn(
-                            "w-full flex items-center gap-3 pl-8 pr-4 py-2 text-sm font-medium transition-all relative",
-                            activeSection === sub.id 
-                              ? "text-[#4F46E5] bg-indigo-50/80" 
-                              : "text-slate-500 hover:text-slate-900 hover:bg-slate-100/50"
-                          )}
-                        >
-                          {activeSection === sub.id && <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#4F46E5] rounded-r-full" />}
-                          {sub.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <button
-                  onClick={() => setSearchParams({ section: item.id })}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold transition-all relative rounded-lg",
-                    activeSection === item.id 
-                      ? "text-[#4F46E5] bg-indigo-50/80" 
-                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                  )}
-                >
-                  {activeSection === item.id && <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#4F46E5] rounded-r-full" />}
-                  <item.icon className={cn("w-4 h-4", activeSection === item.id ? "text-[#4F46E5]" : "text-slate-400")} />
-                  {item.label}
-                </button>
-              )}
+      {/* MyBillBook-style Left Sidebar */}
+      <aside className="w-56 bg-white border-r border-slate-200 flex flex-col shrink-0">
+        
+        {/* Company Info */}
+        <div className="p-4 border-b border-slate-200">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-[#4F46E5] rounded-full flex items-center justify-center text-white font-bold text-sm">
+              {company?.name?.charAt(0)?.toUpperCase() || 'B'}
             </div>
-          ))}
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-slate-900 truncate">{company?.name || 'My Business'}</p>
+              <p className="text-xs text-slate-500 truncate">{company?.phone || ''}</p>
+            </div>
+          </div>
         </div>
 
+        {/* Back to Dashboard */}
+        <div className="px-3 pt-3">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#4F46E5] text-white text-xs font-semibold rounded-lg hover:bg-[#4338CA] transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Back to Dashboard
+          </button>
+        </div>
+
+        {/* Flat Navigation */}
+        <nav className="flex-1 overflow-y-auto py-3 px-3">
+          <ul className="space-y-0.5">
+            {navItems.map((item) => {
+              const isActive = activeSection === item.id;
+              return (
+                <li key={item.id}>
+                  <button
+                    onClick={() => setSearchParams({ section: item.id })}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-2.5 text-[13px] font-medium rounded-lg transition-all",
+                      isActive
+                        ? "bg-[#4F46E5] text-white shadow-sm"
+                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    )}
+                  >
+                    <item.icon className={cn("w-4 h-4", isActive ? "text-white" : "text-slate-400")} />
+                    {item.label}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
         {/* Trust Badges */}
-        <div className="px-6 py-4 border-t border-slate-200 space-y-2">
-          <p className="text-[11px] font-semibold text-slate-500">App Version : 1.0.0</p>
-          <div className="flex items-center gap-3">
+        <div className="px-4 py-3 border-t border-slate-200 space-y-2">
+          <p className="text-[10px] font-semibold text-slate-400">App Version : 1.0.0</p>
+          <div className="flex items-center gap-2">
             <div className="flex items-center gap-1 text-emerald-600">
-              <Shield className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-bold">100% Secure</span>
+              <Shield className="w-3 h-3" />
+              <span className="text-[9px] font-bold">100% Secure</span>
             </div>
-            <div className="flex items-center gap-1 text-slate-500">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-bold">ISO Certified</span>
+            <div className="flex items-center gap-1 text-slate-400">
+              <ShieldCheck className="w-3 h-3" />
+              <span className="text-[9px] font-bold">ISO Certified</span>
             </div>
           </div>
         </div>
       </aside>
 
-      {/* Main Settings Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden bg-slate-50">
         
-        {/* Breadcrumb & Action Bar */}
-        <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-8 shrink-0">
-          <div className="text-sm font-medium text-slate-500">
-            {getBreadcrumbs()}
+        {/* Header with Section Title + Actions */}
+        <header className="border-b border-slate-200 bg-white flex items-center justify-between px-6 py-3 shrink-0">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">{currentSection.title}</h2>
+            <p className="text-xs text-slate-500">{currentSection.subtitle}</p>
           </div>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" className="h-9 border-slate-200" onClick={() => navigate(-1)}>
-              Cancel
+          <div className="flex items-center gap-2">
+            <Button className="h-8 bg-[#E66E26] hover:bg-[#d45d1d] text-white text-xs font-semibold" onClick={() => navigate('/settings/business/new')}>
+              Create new business
             </Button>
-            <Button className="h-9 bg-[#E66E26] hover:bg-[#d45d1d] text-white" onClick={() => navigate('/settings/business/new')}>
-              <Plus className="w-4 h-4 mr-2" />
-              Create New Business
+            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 border-slate-300">
+              <MessageCircle className="w-3.5 h-3.5" />
+              Chat Support
+            </Button>
+            <Button variant="outline" size="sm" className="h-8 text-xs border-slate-300" onClick={() => navigate(-1)}>
+              Cancel
             </Button>
             <Button 
               disabled={submitting || (currentForm && !currentForm.formState.isDirty)}
               onClick={handleGlobalSubmit}
-              className="h-9 bg-[#4F46E5] hover:bg-[#4338CA] text-white min-w-[120px]"
+              size="sm"
+              className="h-8 bg-[#22C55E] hover:bg-[#16A34A] text-white text-xs font-semibold min-w-[100px]"
             >
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
+              {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Save Changes"}
             </Button>
           </div>
         </header>
 
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-8">
-          <div className="max-w-5xl mx-auto">
-            <Card className="bg-white border-slate-200 shadow-sm overflow-hidden min-h-[600px]">
-              <CardContent className="p-10">
+        {/* Scrollable Form Content (no Card wrapper) */}
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="max-w-4xl">
                 
                 {activeSection === 'account-profile' && (
                   <Form {...profileForm}>
@@ -1447,8 +1428,7 @@ export const SettingsPage = () => {
                   </div>
                 )}
 
-              </CardContent>
-            </Card>
+
           </div>
         </div>
       </div>
