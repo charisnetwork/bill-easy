@@ -284,6 +284,47 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+const bulkDeleteProducts = async (req, res) => {
+  const transaction = await sequelize.transaction();
+  try {
+    const { ids } = req.body;
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'Please provide an array of product IDs to delete' });
+    }
+
+    // Only delete products that belong to this company
+    const deletedCount = await Product.destroy({
+      where: {
+        id: { [Op.in]: ids },
+        company_id: req.companyId
+      },
+      transaction
+    });
+
+    // Decrement subscription usage
+    if (deletedCount > 0) {
+      const subscription = await Subscription.findOne({
+        where: { company_id: req.companyId },
+        transaction
+      });
+
+      if (subscription) {
+        const usage = { ...(subscription.usage || { invoices: 0, products: 0, eway_bills: 0, godowns: 0 }) };
+        usage.products = Math.max(0, (usage.products || 0) - deletedCount);
+        await subscription.update({ usage }, { transaction });
+      }
+    }
+
+    await transaction.commit();
+    res.json({ message: `${deletedCount} product(s) deleted successfully`, deletedCount });
+
+  } catch (error) {
+    if (transaction) await transaction.rollback();
+    res.status(500).json({ error: 'Failed to delete products' });
+  }
+};
+
 const adjustStock = async (req, res) => {
   try {
 
@@ -658,7 +699,7 @@ const importProducts = async (req, res) => {
 };
 
 module.exports = {
-  getProducts, getProduct, createProduct, updateProduct, deleteProduct,
+  getProducts, getProduct, createProduct, updateProduct, deleteProduct, bulkDeleteProducts,
   adjustStock, getStockMovements,
   getCategories, createCategory, updateCategory, deleteCategory,
   importProducts

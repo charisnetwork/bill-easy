@@ -126,6 +126,7 @@ export const productAPI = {
   create: (data) => api.post('/products', data),
   update: (id, data) => api.put(`/products/${id}`, data),
   delete: (id) => api.delete(`/products/${id}`),
+  bulkDelete: (ids) => api.post('/products/bulk-delete', { ids }),
   adjustStock: (id, data) => api.post(`/products/${id}/stock`, data),
   getMovements: (id, params) => api.get(`/products/${id}/movements`, { params }),
   getCategories: () => api.get('/products/categories'),

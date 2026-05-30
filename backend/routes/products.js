@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const {
-  getProducts, getProduct, createProduct, updateProduct, deleteProduct,
+  getProducts, getProduct, createProduct, updateProduct, deleteProduct, bulkDeleteProducts,
   adjustStock, getStockMovements,
   getCategories, createCategory, updateCategory, deleteCategory,
   importProducts
@@ -26,6 +26,7 @@ router.get('/:id', getProduct);
 router.get('/:id/movements', getStockMovements);
 router.post('/', checkSubscriptionQuota('products'), productValidation, createProduct);
 router.post('/import', uploadImportFile.single('file'), importProducts);
+router.post('/bulk-delete', bulkDeleteProducts);
 router.put('/:id', productValidation, updateProduct);
 router.delete('/:id', deleteProduct);
 router.post('/:id/stock', adjustStock);

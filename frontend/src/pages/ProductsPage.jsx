@@ -15,7 +15,8 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '../components/ui/table';
 import { Badge } from '../components/ui/badge';
-import { Plus, Search, Edit, Trash2, Package, AlertTriangle, Filter, FileUp, Loader2 } from 'lucide-react';
+import { Checkbox } from '../components/ui/checkbox';
+import { Plus, Search, Edit, Trash2, Package, AlertTriangle, Filter, FileUp, Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { getErrorMessage } from '../config/api';
 
@@ -328,6 +329,10 @@ export const ProductsPage = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
+  // Selection state for bulk operations
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
   const fetchProducts = async () => {
     try {
       const response = await productAPI.getAll({ search, page, limit: 20, low_stock: showLowStock });
@@ -357,6 +362,11 @@ export const ProductsPage = () => {
     fetchProducts();
   }, [search, page, showLowStock]);
 
+  // Clear selection when products change (page change, search, etc.)
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [products]);
+
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
     try {
@@ -365,6 +375,24 @@ export const ProductsPage = () => {
       fetchProducts();
     } catch (error) {
       toast.error(getErrorMessage(error, 'Delete failed'));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    const count = selectedIds.size;
+    if (count === 0) return;
+    if (!window.confirm(`Are you sure you want to delete ${count} selected product(s)? This action cannot be undone.`)) return;
+
+    setBulkDeleting(true);
+    try {
+      const res = await productAPI.bulkDelete(Array.from(selectedIds));
+      toast.success(res.data.message || `${count} product(s) deleted`);
+      setSelectedIds(new Set());
+      fetchProducts();
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Bulk delete failed'));
+    } finally {
+      setBulkDeleting(false);
     }
   };
 
@@ -405,6 +433,31 @@ export const ProductsPage = () => {
   const isLowStock = (product) => {
     return parseFloat(product.stock_quantity) <= parseFloat(product.low_stock_alert);
   };
+
+  // Selection helpers
+  const toggleSelectOne = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === products.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(products.map(p => p.id)));
+    }
+  };
+
+  const isAllSelected = products.length > 0 && selectedIds.size === products.length;
+  const isSomeSelected = selectedIds.size > 0 && selectedIds.size < products.length;
+  const hasSelection = selectedIds.size > 0;
 
   return (
     <div className="space-y-6 animate-fade-in" data-testid="products-page">
@@ -459,6 +512,53 @@ export const ProductsPage = () => {
       </div>
     </div>
 
+    {/* Bulk Action Toolbar */}
+    {hasSelection && (
+      <div className="flex items-center justify-between bg-indigo-50 border border-indigo-200 rounded-lg px-4 py-3 animate-fade-in">
+        <div className="flex items-center gap-3">
+          <Badge variant="secondary" className="bg-indigo-100 text-indigo-700 font-semibold text-sm px-3 py-1">
+            {selectedIds.size} selected
+          </Badge>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSelectedIds(new Set())}
+            className="text-slate-500 hover:text-slate-700"
+          >
+            <X className="w-4 h-4 mr-1" />
+            Clear
+          </Button>
+        </div>
+        <div className="flex items-center gap-2">
+          {selectedIds.size === 1 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const product = products.find(p => p.id === Array.from(selectedIds)[0]);
+                if (product) handleEdit(product);
+              }}
+              className="text-indigo-600 border-indigo-300 hover:bg-indigo-50"
+              data-testid="bulk-edit-btn"
+            >
+              <Edit className="w-4 h-4 mr-1" />
+              Edit
+            </Button>
+          )}
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleBulkDelete}
+            disabled={bulkDeleting}
+            data-testid="bulk-delete-btn"
+          >
+            {bulkDeleting ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Trash2 className="w-4 h-4 mr-1" />}
+            Delete {selectedIds.size > 1 ? `(${selectedIds.size})` : ''}
+          </Button>
+        </div>
+      </div>
+    )}
+
     <Card>
         <CardHeader className="pb-4">
           <div className="flex flex-col md:flex-row md:items-center gap-4">
@@ -497,6 +597,17 @@ export const ProductsPage = () => {
             <Table className="data-table">
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12 pl-4">
+                    <Checkbox
+                      checked={isAllSelected}
+                      ref={(el) => {
+                        if (el) el.dataset.state = isSomeSelected ? 'indeterminate' : (isAllSelected ? 'checked' : 'unchecked');
+                      }}
+                      onCheckedChange={toggleSelectAll}
+                      aria-label="Select all products"
+                      data-testid="select-all-checkbox"
+                    />
+                  </TableHead>
                   <TableHead>Product</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead className="text-right">Purchase Price</TableHead>
@@ -508,7 +619,19 @@ export const ProductsPage = () => {
               </TableHeader>
               <TableBody>
                 {products.map((product) => (
-                  <TableRow key={product.id} data-testid={`product-row-${product.id}`}>
+                  <TableRow
+                    key={product.id}
+                    data-testid={`product-row-${product.id}`}
+                    className={selectedIds.has(product.id) ? 'bg-indigo-50/60' : ''}
+                  >
+                    <TableCell className="pl-4">
+                      <Checkbox
+                        checked={selectedIds.has(product.id)}
+                        onCheckedChange={() => toggleSelectOne(product.id)}
+                        aria-label={`Select ${product.name}`}
+                        data-testid={`select-product-${product.id}`}
+                      />
+                    </TableCell>
                     <TableCell>
                       <div className="font-medium text-slate-900">{product.name}</div>
                       {product.sku && (
