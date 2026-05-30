@@ -100,7 +100,11 @@ import {
   Banknote,
   Layout,
   QrCode,
-  Type
+  Type,
+  Bell,
+  Gift,
+  HelpCircle,
+  Info
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '../lib/utils';
@@ -699,6 +703,9 @@ export const SettingsPage = () => {
     },
     { id: 'payments', label: 'Payment & Bank Settings', icon: CreditCard },
     { id: 'team', label: 'Team/Users', icon: Users },
+    { id: 'reminders', label: 'Reminders', icon: Bell },
+    { id: 'refer', label: 'Refer & Earn', icon: Gift },
+    { id: 'help', label: 'Help & Support', icon: HelpCircle },
   ];
 
   const getBreadcrumbs = () => {
@@ -747,7 +754,7 @@ export const SettingsPage = () => {
       
       {/* Sub-Sidebar Navigation */}
       <aside className="w-72 bg-slate-50 border-r border-slate-200 flex flex-col shrink-0 overflow-y-auto">
-        <div className="p-6 pt-8 space-y-2">
+        <div className="p-6 pt-8 space-y-2 flex-1">
           {navItems.map((item) => (
             <div key={item.id} className="space-y-1">
               {item.subItems ? (
@@ -771,11 +778,11 @@ export const SettingsPage = () => {
                           className={cn(
                             "w-full flex items-center gap-3 pl-8 pr-4 py-2 text-sm font-medium transition-all relative",
                             activeSection === sub.id 
-                              ? "text-indigo-700 bg-indigo-50/80" 
+                              ? "text-[#4F46E5] bg-indigo-50/80" 
                               : "text-slate-500 hover:text-slate-900 hover:bg-slate-100/50"
                           )}
                         >
-                          {activeSection === sub.id && <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-600 rounded-r-full" />}
+                          {activeSection === sub.id && <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#4F46E5] rounded-r-full" />}
                           {sub.label}
                         </button>
                       ))}
@@ -786,19 +793,34 @@ export const SettingsPage = () => {
                 <button
                   onClick={() => setSearchParams({ section: item.id })}
                   className={cn(
-                    "w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold transition-all relative",
+                    "w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold transition-all relative rounded-lg",
                     activeSection === item.id 
-                      ? "text-indigo-700 bg-indigo-50/80" 
+                      ? "text-[#4F46E5] bg-indigo-50/80" 
                       : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                   )}
                 >
-                  {activeSection === item.id && <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-600 rounded-r-full" />}
-                  <item.icon className={cn("w-4 h-4", activeSection === item.id ? "text-indigo-600" : "text-slate-400")} />
+                  {activeSection === item.id && <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#4F46E5] rounded-r-full" />}
+                  <item.icon className={cn("w-4 h-4", activeSection === item.id ? "text-[#4F46E5]" : "text-slate-400")} />
                   {item.label}
                 </button>
               )}
             </div>
           ))}
+        </div>
+
+        {/* Trust Badges */}
+        <div className="px-6 py-4 border-t border-slate-200 space-y-2">
+          <p className="text-[11px] font-semibold text-slate-500">App Version : 1.0.0</p>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 text-emerald-600">
+              <Shield className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-bold">100% Secure</span>
+            </div>
+            <div className="flex items-center gap-1 text-slate-500">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-bold">ISO Certified</span>
+            </div>
+          </div>
         </div>
       </aside>
 
@@ -922,6 +944,11 @@ export const SettingsPage = () => {
                 {activeSection === 'business-details' && (
                   <Form {...businessForm}>
                     <form onSubmit={businessForm.handleSubmit(handleBusinessSubmit)} className="space-y-12">
+                      {/* Note banner like MyBillBook */}
+                      <div className="flex items-center gap-2 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <Info className="w-4 h-4 text-blue-600 shrink-0" />
+                        <p className="text-sm text-blue-700 font-medium">Note: Details added below will be shown on your Invoices</p>
+                      </div>
                       <div className="grid grid-cols-2 gap-12">
                         {/* Left Col */}
                         <div className="space-y-8">
@@ -1370,6 +1397,55 @@ export const SettingsPage = () => {
                   </div>
                 )}
 
+
+                {activeSection === 'reminders' && (
+                  <div className="space-y-8">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3"><Bell className="w-6 h-6 text-[#4F46E5]" /><h3 className="text-xl font-bold">Reminders</h3></div>
+                      <p className="text-sm text-slate-500">Set up automated reminders for invoice payments and follow-ups.</p>
+                    </div>
+                    <div className="p-8 bg-slate-50 rounded-2xl border border-slate-200 text-center space-y-3">
+                      <Bell className="w-12 h-12 text-slate-300 mx-auto" />
+                      <h4 className="text-lg font-bold text-slate-700">Coming Soon</h4>
+                      <p className="text-sm text-slate-500 max-w-md mx-auto">Automated payment reminders, overdue notifications, and follow-up scheduling will be available in a future update.</p>
+                    </div>
+                  </div>
+                )}
+
+                {activeSection === 'refer' && (
+                  <div className="space-y-8">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3"><Gift className="w-6 h-6 text-[#E66E26]" /><h3 className="text-xl font-bold">Refer & Earn</h3></div>
+                      <p className="text-sm text-slate-500">Share Bill Easy with other businesses and earn rewards.</p>
+                    </div>
+                    <div className="p-8 bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-200 text-center space-y-3">
+                      <Gift className="w-12 h-12 text-orange-400 mx-auto" />
+                      <h4 className="text-lg font-bold text-slate-700">Referral Program</h4>
+                      <p className="text-sm text-slate-500 max-w-md mx-auto">Invite your business contacts to Bill Easy. When they subscribe, you both earn rewards! Coming soon.</p>
+                    </div>
+                  </div>
+                )}
+
+                {activeSection === 'help' && (
+                  <div className="space-y-8">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3"><HelpCircle className="w-6 h-6 text-[#4F46E5]" /><h3 className="text-xl font-bold">Help & Support</h3></div>
+                      <p className="text-sm text-slate-500">Get help with Bill Easy features and troubleshooting.</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="p-6 bg-white rounded-xl border border-slate-200 hover:shadow-md transition-shadow cursor-pointer space-y-3">
+                        <Mail className="w-8 h-8 text-[#4F46E5]" />
+                        <h4 className="font-bold text-slate-900">Email Support</h4>
+                        <p className="text-sm text-slate-500">Write to us at support@billeasy.com for any queries or issues.</p>
+                      </div>
+                      <div className="p-6 bg-white rounded-xl border border-slate-200 hover:shadow-md transition-shadow cursor-pointer space-y-3">
+                        <Phone className="w-8 h-8 text-emerald-600" />
+                        <h4 className="font-bold text-slate-900">Phone Support</h4>
+                        <p className="text-sm text-slate-500">Call us at +91 99869 95848 (Mon-Sat, 9 AM - 6 PM)</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
               </CardContent>
             </Card>
