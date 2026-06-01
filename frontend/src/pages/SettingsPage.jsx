@@ -12,6 +12,12 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "../components/ui/accordion";
+import {
   Card,
   CardContent,
 } from '../components/ui/card';
@@ -228,7 +234,7 @@ const BUSINESS_CONFIGS = {
 // --- Main Component ---
 
 export const SettingsPage = () => {
-  const { user, company, refreshProfile, hasFeature } = useAuth();
+  const { user, company, refreshProfile, hasFeature, subscription } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeSection = searchParams.get('section') || 'business-details';
@@ -361,12 +367,16 @@ export const SettingsPage = () => {
 
   const invoiceCustomForm = useForm({
     defaultValues: {
-      businessType: 'generic',
-      columnLabels: {},
-      columnToggles: {},
-      headerColor: '#1D70B8',
-      menuColor: '#FFFFFF',
-      textSize: '10pt'
+      template_id: 'stylish',
+      theme_color: '#4F46E5',
+      show_party_balance: false,
+      enable_free_quantity: false,
+      show_item_description: true,
+      show_alternate_unit: true,
+      show_phone_number: true,
+      show_time: false,
+      price_history: false,
+      auto_apply_luxury: true,
     }
   });
 
@@ -389,12 +399,16 @@ export const SettingsPage = () => {
 
         // Reset Invoice Customization Form
         invoiceCustomForm.reset({
-          businessType: c.invoice_business_category || 'generic',
-          columnLabels: c.invoice_column_labels || {},
-          columnToggles: c.invoice_column_toggles || {},
-          headerColor: c.invoice_header_color || '#1D70B8',
-          menuColor: c.invoice_menu_color || '#FFFFFF',
-          textSize: c.invoice_text_size || '10pt'
+          template_id: c.settings?.template_id || 'stylish',
+          theme_color: c.settings?.theme_color || '#4F46E5',
+          show_party_balance: c.settings?.show_party_balance || false,
+          enable_free_quantity: c.settings?.enable_free_quantity || false,
+          show_item_description: c.settings?.show_item_description ?? true,
+          show_alternate_unit: c.settings?.show_alternate_unit ?? true,
+          show_phone_number: c.settings?.show_phone_number ?? true,
+          show_time: c.settings?.show_time || false,
+          price_history: c.settings?.price_history || false,
+          auto_apply_luxury: c.settings?.auto_apply_luxury ?? true,
         });
 
         businessForm.reset({
@@ -555,7 +569,7 @@ export const SettingsPage = () => {
   const handleInvoiceCustomSubmit = async (values) => {
     setSubmitting(true);
     try {
-      await companyAPI.customizeInvoice(values);
+      await api.patch('/company/settings', { settings: values });
       toast.success("Invoice customization saved");
       refreshProfile();
     } catch (error) {
@@ -563,6 +577,12 @@ export const SettingsPage = () => {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  // Plan-based template access
+  const getPlanName = () => {
+    const plan = subscription?.plan || subscription?.Plan;
+    return plan?.plan_name || 'Free';
   };
 
   // Helper for optimistic toggle updates
@@ -696,7 +716,7 @@ export const SettingsPage = () => {
     'business-tax': { title: 'Tax & GST Settings', subtitle: 'Manage your tax configuration' },
     'business-godowns': { title: 'Godown Management', subtitle: 'Manage your inventory locations' },
     'invoice-customization': { title: 'Invoice Settings', subtitle: 'Customize your invoice appearance' },
-    'invoice-print': { title: 'Print Settings', subtitle: 'Choose your invoice template' },
+    'invoice-print': { title: 'Print Settings', subtitle: 'Configure printers and paper sizes' },
     'payments': { title: 'Payment & Bank Settings', subtitle: 'Manage banking and payment details' },
     'team': { title: 'Manage Users', subtitle: 'Add and manage team members' },
     'reminders': { title: 'Reminders', subtitle: 'Set up automated reminders' },
@@ -1102,128 +1122,214 @@ export const SettingsPage = () => {
               </div>
             )}
 
-            {activeSection === 'invoice-customization' && (
+            {activeSection === 'invoice-customization' && (() => {
+              const planName = getPlanName();
+              const ALL_TEMPLATES = [
+                { id: 'luxury', name: 'Luxury' },
+                { id: 'stylish', name: 'Stylish' },
+                { id: 'adv-gst', name: 'Advanced GST' },
+                { id: 'adv-gst-tally', name: 'GST (Tally)' },
+                { id: 'billbook', name: 'Billbook' },
+                { id: 'billbook-a5', name: 'Billbook (A5)' },
+                { id: 'modern', name: 'Modern' },
+                { id: 'simple', name: 'Simple' },
+                { id: 'custom', name: 'Custom', enterprise: true },
+              ];
+              const freeTemplates = ['stylish'];
+              const premiumTemplates = ['luxury', 'stylish', 'adv-gst', 'billbook', 'modern'];
+              const isTemplateLocked = (tid) => {
+                if (planName === 'Enterprise') return false;
+                if (planName === 'Premium') return !premiumTemplates.includes(tid);
+                return !freeTemplates.includes(tid);
+              };
+              return (
               <Form {...invoiceCustomForm}>
-                <form onSubmit={invoiceCustomForm.handleSubmit(handleInvoiceCustomSubmit)} className="space-y-10">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3"><Palette className="w-6 h-6 text-indigo-600" /><h3 className="text-xl font-bold">Invoice Customization</h3></div>
-                    <p className="text-sm text-slate-500">Configure how your invoices look and what information they show.</p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-12">
-                    <div className="space-y-8">
-                      <FormField
-                        control={invoiceCustomForm.control}
-                        name="businessType"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Business Category</FormLabel>
-                            <Select onValueChange={(val) => {
-                              field.onChange(val);
-                              const config = BUSINESS_CONFIGS[val];
-                              if (config) {
-                                invoiceCustomForm.setValue('columnLabels', config.labels, { shouldDirty: true });
-                                invoiceCustomForm.setValue('columnToggles', config.toggles, { shouldDirty: true });
-                              }
-                            }} value={field.value}>
-                              <FormControl><SelectTrigger><SelectValue placeholder="Select business type" /></SelectTrigger></FormControl>
-                              <SelectContent>
-                                <SelectItem value="generic">Generic / General</SelectItem>
-                                <SelectItem value="distribution">Distribution</SelectItem>
-                                <SelectItem value="retail">Retail</SelectItem>
-                                <SelectItem value="automobile">Automobile</SelectItem>
-                                <SelectItem value="group5_service">Services / Consulting</SelectItem>
-                                <SelectItem value="group6_mfg_construction">Manufacturing / Construction</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormDescription>Selecting a category will apply standard industry labels.</FormDescription>
-                          </FormItem>
+                <form onSubmit={invoiceCustomForm.handleSubmit(handleInvoiceCustomSubmit)} className="h-[calc(100vh-140px)] flex flex-col md:flex-row -m-6 overflow-hidden bg-slate-50">
+                  {/* Left Pane - Live Preview */}
+                  <div className="flex-1 p-8 overflow-y-auto flex flex-col">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-xl font-bold text-slate-800">Invoice Settings</h3>
+                      <Button variant="outline" size="sm" type="button" onClick={() => invoiceCustomForm.reset()} className="bg-white">Revert to Original</Button>
+                    </div>
+                    <div className="flex-1 bg-white border border-slate-200 shadow-sm rounded-lg p-8 relative flex flex-col min-h-[550px]">
+                      <div className="flex justify-between items-start mb-6 border-b pb-4">
+                        <div>
+                          <h2 className="text-2xl font-bold text-slate-900">{company?.name || 'Your Business'}</h2>
+                          <p className="text-xs text-slate-500 mt-1 max-w-xs">{company?.address || 'Business address'}</p>
+                          <p className="text-xs font-semibold mt-1">Mobile: {company?.phone || ''} &nbsp; GSTIN: {taxForm.getValues('gst_number') || ''}</p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-xs font-bold px-2 py-1 border border-slate-300 rounded text-slate-600">TAX INVOICE</span>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-6 text-sm mb-4 bg-slate-50 p-3 rounded">
+                        <div>
+                          <p className="text-slate-500 mb-1 text-xs font-bold tracking-widest">BILL TO</p>
+                          <p className="font-bold text-slate-900">Sample Party</p>
+                          <p className="text-slate-600 text-xs mt-1">No F2, Outer Circle, Connaught Circus</p>
+                          {invoiceCustomForm.watch('show_phone_number') && <p className="text-slate-600 text-xs mt-1">Ph: 9876543210</p>}
+                        </div>
+                        <div className="text-right space-y-1">
+                          <p><span className="text-slate-500">Invoice No.:</span> <span className="font-semibold">INV/202</span></p>
+                          <p><span className="text-slate-500">Date:</span> <span className="font-semibold">17/01/2023</span></p>
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <div className="w-full border-t border-b border-slate-200 py-2 flex text-xs font-bold text-slate-500 bg-slate-50/50">
+                          <div className="flex-1">ITEM NAME</div>
+                          <div className="w-16 text-right">QTY</div>
+                          <div className="w-24 text-right">PRICE</div>
+                          <div className="w-24 text-right">AMOUNT</div>
+                        </div>
+                        <div className="w-full py-3 flex text-sm text-slate-800 border-b border-slate-100">
+                          <div className="flex-1">
+                            PUMA BLUE ROUND NECK T-SHIRT
+                            {invoiceCustomForm.watch('show_item_description') && <p className="text-xs text-slate-400 mt-0.5">Size XL, Cotton</p>}
+                          </div>
+                          <div className="w-16 text-right">2 {invoiceCustomForm.watch('show_alternate_unit') ? 'BOX' : 'PCS'}</div>
+                          <div className="w-24 text-right">900</div>
+                          <div className="w-24 text-right font-semibold">1,800</div>
+                        </div>
+                        {invoiceCustomForm.watch('show_party_balance') && (
+                          <div className="w-full py-3 flex justify-end text-sm border-b border-slate-100">
+                            <div className="w-48 text-right text-slate-500">Previous Balance:</div>
+                            <div className="w-24 text-right font-semibold text-rose-600">₹ 4,500</div>
+                          </div>
                         )}
-                      />
-
-                      <div className="space-y-4">
-                        <Label className="text-base">Column Labels & Toggles</Label>
-                        <p className="text-xs text-slate-500 mb-4">Rename or hide columns in your invoice item table.</p>
-
-                        <div className="space-y-4 border rounded-xl p-6 bg-slate-50/50">
-                          {[1, 2, 3, 4, 5, 6].map((num) => (
-                            <div key={num} className="flex items-center gap-4">
-                              <div className="flex-1">
-                                <FormField
-                                  control={invoiceCustomForm.control}
-                                  name={`columnLabels.f${num}`}
-                                  render={({ field }) => (
-                                    <FormItem className="space-y-1">
-                                      <FormLabel className="text-[10px] uppercase text-slate-400">Column {num} Label</FormLabel>
-                                      <FormControl><Input className="h-9" {...field} /></FormControl>
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
-                              <FormField
-                                control={invoiceCustomForm.control}
-                                name={`columnToggles.showF${num}`}
-                                render={({ field }) => (
-                                  <FormItem className="flex flex-col items-center justify-center pt-5">
-                                    <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                          ))}
+                      </div>
+                      <div className="mt-auto pt-4 sticky bottom-0">
+                        <div className="border border-slate-200 rounded-xl p-4 bg-white shadow-sm space-y-3">
+                          <div className="flex gap-2 text-xs flex-wrap">
+                            <span className="font-semibold text-orange-500 flex items-center gap-1">✨ Try using</span>
+                            {['Easy to Read', 'Brand Touch', 'Highlight Key Info'].map(t => (
+                              <button key={t} type="button" className="px-3 py-1 bg-slate-50 border border-slate-200 rounded-full hover:bg-slate-100">{t}</button>
+                            ))}
+                          </div>
+                          <div className="relative">
+                            <input type="text" placeholder="Write anything to style your invoice..." className="w-full pl-3 pr-12 py-3 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 ring-indigo-500/20" />
+                            <button type="button" className="absolute right-2 top-2 w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center hover:bg-slate-300">
+                              <ArrowLeft className="w-4 h-4 text-slate-600 rotate-90" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
-
-                    <div className="space-y-8">
-                      <div className="space-y-4">
-                        <Label className="text-base">Style & Appearance</Label>
-
-                        <div className="grid grid-cols-2 gap-6">
-                          <FormField
-                            control={invoiceCustomForm.control}
-                            name="headerColor"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Header Color</FormLabel>
-                                <div className="flex gap-2">
-                                  <FormControl><Input type="color" className="w-12 h-10 p-1" {...field} /></FormControl>
-                                  <Input className="h-10 font-mono text-xs uppercase" {...field} />
+                  </div>
+                  {/* Right Pane - Settings Sidebar */}
+                  <div className="w-96 bg-white border-l border-slate-200 flex flex-col h-full shrink-0">
+                    <div className="p-4 border-b border-slate-200 shrink-0">
+                      <Button type="submit" disabled={submitting} className="w-full bg-[#4F46E5] hover:bg-[#4338CA] text-white">
+                        {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
+                      </Button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto">
+                      {/* Themes Grid with Plan Gating */}
+                      <div className="p-5 border-b border-slate-200 space-y-4">
+                        <h4 className="font-bold text-slate-800 flex items-center gap-2">
+                          <div className="w-4 h-4 rounded-full border-[3px] border-indigo-600" /> Themes
+                          <span className="ml-auto text-[10px] font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{planName}</span>
+                        </h4>
+                        <div className="grid grid-cols-3 gap-3">
+                          {ALL_TEMPLATES.map(t => {
+                            const locked = isTemplateLocked(t.id);
+                            return (
+                              <button
+                                key={t.id}
+                                type="button"
+                                disabled={locked}
+                                onClick={() => !locked && invoiceCustomForm.setValue('template_id', t.id, { shouldDirty: true })}
+                                className={cn("flex flex-col items-center gap-1.5 group relative", locked && "opacity-50 cursor-not-allowed")}
+                              >
+                                <div className={cn(
+                                  "w-full aspect-[1/1.4] border-2 rounded-lg bg-slate-50 transition-all p-1",
+                                  invoiceCustomForm.watch('template_id') === t.id ? "border-indigo-600 ring-2 ring-indigo-100" : "border-slate-200 group-hover:border-slate-300"
+                                )}>
+                                  <div className="w-full h-full bg-white border shadow-sm rounded-sm p-1 space-y-1">
+                                    <div className="h-1 bg-slate-200 w-1/2"></div>
+                                    <div className="h-2 bg-slate-100 w-full"></div>
+                                    <div className="h-4 bg-slate-50 w-full border border-slate-100"></div>
+                                  </div>
                                 </div>
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={invoiceCustomForm.control}
-                            name="textSize"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Text Size</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value}>
-                                  <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="9pt">Small (9pt)</SelectItem>
-                                    <SelectItem value="10pt">Medium (10pt)</SelectItem>
-                                    <SelectItem value="11pt">Large (11pt)</SelectItem>
-                                    <SelectItem value="12pt">Extra Large (12pt)</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </FormItem>
-                            )}
-                          />
+                                <span className="text-[10px] text-slate-600 font-medium">{t.name}</span>
+                                {locked && <Lock className="w-3 h-3 text-slate-400 absolute top-1 right-1" />}
+                              </button>
+                            );
+                          })}
                         </div>
+                        {planName === 'Free' && <p className="text-[10px] text-amber-600 bg-amber-50 p-2 rounded-lg">Upgrade to Premium for 5 templates or Enterprise for all + custom.</p>}
                       </div>
-
-                      <div className="p-6 bg-emerald-50 rounded-2xl border border-emerald-100 space-y-4">
-                        <div className="flex items-center gap-2 text-emerald-700 font-bold"><CheckCircle2 className="w-5 h-5" /> Live Preview Enabled</div>
-                        <p className="text-sm text-emerald-600/80 leading-relaxed">Changes saved here will be applied to all new and existing invoices immediately when generating PDFs.</p>
+                      {/* Theme Styling */}
+                      <div className="p-5 border-b border-slate-200 bg-slate-50/50 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-bold text-slate-800 flex items-center gap-2"><Palette className="w-4 h-4 text-indigo-600" /> Theme Styling</h4>
+                          <Badge className="bg-red-500 text-[9px] px-1.5 py-0 h-4">New</Badge>
+                        </div>
+                        <FormField control={invoiceCustomForm.control} name="theme_color" render={({ field }) => (
+                          <FormItem>
+                            <div className="flex gap-3">
+                              {['#1D70B8', '#4F46E5', '#E66E26', '#16A34A', '#DC2626', '#000000'].map(c => (
+                                <button key={c} type="button" onClick={() => field.onChange(c)}
+                                  className={cn("w-6 h-6 rounded-full border-[3px] transition-transform", field.value === c ? "border-slate-300 scale-110 shadow-sm" : "border-transparent opacity-80 hover:opacity-100")}
+                                  style={{ backgroundColor: c }} />
+                              ))}
+                            </div>
+                          </FormItem>
+                        )} />
+                      </div>
+                      {/* Checkboxes */}
+                      <div className="p-5 border-b border-slate-200 space-y-3">
+                        {[
+                          { name: 'show_party_balance', label: 'Show party balance in invoice' },
+                          { name: 'enable_free_quantity', label: 'Enable free item quantity' },
+                          { name: 'show_item_description', label: 'Show item description in invoice' },
+                          { name: 'show_alternate_unit', label: 'Show Alternate Unit in Invoice' },
+                          { name: 'show_phone_number', label: 'Show phone number on Invoice' },
+                          { name: 'show_time', label: 'Show time on Invoices', icon: <Info className="w-3.5 h-3.5 text-slate-400" /> },
+                          { name: 'price_history', label: 'Price History', icon: <Info className="w-3.5 h-3.5 text-slate-400" /> },
+                          { name: 'auto_apply_luxury', label: 'Auto-apply luxury theme for sharing' }
+                        ].map((item) => (
+                          <FormField key={item.name} control={invoiceCustomForm.control} name={item.name} render={({ field }) => (
+                            <FormItem className="flex items-center gap-3 space-y-0">
+                              <FormControl>
+                                <input type="checkbox" className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300" checked={field.value} onChange={field.onChange} />
+                              </FormControl>
+                              <FormLabel className="text-sm font-normal text-slate-700 cursor-pointer flex items-center gap-1.5 leading-none">
+                                {item.label} {item.icon && item.icon}
+                              </FormLabel>
+                            </FormItem>
+                          )} />
+                        ))}
+                      </div>
+                      {/* Accordions */}
+                      <div className="px-2 pb-6">
+                        <Accordion type="multiple" className="w-full">
+                          <AccordionItem value="invoice-details" className="border-b-0">
+                            <AccordionTrigger className="px-4 py-3 hover:bg-slate-50 rounded-lg font-bold text-slate-800">Invoice Details</AccordionTrigger>
+                            <AccordionContent className="px-4 text-slate-500">More settings for invoice headers and footers will appear here.</AccordionContent>
+                          </AccordionItem>
+                          <AccordionItem value="party-details" className="border-b-0">
+                            <AccordionTrigger className="px-4 py-3 hover:bg-slate-50 rounded-lg font-bold text-slate-800">Party Details</AccordionTrigger>
+                            <AccordionContent className="px-4 text-slate-500">Configure what customer information is displayed.</AccordionContent>
+                          </AccordionItem>
+                          <AccordionItem value="item-table" className="border-b-0">
+                            <AccordionTrigger className="px-4 py-3 hover:bg-slate-50 rounded-lg font-bold text-slate-800">Item Table Columns</AccordionTrigger>
+                            <AccordionContent className="px-4 text-slate-500">Toggle HSN, Discount, and Tax columns.</AccordionContent>
+                          </AccordionItem>
+                          <AccordionItem value="misc" className="border-b-0">
+                            <AccordionTrigger className="px-4 py-3 hover:bg-slate-50 rounded-lg font-bold text-slate-800">
+                              <span>Miscellaneous Details</span>
+                              <Badge className="bg-blue-500 hover:bg-blue-600 text-[9px] px-1.5 py-0 ml-2">New</Badge>
+                            </AccordionTrigger>
+                            <AccordionContent className="px-4 text-slate-500">Additional signature and stamp configurations.</AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
                       </div>
                     </div>
                   </div>
                 </form>
               </Form>
-            )}
+              );
+            })()}
 
             {activeSection === 'payments' && (
               <Form {...bankForm}>
@@ -1287,96 +1393,53 @@ export const SettingsPage = () => {
             {['invoice-print'].includes(activeSection) && (
               <div className="space-y-8">
                 <div className="space-y-2">
-                  <div className="flex items-center gap-3"><Printer className="w-6 h-6 text-indigo-600" /><h3 className="text-xl font-bold">Print &amp; PDF Template</h3></div>
-                  <p className="text-sm text-slate-500">Choose how your invoices look when printed or downloaded as PDF. The same template applies to both.</p>
+                  <div className="flex items-center gap-3"><Printer className="w-6 h-6 text-indigo-600" /><h3 className="text-xl font-bold">Print Settings</h3></div>
+                  <p className="text-sm text-slate-500">Configure thermal and barcode printing options for your business.</p>
                 </div>
-                <Form {...customForm}>
-                  <form onSubmit={customForm.handleSubmit(handleCustomSubmit)} className="space-y-6">
-                    <FormField
-                      control={customForm.control}
-                      name="template_id"
-                      render={({ field }) => (
-                        <FormItem>
-                          <div className="grid grid-cols-2 gap-4">
-                            {[
-                              { id: 'modern', name: 'Modern Professional', desc: 'Dark header, structured layout. Bold & impactful.', color: 'bg-slate-900', accent: 'border-slate-900' },
-                              { id: 'classic', name: 'Classic Compact', desc: 'Traditional bordered layout with blue accent. Timeless.', color: 'bg-blue-800', accent: 'border-blue-800' },
-                              { id: 'minimal', name: 'Minimalist', desc: 'Clean whitespace, monochrome. Modern startup feel.', color: 'bg-slate-400', accent: 'border-slate-400' },
-                              { id: 'gst-standard', name: 'GST Standard', desc: 'Full CGST/SGST breakdown. Government-compliant format.', color: 'bg-emerald-700', accent: 'border-emerald-700' },
-                            ].map((tmpl) => (
-                              <button
-                                key={tmpl.id}
-                                type="button"
-                                onClick={() => { field.onChange(tmpl.id); customForm.setValue('template_id', tmpl.id, { shouldDirty: true }); }}
-                                className={cn(
-                                  "relative text-left border-2 rounded-xl overflow-hidden transition-all hover:shadow-lg",
-                                  field.value === tmpl.id ? `${tmpl.accent} shadow-md ring-2 ring-offset-2 ring-indigo-400` : "border-slate-200"
-                                )}
-                              >
-                                {/* Mini preview header */}
-                                <div className={cn("h-10 w-full flex items-center px-4", tmpl.color)}>
-                                  <div className="w-6 h-6 bg-white/20 rounded mr-2"></div>
-                                  <div className="space-y-1 flex-1">
-                                    <div className="h-1.5 bg-white/60 rounded w-20"></div>
-                                    <div className="h-1 bg-white/30 rounded w-12"></div>
-                                  </div>
-                                  <div className="text-white text-[8px] font-bold uppercase tracking-wider border border-white/40 px-1.5 py-0.5 rounded">Invoice</div>
-                                </div>
-                                {/* Mini preview body */}
-                                <div className="p-3 bg-white space-y-1.5">
-                                  <div className="grid grid-cols-2 gap-1">
-                                    <div className="space-y-1">
-                                      <div className="h-1 bg-slate-200 rounded w-10"></div>
-                                      <div className="h-1.5 bg-slate-300 rounded w-16"></div>
-                                      <div className="h-1 bg-slate-100 rounded w-12"></div>
-                                    </div>
-                                    <div className="space-y-1">
-                                      <div className="h-1 bg-slate-200 rounded w-8"></div>
-                                      <div className="h-1.5 bg-slate-300 rounded w-14"></div>
-                                      <div className="h-1 bg-slate-100 rounded w-10"></div>
-                                    </div>
-                                  </div>
-                                  <div className={cn("h-4 rounded flex items-center px-2", tmpl.color)}>
-                                    <div className="h-1 bg-white/60 rounded flex-1"></div>
-                                    <div className="h-1 bg-white/60 rounded w-6 ml-2"></div>
-                                  </div>
-                                  {[1, 2, 3].map(r => (
-                                    <div key={r} className="flex gap-2">
-                                      <div className="h-1 bg-slate-100 rounded flex-1"></div>
-                                      <div className="h-1 bg-slate-100 rounded w-8"></div>
-                                      <div className="h-1 bg-slate-200 rounded w-10"></div>
-                                    </div>
-                                  ))}
-                                </div>
-                                {/* Label */}
-                                <div className="px-3 pb-3">
-                                  <div className="flex items-center justify-between">
-                                    <div>
-                                      <p className="text-sm font-bold text-slate-900">{tmpl.name}</p>
-                                      <p className="text-[11px] text-slate-500 leading-snug mt-0.5">{tmpl.desc}</p>
-                                    </div>
-                                    {field.value === tmpl.id && (
-                                      <div className="w-5 h-5 rounded-full bg-indigo-600 flex items-center justify-center shrink-0 ml-2">
-                                        <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <div className="flex items-center gap-4 pt-2">
-                      <Button type="submit" disabled={submitting || !customForm.formState.isDirty} className="bg-indigo-600 hover:bg-indigo-700 text-white min-w-[140px]">
-                        {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4 mr-2" />Save Template</>}
-                      </Button>
-                      <p className="text-xs text-slate-500">This template applies to both <strong>Print</strong> and <strong>PDF download</strong>.</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-4">
+                  {/* Left Sidebar */}
+                  <div className="space-y-6">
+                    <div className="flex border-b border-slate-200">
+                      <button type="button" className="px-4 py-3 text-sm font-bold text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50">Thermal Printer</button>
+                      <button type="button" className="px-4 py-3 text-sm font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-50">Barcode Printer</button>
                     </div>
-                  </form>
-                </Form>
+                    <div className="space-y-8 px-2">
+                      <div className="space-y-4">
+                        <Label className="text-xs text-slate-500 font-bold uppercase tracking-wider">Paper Size</Label>
+                        <div className="space-y-3">
+                          <button type="button" className="w-full py-3 border-2 border-indigo-600 rounded-lg text-sm font-bold text-indigo-700 bg-indigo-50 text-left px-4">2 Inch (58mm)</button>
+                          <button type="button" className="w-full py-3 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 text-left px-4">3 Inch (80mm)</button>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <Label className="text-xs text-slate-500 font-bold uppercase tracking-wider">Business Logo (Monochrome)</Label>
+                        <div className="h-32 border-2 border-dashed rounded-xl flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer" onClick={() => document.getElementById('mono-logo-in').click()}>
+                          <ImageIcon className="w-8 h-8 text-slate-300 mb-2" />
+                          <span className="text-xs text-indigo-600 font-medium">Upload Monochrome Logo</span>
+                        </div>
+                        <input id="mono-logo-in" type="file" className="hidden" accept="image/*" />
+                        <div className="p-3 bg-slate-50 rounded-lg">
+                          <p className="text-[10px] text-slate-500 leading-relaxed">
+                            Upload in Monochrome, *.bmp extension. Max: 210px width x 70px height. <a href="#" className="text-indigo-600 hover:underline">Learn how</a>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Right Preview */}
+                  <div className="md:col-span-2">
+                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800 mb-6 font-medium">
+                      This is a preview of the Thermal print of your invoice. Some columns might not appear if they don't have the required information.
+                    </div>
+                    <div className="w-full min-h-[500px] bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center">
+                      <div className="text-center text-slate-400 space-y-2">
+                        <Printer className="w-12 h-12 mx-auto opacity-30" />
+                        <p className="text-sm font-medium">Thermal Receipt Preview</p>
+                        <p className="text-xs">Select a paper size to see a live preview</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
