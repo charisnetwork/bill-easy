@@ -757,20 +757,6 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                     </Button>
                     <p className="text-xs text-slate-400">Press Enter on Price/Qty to add next</p>
                   </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-400 italic">Press Alt+S to save</span>
-                    <Button 
-                      type="button" 
-                      variant="default" 
-                      className="bg-emerald-600 hover:bg-emerald-700"
-                      onClick={() => handleSubmit()}
-                      disabled={loading}
-                    >
-                      <Save className="w-4 h-4 mr-2" />
-                      Create Invoice (Double Enter)
-                    </Button>
-                  </div>
                 </div>
               </div>
             )}
