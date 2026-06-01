@@ -358,7 +358,7 @@ export const CustomersPage = () => {
           <div className="flex items-center gap-4">
             <div className="flex-1 max-w-sm">
               <InputGroup
-                placeholder="Search customers..."
+                placeholder="Search by name, company, mobile, email..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 leftIcon={<Search className="w-4 h-4" />}

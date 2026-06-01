@@ -88,7 +88,6 @@ export const DashboardLayout = ({ children }) => {
     },
     { path: '/expenses', icon: Wallet, label: 'Expenses' },
     { path: '/reports', icon: BarChart3, label: 'Reports' },
-    { path: '/wattvision', icon: Zap, label: 'WattVision' },
     { path: '/subscription', icon: CreditCard, label: 'Subscription' },
     { path: '/settings', icon: Settings, label: 'Settings' },
   ].filter(item => !item.hidden);
@@ -119,7 +118,8 @@ export const DashboardLayout = ({ children }) => {
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed md:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform transition-transform duration-200 ease-in-out md:translate-x-0 print:hidden",
+        "fixed md:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform transition-transform duration-200 ease-in-out print:hidden",
+        location.pathname.startsWith('/settings') ? "hidden" : "md:translate-x-0",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
 

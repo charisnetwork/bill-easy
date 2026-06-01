@@ -11,13 +11,16 @@ import { Textarea } from '../components/ui/textarea';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '../components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
+import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '../components/ui/command';
+import { cn } from '../lib/utils';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '../components/ui/table';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
 } from '../components/ui/dialog';
-import { ArrowLeft, Plus, Trash2, Save, Wallet, UserPlus, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save, Wallet, UserPlus, Loader2, Search, Check } from 'lucide-react';
 import { Switch } from '../components/ui/switch';
 import { toast } from 'sonner';
 
@@ -586,21 +589,51 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                       <TableRow key={index}>
                         <TableCell>
                           <div className="space-y-2">
-                            <Select
-                              value={item.product_id}
-                              onValueChange={(value) => updateItem(index, 'product_id', value)}
-                            >
-                              <SelectTrigger data-testid={`item-product-${index}`}>
-                                <SelectValue placeholder={`Select ${industryConfig.labels.itemName.toLowerCase()}`} />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {products.map((product) => (
-                                  <SelectItem key={product.id} value={product.id}>
-                                    {product.name} ({formatCurrency(product.sale_price)})
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button 
+                                    variant="outline" 
+                                    role="combobox" 
+                                    className={cn("w-full justify-between font-normal", !item.product_id && "text-slate-500")}
+                                  >
+                                    {item.product_id 
+                                      ? (() => {
+                                          const p = products.find(p => p.id === item.product_id);
+                                          return p ? `${p.name} (${formatCurrency(p.sale_price)})` : 'Select item';
+                                        })()
+                                      : `Select ${industryConfig.labels.itemName.toLowerCase()}`}
+                                    <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-[300px] p-0" align="start">
+                                <Command>
+                                  <CommandInput placeholder={`Search by name, sku, barcode...`} />
+                                  <CommandList>
+                                    <CommandEmpty>No items found.</CommandEmpty>
+                                    <CommandGroup>
+                                      {products.map((product) => (
+                                        <CommandItem
+                                          key={product.id}
+                                          value={product.name + " " + (product.sku || "") + " " + (product.barcode || "")}
+                                          onSelect={() => updateItem(index, 'product_id', product.id)}
+                                        >
+                                          <div className="flex flex-col">
+                                            <span className="font-medium">{product.name}</span>
+                                            <span className="text-[10px] text-slate-500">
+                                              {formatCurrency(product.sale_price)} 
+                                              {product.type === 'product' && ` • Stock: ${product.stock_quantity}`}
+                                            </span>
+                                          </div>
+                                          <Check className={cn("ml-auto h-4 w-4", item.product_id === product.id ? "opacity-100" : "opacity-0")} />
+                                        </CommandItem>
+                                      ))}
+                                    </CommandGroup>
+                                  </CommandList>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
                             {industryConfig.fields.showDescription && (
                               <Textarea
                                 placeholder="Description"
