@@ -1364,7 +1364,7 @@ export const SettingsPage = () => {
                                   <Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl><SelectTrigger className="h-10"><SelectValue placeholder="Select industry" /></SelectTrigger></FormControl>
                                     <SelectContent>
-                                      {industries.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}
+                                      {industries.map(i => <SelectItem key={i.value} value={i.value}>{i.label}</SelectItem>)}
                                     </SelectContent>
                                   </Select>
                                 </FormItem>
