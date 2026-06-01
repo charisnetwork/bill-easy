@@ -654,12 +654,20 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                               </PopoverContent>
                             </Popover>
                             {industryConfig.fields.showDescription && (
-                              <Textarea
-                                placeholder="Description"
-                                value={item.description || ''}
-                                onChange={(e) => updateItem(index, 'description', e.target.value)}
-                                className="text-xs min-h-[60px]"
-                              />
+                              item.description !== undefined && item.description !== null && item.description !== '' ? (
+                                <Input
+                                  placeholder="Item description..."
+                                  value={item.description || ''}
+                                  onChange={(e) => updateItem(index, 'description', e.target.value)}
+                                  className="text-xs h-7 mt-1"
+                                />
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => updateItem(index, 'description', ' ')}
+                                  className="text-xs text-blue-600 hover:text-blue-800 hover:underline mt-1"
+                                >+ Add description</button>
+                              )
                             )}
                           </div>
                         </TableCell>

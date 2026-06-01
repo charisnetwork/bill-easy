@@ -427,11 +427,11 @@ export const DashboardLayout = ({ children }) => {
         </header>
 
         {/* Page */}
-        <main className="flex-1 overflow-y-auto flex flex-col print:overflow-visible print:bg-white">
-          <div className="p-4 md:p-6 lg:p-8 flex-1 shrink-0 print:p-0">
+        <main className="flex-1 overflow-y-auto flex flex-col print:overflow-visible print:bg-white relative">
+          <div className="p-4 md:p-6 lg:p-8 print:p-0">
             {children}
           </div>
-          <div className="print:hidden">
+          <div className="mt-auto print:hidden shrink-0">
             <Footer />
           </div>
         </main>

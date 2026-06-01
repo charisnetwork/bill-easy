@@ -329,16 +329,16 @@ const InvoicePreview = () => {
           <Card className="border border-slate-100 shadow-2xl rounded-2xl overflow-hidden print:shadow-none print:border print:m-0 bg-white">
             <CardContent className="p-0">
               {/* Template Switcher */}
-              {template === 'classic' && (
+              {(template === 'classic' || template === 'billbook' || template === 'billbook-a5') && (
                 <ClassicTemplate invoice={invoice} company={company} industryConfig={industryConfig} balanceDue={balanceDue} paymentProgress={paymentProgress} />
               )}
-              {template === 'minimal' && (
+              {(template === 'minimal' || template === 'simple') && (
                 <MinimalTemplate invoice={invoice} company={company} industryConfig={industryConfig} balanceDue={balanceDue} paymentProgress={paymentProgress} />
               )}
-              {template === 'gst-standard' && (
+              {(template === 'gst-standard' || template === 'adv-gst' || template === 'adv-gst-tally') && (
                 <GstStandardTemplate invoice={invoice} company={company} industryConfig={industryConfig} balanceDue={balanceDue} paymentProgress={paymentProgress} />
               )}
-              {(template === 'modern' || !template) && (
+              {(template === 'modern' || template === 'luxury' || template === 'stylish' || template === 'custom' || !['classic','billbook','billbook-a5','minimal','simple','gst-standard','adv-gst','adv-gst-tally'].includes(template)) && (
               <div className="p-10 md:p-16 space-y-10">
                 {/* Header (Logo Top-Left, aligned with Name) */}
                 <div className="flex flex-row items-start justify-between border-b border-slate-100 pb-10">

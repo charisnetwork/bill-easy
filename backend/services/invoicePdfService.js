@@ -357,12 +357,14 @@ const generateInvoicePdf = async (invoice, company) => {
   return new Promise((resolve) => {
     doc.on('end', () => resolve(Buffer.concat(buffers)));
 
-    if (templateId === 'classic') {
+    if (templateId === 'classic' || templateId === 'billbook' || templateId === 'billbook-a5') {
       generateClassicPdf(doc, invoice, company, uploadsPath, baseSize);
-    } else if (templateId === 'minimal') {
+    } else if (templateId === 'minimal' || templateId === 'simple') {
       generateMinimalPdf(doc, invoice, company, uploadsPath, baseSize);
-    } else if (templateId === 'gst-standard') {
+    } else if (templateId === 'gst-standard' || templateId === 'adv-gst' || templateId === 'adv-gst-tally') {
       generateGstStandardPdf(doc, invoice, company, uploadsPath, baseSize);
+    } else if (templateId === 'luxury' || templateId === 'stylish' || templateId === 'custom') {
+      generateModernPdf(doc, invoice, company, uploadsPath, baseSize);
     } else {
       generateModernPdf(doc, invoice, company, uploadsPath, baseSize);
     }
