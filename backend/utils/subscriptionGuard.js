@@ -93,6 +93,12 @@ const SubscriptionGuard = {
         case 'USER_ACTIVITY_TRACKER':
           return features.user_activity_tracker === true;
 
+        case 'REPORT_PREMIUM':
+          return planName === 'Premium' || planName === 'Enterprise';
+          
+        case 'REPORT_ENTERPRISE':
+          return planName === 'Enterprise';
+
         default:
           return !!features[actionType];
       }

@@ -110,6 +110,105 @@ const getStockReport = async (req, res) => {
   }
 };
 
+const getDaybook = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    if (!startDate || !endDate) return res.status(400).json({ error: 'Start date and end date are required' });
+    const report = await ReportService.getDaybook(req.companyId, startDate, endDate);
+    res.json(report);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get daybook' });
+  }
+};
+
+const getCashAndBankReport = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    if (!startDate || !endDate) return res.status(400).json({ error: 'Start date and end date are required' });
+    const report = await ReportService.getCashAndBankReport(req.companyId, startDate, endDate);
+    res.json(report);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get cash and bank report' });
+  }
+};
+
+const getGSTSales = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    if (!startDate || !endDate) return res.status(400).json({ error: 'Start date and end date are required' });
+    const report = await ReportService.getGSTSales(req.companyId, startDate, endDate);
+    res.json(report);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get GST Sales' });
+  }
+};
+
+const getGSTPurchase = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    if (!startDate || !endDate) return res.status(400).json({ error: 'Start date and end date are required' });
+    const report = await ReportService.getGSTPurchase(req.companyId, startDate, endDate);
+    res.json(report);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get GST Purchase' });
+  }
+};
+
+const getHSNWiseSales = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    if (!startDate || !endDate) return res.status(400).json({ error: 'Start date and end date are required' });
+    const report = await ReportService.getHSNWiseSales(req.companyId, startDate, endDate);
+    res.json(report);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get HSN wise sales' });
+  }
+};
+
+const getBillWiseProfit = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    if (!startDate || !endDate) return res.status(400).json({ error: 'Start date and end date are required' });
+    const report = await ReportService.getBillWiseProfit(req.companyId, startDate, endDate);
+    res.json(report);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get bill wise profit' });
+  }
+};
+
+const getBalanceSheet = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    if (!startDate || !endDate) return res.status(400).json({ error: 'Start date and end date are required' });
+    const report = await ReportService.getBalanceSheet(req.companyId, startDate, endDate);
+    res.json(report);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get balance sheet' });
+  }
+};
+
+const getGSTR3b = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    if (!startDate || !endDate) return res.status(400).json({ error: 'Start date and end date are required' });
+    const report = await ReportService.getGSTR3b(req.companyId, startDate, endDate);
+    res.json(report);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get GSTR3b' });
+  }
+};
+
+const getTDSTCS = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    if (!startDate || !endDate) return res.status(400).json({ error: 'Start date and end date are required' });
+    const report = await ReportService.getTDSTCS(req.companyId, startDate, endDate);
+    res.json(report);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get TDS TCS' });
+  }
+};
+
 module.exports = {
   getDashboard,
   getSalesReport,
@@ -119,5 +218,14 @@ module.exports = {
   getGSTReport,
   getCustomerOutstanding,
   getSupplierOutstanding,
-  getStockReport
+  getStockReport,
+  getDaybook,
+  getCashAndBankReport,
+  getGSTSales,
+  getGSTPurchase,
+  getHSNWiseSales,
+  getBillWiseProfit,
+  getBalanceSheet,
+  getGSTR3b,
+  getTDSTCS
 };

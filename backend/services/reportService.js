@@ -317,6 +317,170 @@ class ReportService {
       totalBusinessesLimit
     };
   }
+  // --- ADVANCED & PREMIUM REPORTS ---
+  
+  static async getDaybook(companyId, startDate, endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    // Daybook aggregates all transactions for the period ordered by date
+    const sales = await Invoice.findAll({
+      where: { company_id: companyId, invoice_date: { [Op.between]: [start, end] } },
+      attributes: ['invoice_date', 'invoice_number', 'total_amount', 'payment_status', 'customer_name'],
+      raw: true
+    });
+    const purchases = await Purchase.findAll({
+      where: { company_id: companyId, bill_date: { [Op.between]: [start, end] } },
+      attributes: ['bill_date', 'bill_number', 'total_amount', 'payment_status'],
+      raw: true
+    });
+    const expenses = await Expense.findAll({
+      where: { company_id: companyId, date: { [Op.between]: [start, end] } },
+      attributes: ['date', 'category', 'amount', 'description'],
+      raw: true
+    });
+
+    const daybook = [];
+    sales.forEach(s => daybook.push({ date: s.invoice_date, type: 'Sale', ref: s.invoice_number, amount: s.total_amount, party: s.customer_name }));
+    purchases.forEach(p => daybook.push({ date: p.bill_date, type: 'Purchase', ref: p.bill_number, amount: -p.total_amount, party: 'Supplier' }));
+    expenses.forEach(e => daybook.push({ date: e.date, type: 'Expense', ref: e.category, amount: -e.amount, party: e.description }));
+
+    daybook.sort((a, b) => new Date(a.date) - new Date(b.date));
+    return daybook;
+  }
+
+  static async getCashAndBankReport(companyId, startDate, endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    // In a real system, you'd check Payment records. We approximate with paid invoices/purchases.
+    const salesReceived = await Invoice.sum('paid_amount', { where: { company_id: companyId, invoice_date: { [Op.between]: [start, end] } } }) || 0;
+    const purchasesPaid = await Purchase.sum('paid_amount', { where: { company_id: companyId, bill_date: { [Op.between]: [start, end] } } }) || 0;
+    const expensesPaid = await Expense.sum('amount', { where: { company_id: companyId, date: { [Op.between]: [start, end] } } }) || 0;
+
+    return {
+      cashIn: Number(salesReceived),
+      cashOut: Number(purchasesPaid) + Number(expensesPaid),
+      netCashFlow: Number(salesReceived) - (Number(purchasesPaid) + Number(expensesPaid))
+    };
+  }
+
+  static async getGSTSales(companyId, startDate, endDate) {
+    // Equivalent to GSTR-1
+    return await this.getSalesReport(companyId, startDate, endDate);
+  }
+
+  static async getGSTPurchase(companyId, startDate, endDate) {
+    // Equivalent to GSTR-2
+    return await this.getPurchaseReport(companyId, startDate, endDate);
+  }
+
+  static async getHSNWiseSales(companyId, startDate, endDate) {
+    // Fetch all invoice items for the period and group by HSN
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    const invoices = await Invoice.findAll({
+      where: { company_id: companyId, invoice_date: { [Op.between]: [start, end] }, status: { [Op.ne]: 'cancelled' } },
+      attributes: ['id'],
+      raw: true
+    });
+    
+    if(!invoices.length) return [];
+    const invoiceIds = invoices.map(i => i.id);
+
+    const items = await InvoiceItem.findAll({
+      where: { invoice_id: { [Op.in]: invoiceIds } },
+      include: [{ model: Product, attributes: ['hsn_code', 'name'] }]
+    });
+
+    const hsnMap = {};
+    items.forEach(item => {
+      const hsn = item.Product?.hsn_code || 'Unknown';
+      if(!hsnMap[hsn]) hsnMap[hsn] = { hsn, name: item.Product?.name, quantity: 0, taxableValue: 0, taxAmount: 0 };
+      hsnMap[hsn].quantity += Number(item.quantity);
+      hsnMap[hsn].taxableValue += (Number(item.quantity) * Number(item.price));
+      // Approximation for tax amount per item if not stored directly
+      hsnMap[hsn].taxAmount += ((Number(item.quantity) * Number(item.price)) * (Number(item.gst_rate) || 0) / 100);
+    });
+
+    return Object.values(hsnMap);
+  }
+
+  static async getBillWiseProfit(companyId, startDate, endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    const invoices = await Invoice.findAll({
+      where: { company_id: companyId, invoice_date: { [Op.between]: [start, end] }, status: { [Op.ne]: 'cancelled' } },
+      include: [{ model: InvoiceItem, include: [Product] }]
+    });
+
+    const billProfits = invoices.map(inv => {
+      let totalCost = 0;
+      inv.InvoiceItems.forEach(item => {
+        const costPrice = item.Product?.purchase_price || 0;
+        totalCost += (costPrice * item.quantity);
+      });
+      const revenue = Number(inv.total_amount) - Number(inv.tax_amount); // Revenue excluding tax
+      return {
+        invoice_number: inv.invoice_number,
+        date: inv.invoice_date,
+        revenue: revenue,
+        cost: totalCost,
+        profit: revenue - totalCost,
+        margin: revenue > 0 ? ((revenue - totalCost) / revenue * 100).toFixed(2) : 0
+      };
+    });
+
+    return billProfits;
+  }
+
+  static async getBalanceSheet(companyId, startDate, endDate) {
+    const pl = await this.getProfitLossReport(companyId, startDate, endDate);
+    const custOut = await this.getCustomerOutstanding(companyId);
+    const suppOut = await this.getSupplierOutstanding(companyId);
+    const stock = await this.getStockReport(companyId);
+    const cash = await this.getCashAndBankReport(companyId, startDate, endDate);
+
+    return {
+      assets: {
+        cashAndBank: cash.netCashFlow > 0 ? cash.netCashFlow : 0,
+        accountsReceivable: custOut.total,
+        inventory: stock.totalStockValue,
+        totalAssets: (cash.netCashFlow > 0 ? cash.netCashFlow : 0) + custOut.total + stock.totalStockValue
+      },
+      liabilities: {
+        accountsPayable: suppOut.total,
+        shortTermLoans: 0,
+        totalLiabilities: suppOut.total
+      },
+      equity: {
+        retainedEarnings: pl.netProfit,
+        totalEquity: pl.netProfit
+      }
+    };
+  }
+
+  static async getGSTR3b(companyId, startDate, endDate) {
+    const gst = await this.getGSTReport(companyId, startDate, endDate);
+    // GSTR3B is a summary return
+    return {
+      outwardTaxableSupplies: gst.outputGST, // Simplified
+      eligibleITC: gst.inputGST,
+      netTaxPayable: gst.gstPayable
+    };
+  }
+
+  static async getTDSTCS(companyId, startDate, endDate) {
+    // Simplified placeholders as TDS/TCS aren't tracked natively yet
+    return {
+      tdsPayable: 0,
+      tdsReceivable: 0,
+      tcsPayable: 0,
+      tcsReceivable: 0
+    };
+  }
 }
 
 module.exports = ReportService;

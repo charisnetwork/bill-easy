@@ -200,6 +200,7 @@ export const expenseAPI = {
 
 // Report APIs
 export const reportAPI = {
+  client: api,
   getDashboard: () => api.get('/reports/dashboard'),
   getSales: (params) => api.get('/reports/sales', { params }),
   getPurchases: (params) => api.get('/reports/purchases', { params }),
