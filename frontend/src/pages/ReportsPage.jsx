@@ -48,9 +48,9 @@ const reportCategories = {
 };
 
 export const ReportsPage = () => {
-  const { user } = useAuth();
+  const { user, subscription } = useAuth();
   const navigate = useNavigate();
-  const planName = user?.Company?.Subscription?.Plan?.plan_name || 'Free Account';
+  const planName = subscription?.plan?.plan_name || 'Free Account';
   
   const [activeReport, setActiveReport] = useState(null);
   const [activeReportDetails, setActiveReportDetails] = useState(null);
@@ -259,16 +259,102 @@ export const ReportsPage = () => {
       );
     }
 
-    // Generic JSON renderer for others not fully mapped to table yet
+    if (activeReport === 'customer-outstanding' || activeReport === 'supplier-outstanding') {
+      const parties = activeReport === 'customer-outstanding' ? reportData.customers : reportData.suppliers;
+      return (
+        <Card>
+          <CardHeader><CardTitle>{activeReportDetails?.title}</CardTitle></CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead>City</TableHead>
+                    <TableHead className="text-right">Outstanding</TableHead>
+                    <TableHead className="text-right">Wallet Balance</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {parties?.map((party) => (
+                    <TableRow key={party.id}>
+                      <TableCell className="font-medium">{party.name}</TableCell>
+                      <TableCell>{party.phone || '-'}</TableCell>
+                      <TableCell>{party.city || '-'}</TableCell>
+                      <TableCell className={`text-right font-mono font-bold ${activeReport === 'customer-outstanding' ? 'text-amber-600' : 'text-red-600'}`}>{formatCurrency(party.outstanding_balance)}</TableCell>
+                      <TableCell className="text-right font-mono text-emerald-600">{formatCurrency(party.wallet_balance || 0)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // Dynamic Table Fallback for any other reports
+    const dataToRender = Array.isArray(reportData) ? reportData : (reportData.data || reportData.items || reportData.products || reportData.expenses || reportData.invoices || []);
+    
+    if (Array.isArray(dataToRender) && dataToRender.length > 0) {
+      const sampleItem = dataToRender[0];
+      const keys = Object.keys(sampleItem).filter(k => typeof sampleItem[k] !== 'object' && !k.endsWith('_id') && k !== 'id' && k !== 'createdAt' && k !== 'updatedAt');
+      
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle>{activeReportDetails?.title}</CardTitle>
+            {reportData.summary && (
+              <CardDescription className="flex gap-4 flex-wrap mt-2">
+                {Object.entries(reportData.summary).map(([k, v]) => (
+                  <span key={k} className="bg-slate-100 px-2 py-1 rounded text-slate-700 capitalize font-medium">
+                    {k.replace(/_/g, ' ')}: {typeof v === 'number' ? formatCurrency(v) : v}
+                  </span>
+                ))}
+              </CardDescription>
+            )}
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto max-h-[600px]">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    {keys.map(k => <TableHead key={k} className="capitalize whitespace-nowrap">{k.replace(/_/g, ' ')}</TableHead>)}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {dataToRender.map((row, idx) => (
+                    <TableRow key={idx}>
+                      {keys.map(k => {
+                        const val = row[k];
+                        const isMoney = (k.includes('balance') || k.includes('amount') || k.includes('price') || k.includes('total') || k.includes('tax'));
+                        return (
+                          <TableCell key={k} className={isMoney ? "font-mono whitespace-nowrap" : "whitespace-nowrap"}>
+                            {typeof val === 'number' && isMoney ? formatCurrency(val) : String(val || '-')}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // Generic JSON renderer if empty or unrecognizable
     return (
       <Card>
         <CardHeader>
           <CardTitle>{activeReportDetails?.title}</CardTitle>
         </CardHeader>
         <CardContent>
-          <pre className="bg-slate-50 p-4 rounded text-xs overflow-auto">
-            {JSON.stringify(reportData, null, 2)}
-          </pre>
+          <div className="text-center py-8 text-slate-500 bg-slate-50 rounded border border-dashed">
+            No data found for this period.
+          </div>
         </CardContent>
       </Card>
     );

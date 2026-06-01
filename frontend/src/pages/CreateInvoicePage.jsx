@@ -391,21 +391,42 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                       New Customer
                     </button>
                   </div>
-                  <Select
-                    value={formData.customer_id}
-                    onValueChange={(value) => setFormData({ ...formData, customer_id: value })}
-                  >
-                    <SelectTrigger data-testid="customer-select">
-                      <SelectValue placeholder="Select customer" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {customers.map((customer) => (
-                        <SelectItem key={customer.id} value={customer.id}>
-                          {customer.name}{customer.phone ? ` · ${customer.phone}` : ''}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" role="combobox" className={cn("w-full justify-between font-normal", !formData.customer_id && "text-slate-500")} data-testid="customer-select">
+                        {formData.customer_id 
+                          ? (() => {
+                              const c = customers.find(c => c.id === formData.customer_id);
+                              return c ? `${c.name}${c.phone ? ` · ${c.phone}` : ''}` : 'Select customer';
+                            })()
+                          : "Select customer"}
+                        <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[400px] p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Search customer by name or phone..." />
+                        <CommandList>
+                          <CommandEmpty>No customer found.</CommandEmpty>
+                          <CommandGroup>
+                            {customers.map((customer) => (
+                              <CommandItem
+                                key={customer.id}
+                                value={customer.name + " " + (customer.phone || "")}
+                                onSelect={() => setFormData({ ...formData, customer_id: customer.id })}
+                              >
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{customer.name}</span>
+                                  {customer.phone && <span className="text-[10px] text-slate-500">{customer.phone}</span>}
+                                </div>
+                                <Check className={cn("ml-auto h-4 w-4", formData.customer_id === customer.id ? "opacity-100" : "opacity-0")} />
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
 
                   {selectedCustomer && parseFloat(selectedCustomer.wallet_balance) > 0 && (
                     <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-lg mt-2 flex items-center justify-between">
@@ -591,7 +612,6 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                           <div className="space-y-2">
                             <Popover>
                               <PopoverTrigger asChild>
-                                <FormControl>
                                   <Button 
                                     variant="outline" 
                                     role="combobox" 
@@ -605,7 +625,6 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                                       : `Select ${industryConfig.labels.itemName.toLowerCase()}`}
                                     <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                   </Button>
-                                </FormControl>
                               </PopoverTrigger>
                               <PopoverContent className="w-[300px] p-0" align="start">
                                 <Command>
