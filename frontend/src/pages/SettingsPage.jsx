@@ -377,6 +377,10 @@ export const SettingsPage = () => {
       show_time: false,
       price_history: false,
       auto_apply_luxury: true,
+      show_po_number: false,
+      show_eway_bill: false,
+      show_vehicle_number: false,
+      invoice_industry_type: '',
     }
   });
 
@@ -406,6 +410,10 @@ export const SettingsPage = () => {
           show_item_description: c.settings?.show_item_description ?? true,
           show_alternate_unit: c.settings?.show_alternate_unit ?? true,
           show_phone_number: c.settings?.show_phone_number ?? true,
+          show_po_number: c.settings?.show_po_number || false,
+          show_eway_bill: c.settings?.show_eway_bill || false,
+          show_vehicle_number: c.settings?.show_vehicle_number || false,
+          invoice_industry_type: c.settings?.invoice_industry_type || c.business_category || '',
           show_time: c.settings?.show_time || false,
           price_history: c.settings?.price_history || false,
           auto_apply_luxury: c.settings?.auto_apply_luxury ?? true,
@@ -985,6 +993,9 @@ export const SettingsPage = () => {
                           <FormItem><FormLabel>Pincode</FormLabel><FormControl><Input className="h-11" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
                       </div>
+                      <FormField control={businessForm.control} name="city" render={({ field }) => (
+                        <FormItem><FormLabel>City</FormLabel><FormControl><Input className="h-11" placeholder="Enter City" {...field} /></FormControl><FormMessage /></FormItem>
+                      )} />
                     </div>
                     {/* Right Col */}
                     <div className="space-y-8">
@@ -995,9 +1006,27 @@ export const SettingsPage = () => {
                           <FormMessage /></FormItem>
                       )} />
                       <FormField control={businessForm.control} name="industry" render={({ field }) => (
-                        <FormItem><FormLabel>Industry</FormLabel>
+                        <FormItem><FormLabel>Industry Type</FormLabel>
                           <Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="h-11 w-full justify-between font-normal"><div className="flex items-center gap-2"><Briefcase className="w-4 h-4 text-slate-400" />{field.value || "Select"}</div><Search className="w-4 h-4 opacity-50" /></Button></FormControl></PopoverTrigger>
                             <PopoverContent className="w-full p-0"><Command><CommandInput placeholder="Search..." /><CommandList><CommandEmpty>No results</CommandEmpty><CommandGroup>{industries.map(i => <CommandItem key={i} onSelect={() => businessForm.setValue("industry", i, { shouldDirty: true })}><Check className={cn("mr-2 h-4 w-4", i === field.value ? "opacity-100" : "opacity-0")} />{i}</CommandItem>)}</CommandGroup></CommandList></Command></PopoverContent></Popover>
+                          <FormMessage /></FormItem>
+                      )} />
+                      <FormField control={businessForm.control} name="registration_type" render={({ field }) => (
+                        <FormItem><FormLabel>Business Registration Type</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl><SelectTrigger className="h-11"><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
+                            <SelectContent>
+                              <SelectItem value="Sole Proprietorship">Sole Proprietorship</SelectItem>
+                              <SelectItem value="Partnership">Partnership</SelectItem>
+                              <SelectItem value="LLP">LLP</SelectItem>
+                              <SelectItem value="Private Limited">Private Limited</SelectItem>
+                              <SelectItem value="Public Limited">Public Limited</SelectItem>
+                              <SelectItem value="One Person Company">One Person Company</SelectItem>
+                              <SelectItem value="Trust">Trust</SelectItem>
+                              <SelectItem value="Society">Society</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <FormMessage /></FormItem>
                       )} />
                       <div className="space-y-4">
@@ -1151,37 +1180,50 @@ export const SettingsPage = () => {
                       <h3 className="text-xl font-bold text-slate-800">Invoice Settings</h3>
                       <Button variant="outline" size="sm" type="button" onClick={() => invoiceCustomForm.reset()} className="bg-white">Revert to Original</Button>
                     </div>
-                    <div className="flex-1 bg-white border border-slate-200 shadow-sm rounded-lg p-8 relative flex flex-col min-h-[550px]">
+                    <div className="flex-1 bg-white border border-slate-200 shadow-sm rounded-lg relative flex flex-col min-h-[550px] overflow-hidden">
+                      {/* Template-reactive colored top bar */}
+                      <div className="h-2 w-full" style={{ backgroundColor: invoiceCustomForm.watch('theme_color') || '#4F46E5' }}></div>
+                      <div className="p-8 flex flex-col flex-1">
                       <div className="flex justify-between items-start mb-6 border-b pb-4">
                         <div>
-                          <h2 className="text-2xl font-bold text-slate-900">{company?.name || 'Your Business'}</h2>
-                          <p className="text-xs text-slate-500 mt-1 max-w-xs">{company?.address || 'Business address'}</p>
-                          <p className="text-xs font-semibold mt-1">Mobile: {company?.phone || ''} &nbsp; GSTIN: {taxForm.getValues('gst_number') || ''}</p>
+                          <h2 className="text-2xl font-bold" style={{ color: invoiceCustomForm.watch('theme_color') || '#1e293b' }}>{company?.name || 'Your Business'}</h2>
+                          {taxForm.getValues('pan_number') && <p className="text-xs text-slate-500 mt-1">Pan No <span className="font-semibold">{taxForm.getValues('pan_number')}</span> &nbsp; GSTIN <span className="font-semibold">{taxForm.getValues('gst_number') || ''}</span></p>}
+                          <p className="text-xs text-slate-500 mt-1">📞 {company?.phone || ''}</p>
+                          <p className="text-xs text-slate-500 mt-1 max-w-xs">📍 {company?.address || 'Business address'}{company?.state ? `, ${company.state}` : ''}{company?.pincode ? ` - ${company.pincode}` : ''}</p>
                         </div>
-                        <div className="text-right">
-                          <span className="text-xs font-bold px-2 py-1 border border-slate-300 rounded text-slate-600">TAX INVOICE</span>
+                        <div className="text-right space-y-2">
+                          <span className="text-xs font-bold px-3 py-1.5 border-2 rounded text-white" style={{ borderColor: invoiceCustomForm.watch('theme_color'), backgroundColor: invoiceCustomForm.watch('theme_color') }}>TAX INVOICE</span>
+                          <p className="text-[9px] text-slate-400 mt-2">ORIGINAL FOR RECIPIENT</p>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-6 text-sm mb-4 bg-slate-50 p-3 rounded">
+                      {/* Invoice meta row */}
+                      <div className="flex gap-4 text-xs mb-4 p-3 rounded" style={{ backgroundColor: (invoiceCustomForm.watch('theme_color') || '#4F46E5') + '10' }}>
+                        <div><span className="text-slate-500 block">Invoice No.</span><span className="font-bold">AABBCCDD/202</span></div>
+                        <div><span className="text-slate-500 block">Invoice Date</span><span className="font-bold">17/01/2023</span></div>
+                        <div><span className="text-slate-500 block">Due Date</span><span className="font-bold">16/02/2023</span></div>
+                        {invoiceCustomForm.watch('show_vehicle_number') && <div><span className="text-slate-500 block">Vehicle No.</span><span className="font-bold">12312321</span></div>}
+                        {invoiceCustomForm.watch('show_po_number') && <div><span className="text-slate-500 block">PO Number</span><span className="font-bold">PO-4521</span></div>}
+                        {invoiceCustomForm.watch('show_eway_bill') && <div><span className="text-slate-500 block">E-way Bill</span><span className="font-bold">EWB-789</span></div>}
+                      </div>
+                      <div className="grid grid-cols-2 gap-6 text-sm mb-4 p-3 bg-slate-50 rounded">
                         <div>
                           <p className="text-slate-500 mb-1 text-xs font-bold tracking-widest">BILL TO</p>
                           <p className="font-bold text-slate-900">Sample Party</p>
-                          <p className="text-slate-600 text-xs mt-1">No F2, Outer Circle, Connaught Circus</p>
+                          <p className="text-slate-600 text-xs mt-1">1234123 324324234, Bengaluru</p>
                           {invoiceCustomForm.watch('show_phone_number') && <p className="text-slate-600 text-xs mt-1">Ph: 9876543210</p>}
                         </div>
                         <div className="text-right space-y-1">
-                          <p><span className="text-slate-500">Invoice No.:</span> <span className="font-semibold">INV/202</span></p>
-                          <p><span className="text-slate-500">Date:</span> <span className="font-semibold">17/01/2023</span></p>
+                          {invoiceCustomForm.watch('show_time') && <p className="text-xs text-slate-400">Time: 14:30</p>}
                         </div>
                       </div>
                       <div className="flex-1">
-                        <div className="w-full border-t border-b border-slate-200 py-2 flex text-xs font-bold text-slate-500 bg-slate-50/50">
-                          <div className="flex-1">ITEM NAME</div>
-                          <div className="w-16 text-right">QTY</div>
-                          <div className="w-24 text-right">PRICE</div>
-                          <div className="w-24 text-right">AMOUNT</div>
+                        <div className="w-full border-t border-b py-2 flex text-xs font-bold text-white" style={{ backgroundColor: invoiceCustomForm.watch('theme_color') || '#4F46E5' }}>
+                          <div className="flex-1 px-2">ITEM NAME</div>
+                          <div className="w-16 text-right px-2">QTY</div>
+                          <div className="w-24 text-right px-2">PRICE</div>
+                          <div className="w-24 text-right px-2">AMOUNT</div>
                         </div>
-                        <div className="w-full py-3 flex text-sm text-slate-800 border-b border-slate-100">
+                        <div className="w-full py-3 flex text-sm text-slate-800 border-b border-slate-100 px-2">
                           <div className="flex-1">
                             PUMA BLUE ROUND NECK T-SHIRT
                             {invoiceCustomForm.watch('show_item_description') && <p className="text-xs text-slate-400 mt-0.5">Size XL, Cotton</p>}
@@ -1190,6 +1232,15 @@ export const SettingsPage = () => {
                           <div className="w-24 text-right">900</div>
                           <div className="w-24 text-right font-semibold">1,800</div>
                         </div>
+                        <div className="w-full py-3 flex text-sm text-slate-800 border-b border-slate-100 px-2">
+                          <div className="flex-1">
+                            Pane-G 200g
+                            {invoiceCustomForm.watch('show_item_description') && <p className="text-xs text-slate-400 mt-0.5">HSN: 40911209</p>}
+                          </div>
+                          <div className="w-16 text-right">1 {invoiceCustomForm.watch('show_alternate_unit') ? 'BOX' : 'PCS'}</div>
+                          <div className="w-24 text-right">342.86</div>
+                          <div className="w-24 text-right font-semibold">342.86</div>
+                        </div>
                         {invoiceCustomForm.watch('show_party_balance') && (
                           <div className="w-full py-3 flex justify-end text-sm border-b border-slate-100">
                             <div className="w-48 text-right text-slate-500">Previous Balance:</div>
@@ -1197,7 +1248,9 @@ export const SettingsPage = () => {
                           </div>
                         )}
                       </div>
-                      <div className="mt-auto pt-4 sticky bottom-0">
+                      </div>
+                    </div>
+                    <div className="mt-4">
                         <div className="border border-slate-200 rounded-xl p-4 bg-white shadow-sm space-y-3">
                           <div className="flex gap-2 text-xs flex-wrap">
                             <span className="font-semibold text-orange-500 flex items-center gap-1">✨ Try using</span>
@@ -1302,14 +1355,40 @@ export const SettingsPage = () => {
                       </div>
                       {/* Accordions */}
                       <div className="px-2 pb-6">
-                        <Accordion type="multiple" className="w-full">
+                        <Accordion type="multiple" defaultValue={['invoice-details']} className="w-full">
                           <AccordionItem value="invoice-details" className="border-b-0">
                             <AccordionTrigger className="px-4 py-3 hover:bg-slate-50 rounded-lg font-bold text-slate-800">Invoice Details</AccordionTrigger>
-                            <AccordionContent className="px-4 text-slate-500">More settings for invoice headers and footers will appear here.</AccordionContent>
+                            <AccordionContent className="px-4 space-y-4">
+                              <FormField control={invoiceCustomForm.control} name="invoice_industry_type" render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-xs text-slate-500">Industry Type</FormLabel>
+                                  <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl><SelectTrigger className="h-10"><SelectValue placeholder="Select industry" /></SelectTrigger></FormControl>
+                                    <SelectContent>
+                                      {industries.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}
+                                    </SelectContent>
+                                  </Select>
+                                </FormItem>
+                              )} />
+                              {[
+                                { name: 'show_po_number', label: 'PO Number' },
+                                { name: 'show_eway_bill', label: 'E-way Bill Number' },
+                                { name: 'show_vehicle_number', label: 'Vehicle Number' },
+                              ].map(item => (
+                                <FormField key={item.name} control={invoiceCustomForm.control} name={item.name} render={({ field }) => (
+                                  <FormItem className="flex items-center gap-3 space-y-0">
+                                    <FormControl>
+                                      <input type="checkbox" className="w-4 h-4 rounded text-indigo-600 border-slate-300" checked={field.value} onChange={field.onChange} />
+                                    </FormControl>
+                                    <FormLabel className="text-sm font-normal text-slate-700 cursor-pointer leading-none">{item.label}</FormLabel>
+                                  </FormItem>
+                                )} />
+                              ))}
+                            </AccordionContent>
                           </AccordionItem>
                           <AccordionItem value="party-details" className="border-b-0">
                             <AccordionTrigger className="px-4 py-3 hover:bg-slate-50 rounded-lg font-bold text-slate-800">Party Details</AccordionTrigger>
-                            <AccordionContent className="px-4 text-slate-500">Configure what customer information is displayed.</AccordionContent>
+                            <AccordionContent className="px-4 text-slate-500">Configure what customer information is displayed on the invoice.</AccordionContent>
                           </AccordionItem>
                           <AccordionItem value="item-table" className="border-b-0">
                             <AccordionTrigger className="px-4 py-3 hover:bg-slate-50 rounded-lg font-bold text-slate-800">Item Table Columns</AccordionTrigger>
