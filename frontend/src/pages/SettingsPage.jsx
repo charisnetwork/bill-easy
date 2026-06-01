@@ -1154,15 +1154,15 @@ export const SettingsPage = () => {
             {activeSection === 'invoice-customization' && (() => {
               const planName = getPlanName();
               const ALL_TEMPLATES = [
-                { id: 'luxury', name: 'Luxury' },
-                { id: 'stylish', name: 'Stylish' },
-                { id: 'adv-gst', name: 'Advanced GST' },
-                { id: 'adv-gst-tally', name: 'GST (Tally)' },
-                { id: 'billbook', name: 'Billbook' },
-                { id: 'billbook-a5', name: 'Billbook (A5)' },
-                { id: 'modern', name: 'Modern' },
-                { id: 'simple', name: 'Simple' },
-                { id: 'custom', name: 'Custom', enterprise: true },
+                { id: 'luxury', name: 'Luxury', color: '#8B5CF6' },
+                { id: 'stylish', name: 'Stylish', color: '#4F46E5' },
+                { id: 'adv-gst', name: 'Advanced GST', color: '#0369A1' },
+                { id: 'adv-gst-tally', name: 'GST (Tally)', color: '#0F766E' },
+                { id: 'billbook', name: 'Billbook', color: '#1D4ED8' },
+                { id: 'billbook-a5', name: 'Billbook (A5)', color: '#1E40AF' },
+                { id: 'modern', name: 'Modern', color: '#0F172A' },
+                { id: 'simple', name: 'Simple', color: '#64748B' },
+                { id: 'custom', name: 'Custom', color: '#E11D48', enterprise: true },
               ];
               const freeTemplates = ['stylish'];
               const premiumTemplates = ['luxury', 'stylish', 'adv-gst', 'billbook', 'modern'];
@@ -1171,6 +1171,8 @@ export const SettingsPage = () => {
                 if (planName === 'Premium') return !premiumTemplates.includes(tid);
                 return !freeTemplates.includes(tid);
               };
+              const selectedTmpl = ALL_TEMPLATES.find(t => t.id === invoiceCustomForm.watch('template_id')) || ALL_TEMPLATES[1];
+              const activeColor = invoiceCustomForm.watch('theme_color') || selectedTmpl.color;
               return (
               <Form {...invoiceCustomForm}>
                 <form onSubmit={invoiceCustomForm.handleSubmit(handleInvoiceCustomSubmit)} className="h-[calc(100vh-140px)] flex flex-col md:flex-row -m-6 overflow-hidden bg-slate-50">
@@ -1182,22 +1184,22 @@ export const SettingsPage = () => {
                     </div>
                     <div className="flex-1 bg-white border border-slate-200 shadow-sm rounded-lg relative flex flex-col min-h-[550px] overflow-hidden">
                       {/* Template-reactive colored top bar */}
-                      <div className="h-2 w-full" style={{ backgroundColor: invoiceCustomForm.watch('theme_color') || '#4F46E5' }}></div>
+                      <div className="h-2 w-full" style={{ backgroundColor: activeColor }}></div>
                       <div className="p-8 flex flex-col flex-1">
                       <div className="flex justify-between items-start mb-6 border-b pb-4">
                         <div>
-                          <h2 className="text-2xl font-bold" style={{ color: invoiceCustomForm.watch('theme_color') || '#1e293b' }}>{company?.name || 'Your Business'}</h2>
+                          <h2 className="text-2xl font-bold" style={{ color: activeColor }}>{company?.name || 'Your Business'}</h2>
                           {taxForm.getValues('pan_number') && <p className="text-xs text-slate-500 mt-1">Pan No <span className="font-semibold">{taxForm.getValues('pan_number')}</span> &nbsp; GSTIN <span className="font-semibold">{taxForm.getValues('gst_number') || ''}</span></p>}
                           <p className="text-xs text-slate-500 mt-1">📞 {company?.phone || ''}</p>
                           <p className="text-xs text-slate-500 mt-1 max-w-xs">📍 {company?.address || 'Business address'}{company?.state ? `, ${company.state}` : ''}{company?.pincode ? ` - ${company.pincode}` : ''}</p>
                         </div>
                         <div className="text-right space-y-2">
-                          <span className="text-xs font-bold px-3 py-1.5 border-2 rounded text-white" style={{ borderColor: invoiceCustomForm.watch('theme_color'), backgroundColor: invoiceCustomForm.watch('theme_color') }}>TAX INVOICE</span>
+                          <span className="text-xs font-bold px-3 py-1.5 border-2 rounded text-white" style={{ borderColor: activeColor, backgroundColor: activeColor }}>TAX INVOICE</span>
                           <p className="text-[9px] text-slate-400 mt-2">ORIGINAL FOR RECIPIENT</p>
                         </div>
                       </div>
                       {/* Invoice meta row */}
-                      <div className="flex gap-4 text-xs mb-4 p-3 rounded" style={{ backgroundColor: (invoiceCustomForm.watch('theme_color') || '#4F46E5') + '10' }}>
+                      <div className="flex gap-4 text-xs mb-4 p-3 rounded" style={{ backgroundColor: activeColor + '10' }}>
                         <div><span className="text-slate-500 block">Invoice No.</span><span className="font-bold">AABBCCDD/202</span></div>
                         <div><span className="text-slate-500 block">Invoice Date</span><span className="font-bold">17/01/2023</span></div>
                         <div><span className="text-slate-500 block">Due Date</span><span className="font-bold">16/02/2023</span></div>
@@ -1217,7 +1219,7 @@ export const SettingsPage = () => {
                         </div>
                       </div>
                       <div className="flex-1">
-                        <div className="w-full border-t border-b py-2 flex text-xs font-bold text-white" style={{ backgroundColor: invoiceCustomForm.watch('theme_color') || '#4F46E5' }}>
+                        <div className="w-full border-t border-b py-2 flex text-xs font-bold text-white" style={{ backgroundColor: activeColor }}>
                           <div className="flex-1 px-2">ITEM NAME</div>
                           <div className="w-16 text-right px-2">QTY</div>
                           <div className="w-24 text-right px-2">PRICE</div>
@@ -1289,7 +1291,7 @@ export const SettingsPage = () => {
                                 key={t.id}
                                 type="button"
                                 disabled={locked}
-                                onClick={() => !locked && invoiceCustomForm.setValue('template_id', t.id, { shouldDirty: true })}
+                                onClick={() => { if (!locked) { invoiceCustomForm.setValue('template_id', t.id, { shouldDirty: true }); invoiceCustomForm.setValue('theme_color', t.color, { shouldDirty: true }); }}}
                                 className={cn("flex flex-col items-center gap-1.5 group relative", locked && "opacity-50 cursor-not-allowed")}
                               >
                                 <div className={cn(
@@ -1297,6 +1299,7 @@ export const SettingsPage = () => {
                                   invoiceCustomForm.watch('template_id') === t.id ? "border-indigo-600 ring-2 ring-indigo-100" : "border-slate-200 group-hover:border-slate-300"
                                 )}>
                                   <div className="w-full h-full bg-white border shadow-sm rounded-sm p-1 space-y-1">
+                                    <div className="h-1.5 rounded-sm w-full" style={{ backgroundColor: t.color }}></div>
                                     <div className="h-1 bg-slate-200 w-1/2"></div>
                                     <div className="h-2 bg-slate-100 w-full"></div>
                                     <div className="h-4 bg-slate-50 w-full border border-slate-100"></div>
