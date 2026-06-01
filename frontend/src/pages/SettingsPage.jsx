@@ -1267,7 +1267,6 @@ export const SettingsPage = () => {
                         </div>
                       </div>
                     </div>
-                  </div>
                   {/* Right Pane - Settings Sidebar */}
                   <div className="w-96 bg-white border-l border-slate-200 flex flex-col h-full shrink-0">
                     <div className="p-4 border-b border-slate-200 shrink-0">
