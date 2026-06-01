@@ -1183,74 +1183,183 @@ export const SettingsPage = () => {
                       <Button variant="outline" size="sm" type="button" onClick={() => invoiceCustomForm.reset()} className="bg-white">Revert to Original</Button>
                     </div>
                     <div className="flex-1 bg-white border border-slate-200 shadow-sm rounded-lg relative flex flex-col min-h-[550px] overflow-hidden">
-                      {/* Template-reactive colored top bar */}
-                      <div className="h-2 w-full" style={{ backgroundColor: activeColor }}></div>
-                      <div className="p-8 flex flex-col flex-1">
-                      <div className="flex justify-between items-start mb-6 border-b pb-4">
-                        <div>
-                          <h2 className="text-2xl font-bold" style={{ color: activeColor }}>{company?.name || 'Your Business'}</h2>
-                          {taxForm.getValues('pan_number') && <p className="text-xs text-slate-500 mt-1">Pan No <span className="font-semibold">{taxForm.getValues('pan_number')}</span> &nbsp; GSTIN <span className="font-semibold">{taxForm.getValues('gst_number') || ''}</span></p>}
-                          <p className="text-xs text-slate-500 mt-1">📞 {company?.phone || ''}</p>
-                          <p className="text-xs text-slate-500 mt-1 max-w-xs">📍 {company?.address || 'Business address'}{company?.state ? `, ${company.state}` : ''}{company?.pincode ? ` - ${company.pincode}` : ''}</p>
-                        </div>
-                        <div className="text-right space-y-2">
-                          <span className="text-xs font-bold px-3 py-1.5 border-2 rounded text-white" style={{ borderColor: activeColor, backgroundColor: activeColor }}>TAX INVOICE</span>
-                          <p className="text-[9px] text-slate-400 mt-2">ORIGINAL FOR RECIPIENT</p>
-                        </div>
-                      </div>
-                      {/* Invoice meta row */}
-                      <div className="flex gap-4 text-xs mb-4 p-3 rounded" style={{ backgroundColor: activeColor + '10' }}>
-                        <div><span className="text-slate-500 block">Invoice No.</span><span className="font-bold">AABBCCDD/202</span></div>
-                        <div><span className="text-slate-500 block">Invoice Date</span><span className="font-bold">17/01/2023</span></div>
-                        <div><span className="text-slate-500 block">Due Date</span><span className="font-bold">16/02/2023</span></div>
-                        {invoiceCustomForm.watch('show_vehicle_number') && <div><span className="text-slate-500 block">Vehicle No.</span><span className="font-bold">12312321</span></div>}
-                        {invoiceCustomForm.watch('show_po_number') && <div><span className="text-slate-500 block">PO Number</span><span className="font-bold">PO-4521</span></div>}
-                        {invoiceCustomForm.watch('show_eway_bill') && <div><span className="text-slate-500 block">E-way Bill</span><span className="font-bold">EWB-789</span></div>}
-                      </div>
-                      <div className="grid grid-cols-2 gap-6 text-sm mb-4 p-3 bg-slate-50 rounded">
-                        <div>
-                          <p className="text-slate-500 mb-1 text-xs font-bold tracking-widest">BILL TO</p>
-                          <p className="font-bold text-slate-900">Sample Party</p>
-                          <p className="text-slate-600 text-xs mt-1">1234123 324324234, Bengaluru</p>
-                          {invoiceCustomForm.watch('show_phone_number') && <p className="text-slate-600 text-xs mt-1">Ph: 9876543210</p>}
-                        </div>
-                        <div className="text-right space-y-1">
-                          {invoiceCustomForm.watch('show_time') && <p className="text-xs text-slate-400">Time: 14:30</p>}
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <div className="w-full border-t border-b py-2 flex text-xs font-bold text-white" style={{ backgroundColor: activeColor }}>
-                          <div className="flex-1 px-2">ITEM NAME</div>
-                          <div className="w-16 text-right px-2">QTY</div>
-                          <div className="w-24 text-right px-2">PRICE</div>
-                          <div className="w-24 text-right px-2">AMOUNT</div>
-                        </div>
-                        <div className="w-full py-3 flex text-sm text-slate-800 border-b border-slate-100 px-2">
-                          <div className="flex-1">
-                            PUMA BLUE ROUND NECK T-SHIRT
-                            {invoiceCustomForm.watch('show_item_description') && <p className="text-xs text-slate-400 mt-0.5">Size XL, Cotton</p>}
+                      {/* === TEMPLATE PREVIEWS === */}
+                      {(() => {
+                        const tid = invoiceCustomForm.watch('template_id') || 'stylish';
+                        const w = (f) => invoiceCustomForm.watch(f);
+                        const biz = company?.name || 'Your Business';
+                        const addr = company?.address || 'Business address';
+                        const ph = company?.phone || '';
+                        const gstin = taxForm.getValues('gst_number') || '';
+                        const pan = taxForm.getValues('pan_number') || '';
+                        const stateVal = company?.state || '';
+                        const pin = company?.pincode || '';
+                        const unit = w('show_alternate_unit') ? 'BOX' : 'PCS';
+
+                        const MetaRow = ({bg}) => (
+                          <div className="flex gap-4 text-xs p-3 rounded mb-3" style={{backgroundColor: bg || '#f8fafc'}}>
+                            <div><span className="text-slate-500 block">Invoice No.</span><span className="font-bold">AABBCCDD/202</span></div>
+                            <div><span className="text-slate-500 block">Date</span><span className="font-bold">17/01/2023</span></div>
+                            <div><span className="text-slate-500 block">Due Date</span><span className="font-bold">16/02/2023</span></div>
+                            {w('show_vehicle_number') && <div><span className="text-slate-500 block">Vehicle</span><span className="font-bold">12312321</span></div>}
+                            {w('show_po_number') && <div><span className="text-slate-500 block">PO No.</span><span className="font-bold">PO-4521</span></div>}
+                            {w('show_eway_bill') && <div><span className="text-slate-500 block">E-way</span><span className="font-bold">EWB-789</span></div>}
                           </div>
-                          <div className="w-16 text-right">2 {invoiceCustomForm.watch('show_alternate_unit') ? 'BOX' : 'PCS'}</div>
-                          <div className="w-24 text-right">900</div>
-                          <div className="w-24 text-right font-semibold">1,800</div>
-                        </div>
-                        <div className="w-full py-3 flex text-sm text-slate-800 border-b border-slate-100 px-2">
-                          <div className="flex-1">
-                            Pane-G 200g
-                            {invoiceCustomForm.watch('show_item_description') && <p className="text-xs text-slate-400 mt-0.5">HSN: 40911209</p>}
+                        );
+                        const BillTo = () => (
+                          <div className="mb-3">
+                            <p className="text-slate-500 text-xs font-bold tracking-widest mb-1">BILL TO</p>
+                            <p className="font-bold text-slate-900 text-sm">Sample Party</p>
+                            <p className="text-slate-600 text-xs mt-0.5">1234123, Bengaluru</p>
+                            {w('show_phone_number') && <p className="text-slate-600 text-xs">Ph: 9876543210</p>}
                           </div>
-                          <div className="w-16 text-right">1 {invoiceCustomForm.watch('show_alternate_unit') ? 'BOX' : 'PCS'}</div>
-                          <div className="w-24 text-right">342.86</div>
-                          <div className="w-24 text-right font-semibold">342.86</div>
-                        </div>
-                        {invoiceCustomForm.watch('show_party_balance') && (
-                          <div className="w-full py-3 flex justify-end text-sm border-b border-slate-100">
-                            <div className="w-48 text-right text-slate-500">Previous Balance:</div>
-                            <div className="w-24 text-right font-semibold text-rose-600">₹ 4,500</div>
+                        );
+                        const ItemRows = ({borderStyle}) => (
+                          <>
+                            <div className={cn("w-full py-2.5 flex text-sm text-slate-800 px-2", borderStyle || "border-b border-slate-100")}>
+                              <div className="flex-1">PUMA BLUE T-SHIRT{w('show_item_description') && <p className="text-xs text-slate-400 mt-0.5">Size XL, Cotton</p>}</div>
+                              <div className="w-14 text-right">2 {unit}</div><div className="w-20 text-right">900</div><div className="w-20 text-right font-semibold">1,800</div>
+                            </div>
+                            <div className={cn("w-full py-2.5 flex text-sm text-slate-800 px-2", borderStyle || "border-b border-slate-100")}>
+                              <div className="flex-1">Pane-G 200g{w('show_item_description') && <p className="text-xs text-slate-400 mt-0.5">HSN: 40911209</p>}</div>
+                              <div className="w-14 text-right">1 {unit}</div><div className="w-20 text-right">342.86</div><div className="w-20 text-right font-semibold">342.86</div>
+                            </div>
+                            {w('show_party_balance') && <div className="w-full py-2 flex justify-end text-sm border-b border-slate-100"><div className="w-40 text-right text-slate-500">Prev Balance:</div><div className="w-20 text-right font-semibold text-rose-600">₹ 4,500</div></div>}
+                          </>
+                        );
+
+                        /* ── LUXURY ── */
+                        if (tid === 'luxury') return (
+                          <div className="flex flex-col flex-1">
+                            <div className="p-6 text-white" style={{background:'linear-gradient(135deg,#7C3AED,#4F46E5)'}}>
+                              <div className="flex justify-between items-start">
+                                <div><h2 className="text-2xl font-bold tracking-tight">{biz}</h2><p className="text-purple-200 text-xs mt-1">{addr}{stateVal && `, ${stateVal}`}</p>{ph && <p className="text-purple-200 text-xs">📞 {ph}</p>}</div>
+                                <div className="text-right"><span className="text-sm font-bold border border-white/40 px-3 py-1 rounded">TAX INVOICE</span><p className="text-[9px] text-purple-200 mt-2">ORIGINAL FOR RECIPIENT</p></div>
+                              </div>
+                            </div>
+                            <div className="p-6 flex-1 flex flex-col">
+                              <MetaRow bg="#F5F3FF" />
+                              <BillTo />
+                              <div className="flex-1">
+                                <div className="w-full py-2 flex text-xs font-bold text-purple-700 border-y-2 border-purple-200 bg-purple-50 px-2"><div className="flex-1">ITEM</div><div className="w-14 text-right">QTY</div><div className="w-20 text-right">RATE</div><div className="w-20 text-right">AMOUNT</div></div>
+                                <ItemRows />
+                              </div>
+                            </div>
                           </div>
-                        )}
-                      </div>
-                      </div>
+                        );
+
+                        /* ── MODERN ── */
+                        if (tid === 'modern') return (
+                          <div className="flex flex-col flex-1">
+                            <div className="p-6 bg-slate-900 text-white">
+                              <div className="flex justify-between items-start">
+                                <div><h2 className="text-2xl font-bold">{biz}</h2><p className="text-slate-400 text-xs mt-1">{gstin && `GSTIN: ${gstin}`} {pan && `| PAN: ${pan}`}</p><p className="text-slate-400 text-xs">{addr}</p></div>
+                                <div className="text-right"><span className="text-xs font-bold bg-white text-slate-900 px-3 py-1.5 rounded">TAX INVOICE</span></div>
+                              </div>
+                            </div>
+                            <div className="p-6 flex-1 flex flex-col">
+                              <MetaRow bg="#F1F5F9" />
+                              <BillTo />
+                              <div className="flex-1">
+                                <div className="w-full py-2 flex text-xs font-bold text-white bg-slate-800 rounded-t px-2"><div className="flex-1">DESCRIPTION</div><div className="w-14 text-right">QTY</div><div className="w-20 text-right">RATE</div><div className="w-20 text-right">AMOUNT</div></div>
+                                <ItemRows borderStyle="border-b border-slate-200" />
+                              </div>
+                            </div>
+                          </div>
+                        );
+
+                        /* ── ADVANCED GST ── */
+                        if (tid === 'adv-gst') return (
+                          <div className="flex flex-col flex-1 p-6">
+                            <div className="flex justify-between items-start mb-4 pb-4 border-b-2 border-sky-600">
+                              <div><h2 className="text-xl font-bold text-sky-800">{biz}</h2><p className="text-xs text-slate-500 mt-1">{gstin && `GSTIN: ${gstin}`}</p><p className="text-xs text-slate-500">{addr}</p></div>
+                              <div className="text-right"><span className="text-xs font-bold border-2 border-sky-600 text-sky-700 px-3 py-1 rounded">TAX INVOICE</span><p className="text-[9px] text-slate-400 mt-1">ORIGINAL</p></div>
+                            </div>
+                            <MetaRow bg="#F0F9FF" />
+                            <BillTo />
+                            <div className="flex-1">
+                              <div className="w-full py-2 flex text-xs font-bold text-sky-800 border border-sky-200 bg-sky-50 px-2"><div className="flex-1">ITEM</div><div className="w-10 text-right">HSN</div><div className="w-10 text-right">QTY</div><div className="w-16 text-right">RATE</div><div className="w-12 text-right">CGST</div><div className="w-12 text-right">SGST</div><div className="w-16 text-right">TOTAL</div></div>
+                              <div className="w-full py-2 flex text-xs text-slate-700 border-x border-b border-sky-100 px-2"><div className="flex-1">PUMA T-SHIRT</div><div className="w-10 text-right">6109</div><div className="w-10 text-right">2</div><div className="w-16 text-right">900</div><div className="w-12 text-right text-sky-600">81</div><div className="w-12 text-right text-sky-600">81</div><div className="w-16 text-right font-bold">1,962</div></div>
+                              <div className="w-full py-2 flex text-xs text-slate-700 border-x border-b border-sky-100 px-2"><div className="flex-1">Pane-G 200g</div><div className="w-10 text-right">4091</div><div className="w-10 text-right">1</div><div className="w-16 text-right">342.86</div><div className="w-12 text-right text-sky-600">30.86</div><div className="w-12 text-right text-sky-600">30.86</div><div className="w-16 text-right font-bold">404.58</div></div>
+                            </div>
+                          </div>
+                        );
+
+                        /* ── GST TALLY ── */
+                        if (tid === 'adv-gst-tally') return (
+                          <div className="flex flex-col flex-1 p-5 font-mono text-xs">
+                            <div className="border-2 border-teal-700 p-3 mb-3">
+                              <div className="flex justify-between"><div><p className="font-bold text-sm">{biz}</p><p className="text-slate-600">{addr}</p><p className="text-slate-600">GSTIN: {gstin}</p></div><div className="text-right font-bold text-teal-700">TAX INVOICE</div></div>
+                            </div>
+                            <div className="border border-teal-600 mb-3">
+                              <div className="grid grid-cols-4 border-b border-teal-600 divide-x divide-teal-600 text-[10px]">
+                                <div className="p-1.5"><span className="text-slate-500">Inv No</span><br/><span className="font-bold">AABBCCDD/202</span></div>
+                                <div className="p-1.5"><span className="text-slate-500">Date</span><br/><span className="font-bold">17/01/2023</span></div>
+                                <div className="p-1.5"><span className="text-slate-500">Due</span><br/><span className="font-bold">16/02/2023</span></div>
+                                <div className="p-1.5"><span className="text-slate-500">Place</span><br/><span className="font-bold">{stateVal || 'N/A'}</span></div>
+                              </div>
+                              <div className="p-2"><p className="text-slate-500">Bill To:</p><p className="font-bold">Sample Party</p><p>1234123, Bengaluru</p></div>
+                            </div>
+                            <div className="flex-1 border border-teal-600">
+                              <div className="flex font-bold bg-teal-50 border-b border-teal-600 divide-x divide-teal-600"><div className="flex-1 p-1.5">Particulars</div><div className="w-10 p-1.5 text-right">Qty</div><div className="w-14 p-1.5 text-right">Rate</div><div className="w-14 p-1.5 text-right">Amt</div></div>
+                              <div className="flex border-b border-teal-200 divide-x divide-teal-200"><div className="flex-1 p-1.5">PUMA T-SHIRT</div><div className="w-10 p-1.5 text-right">2</div><div className="w-14 p-1.5 text-right">900</div><div className="w-14 p-1.5 text-right">1,800</div></div>
+                              <div className="flex border-b border-teal-200 divide-x divide-teal-200"><div className="flex-1 p-1.5">Pane-G 200g</div><div className="w-10 p-1.5 text-right">1</div><div className="w-14 p-1.5 text-right">342.86</div><div className="w-14 p-1.5 text-right">342.86</div></div>
+                            </div>
+                          </div>
+                        );
+
+                        /* ── BILLBOOK ── */
+                        if (tid === 'billbook' || tid === 'billbook-a5') return (
+                          <div className={cn("flex flex-col flex-1 p-5", tid === 'billbook-a5' && "text-xs")}>
+                            <div className="border-b-2 border-blue-800 pb-3 mb-3 flex justify-between items-start">
+                              <div><h2 className={cn("font-bold text-blue-900", tid === 'billbook-a5' ? "text-base" : "text-lg")}>{biz}</h2><p className="text-xs text-slate-500">{addr}</p>{ph && <p className="text-xs text-slate-500">Ph: {ph}</p>}</div>
+                              <div className="border-2 border-blue-800 px-3 py-1 text-xs font-bold text-blue-900">INVOICE</div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 mb-3 text-xs">
+                              <div className="border border-slate-300 rounded p-2"><span className="text-slate-500">Invoice #:</span> <span className="font-bold">AABBCCDD/202</span><br/><span className="text-slate-500">Date:</span> <span className="font-bold">17/01/2023</span></div>
+                              <div className="border border-slate-300 rounded p-2"><span className="text-slate-500">Bill To:</span><br/><span className="font-bold">Sample Party</span><br/>1234123, Bengaluru</div>
+                            </div>
+                            <div className="flex-1">
+                              <table className="w-full border border-blue-200 text-xs"><thead><tr className="bg-blue-50 text-blue-900"><th className="border border-blue-200 p-1.5 text-left">Item</th><th className="border border-blue-200 p-1.5 w-12">Qty</th><th className="border border-blue-200 p-1.5 w-16 text-right">Rate</th><th className="border border-blue-200 p-1.5 w-16 text-right">Amount</th></tr></thead>
+                              <tbody><tr><td className="border border-blue-100 p-1.5">PUMA T-SHIRT</td><td className="border border-blue-100 p-1.5 text-center">2 {unit}</td><td className="border border-blue-100 p-1.5 text-right">900</td><td className="border border-blue-100 p-1.5 text-right font-bold">1,800</td></tr>
+                              <tr><td className="border border-blue-100 p-1.5">Pane-G 200g</td><td className="border border-blue-100 p-1.5 text-center">1</td><td className="border border-blue-100 p-1.5 text-right">342.86</td><td className="border border-blue-100 p-1.5 text-right font-bold">342.86</td></tr></tbody></table>
+                            </div>
+                          </div>
+                        );
+
+                        /* ── SIMPLE ── */
+                        if (tid === 'simple') return (
+                          <div className="flex flex-col flex-1 p-8">
+                            <div className="mb-6"><h2 className="text-lg font-medium text-slate-700">{biz}</h2><p className="text-xs text-slate-400 mt-1">{addr} | {ph}</p></div>
+                            <div className="flex justify-between text-xs text-slate-500 mb-4 pb-2 border-b"><span>Invoice AABBCCDD/202</span><span>17/01/2023</span></div>
+                            <div className="mb-4 text-xs"><p className="text-slate-400">Bill To</p><p className="font-medium text-slate-700">Sample Party</p><p className="text-slate-400">1234123, Bengaluru</p></div>
+                            <div className="flex-1">
+                              <div className="w-full py-2 flex text-xs text-slate-500 border-b border-slate-200 px-1"><div className="flex-1">Item</div><div className="w-12 text-right">Qty</div><div className="w-16 text-right">Rate</div><div className="w-16 text-right">Amount</div></div>
+                              <div className="w-full py-2 flex text-sm text-slate-700 border-b border-slate-100 px-1"><div className="flex-1">PUMA T-SHIRT</div><div className="w-12 text-right">2</div><div className="w-16 text-right">900</div><div className="w-16 text-right">1,800</div></div>
+                              <div className="w-full py-2 flex text-sm text-slate-700 border-b border-slate-100 px-1"><div className="flex-1">Pane-G 200g</div><div className="w-12 text-right">1</div><div className="w-16 text-right">342.86</div><div className="w-16 text-right">342.86</div></div>
+                            </div>
+                          </div>
+                        );
+
+                        /* ── STYLISH (default) + CUSTOM ── */
+                        return (
+                          <div className="flex flex-col flex-1">
+                            <div className="h-2 w-full" style={{backgroundColor: activeColor}}></div>
+                            <div className="p-6 flex flex-col flex-1">
+                              <div className="flex justify-between items-start mb-4 border-b pb-3">
+                                <div><h2 className="text-xl font-bold" style={{color: activeColor}}>{biz}</h2>{pan && <p className="text-xs text-slate-500 mt-1">PAN: {pan} &nbsp; GSTIN: {gstin}</p>}{ph && <p className="text-xs text-slate-500">📞 {ph}</p>}<p className="text-xs text-slate-500">📍 {addr}{stateVal && `, ${stateVal}`}{pin && ` - ${pin}`}</p></div>
+                                <div className="text-right"><span className="text-xs font-bold px-3 py-1.5 rounded text-white" style={{backgroundColor: activeColor}}>TAX INVOICE</span><p className="text-[9px] text-slate-400 mt-2">ORIGINAL FOR RECIPIENT</p></div>
+                              </div>
+                              <MetaRow bg={activeColor + '10'} />
+                              <BillTo />
+                              <div className="flex-1">
+                                <div className="w-full py-2 flex text-xs font-bold text-white px-2" style={{backgroundColor: activeColor}}><div className="flex-1">ITEM NAME</div><div className="w-14 text-right">QTY</div><div className="w-20 text-right">PRICE</div><div className="w-20 text-right">AMOUNT</div></div>
+                                <ItemRows />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                     <div className="mt-4">
                         <div className="border border-slate-200 rounded-xl p-4 bg-white shadow-sm space-y-3">
