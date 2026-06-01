@@ -715,7 +715,6 @@ export const SettingsPage = () => {
     if (activeSection === 'invoice-customization') return invoiceCustomForm;
     return null;
   }, [activeSection, profileForm, passwordForm, businessForm, taxForm, bankForm, invoiceCustomForm]);
-  g
   const handleGlobalSubmit = () => {
     if (activeSection === 'account-profile') profileForm.handleSubmit(handleProfileSubmit)();
     else if (activeSection === 'account-security') passwordForm.handleSubmit(handlePasswordSubmit)();
