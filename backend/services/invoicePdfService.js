@@ -281,7 +281,7 @@ const generateGstStandardPdf = (doc, invoice, company, uploadsPath, baseSize) =>
     .text('Invoice No:', 40, detY + 8).text('Date:', 200, detY + 8)
     .text('Bill To:', 350, detY + 8);
   doc.font('Helvetica').fillColor('#000000')
-    .text(invoice.invoice_number, 40, detY + 20)
+    .text(String(invoice.invoice_number || ''), 40, detY + 20)
     .text(new Date(invoice.invoice_date).toLocaleDateString('en-IN'), 200, detY + 20)
     .text(invoice.Customer?.name || '', 350, detY + 20)
     .text(`${invoice.Customer?.address || ''}`, 350, detY + 32, { width: 200 })
@@ -316,7 +316,7 @@ const generateGstStandardPdf = (doc, invoice, company, uploadsPath, baseSize) =>
     if (i % 2 === 1) doc.rect(40, itemY - 3, 515, 18).fill('#ecfdf5').fillColor('#000000');
     doc.text((i + 1).toString(), 42, itemY, { width: 18 })
       .text(item.Product?.name || 'Item', 62, itemY, { width: 140 })
-      .text(item.Product?.hsn_code || '-', 205, itemY, { width: 45, align: 'center' })
+      .text(String(item.Product?.hsn_code || '-'), 205, itemY, { width: 45, align: 'center' })
       .text(String(item.quantity), 253, itemY, { width: 35, align: 'center' })
       .text(parseFloat(item.unit_price).toFixed(2), 291, itemY, { width: 55, align: 'right' })
       .text(`${taxRate}%`, 349, itemY, { width: 35, align: 'center' })
