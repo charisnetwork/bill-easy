@@ -95,7 +95,10 @@ const User = sequelize.define('User',{
   is_active:{ type:DataTypes.BOOLEAN, defaultValue:true },
   email_verified:{ type:DataTypes.BOOLEAN, defaultValue:false },
   last_login:{ type:DataTypes.DATE },
-  token_version:{ type:DataTypes.INTEGER, defaultValue:1 }  // For mass logout
+  token_version:{ type:DataTypes.INTEGER, defaultValue:1 },  // For mass logout
+  reset_password_token: { type: DataTypes.STRING, allowNull: true },
+  reset_password_expire: { type: DataTypes.DATE, allowNull: true },
+  verification_token: { type: DataTypes.STRING, allowNull: true }
 }, { tableName: 'users' });
 
 const Coupon = sequelize.define('Coupon', {

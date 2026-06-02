@@ -79,7 +79,10 @@ export const authAPI = {
   changePassword: (data) => api.post('/auth/change-password', data),
   switchCompany: (companyId) => api.post(`/auth/switch-company/${companyId}`),
   getSessions: () => api.get('/auth/sessions'),
-  revokeSession: (sessionId) => api.post(`/auth/sessions/${sessionId}/revoke`)
+  revokeSession: (sessionId) => api.post(`/auth/sessions/${sessionId}/revoke`),
+  verifyEmail: (token) => api.get(`/auth/verify-email/${token}`),
+  forgotPassword: (data) => api.post('/auth/forgot-password', data),
+  resetPassword: (token, data) => api.post(`/auth/reset-password/${token}`, data)
 };
 
 // Company APIs

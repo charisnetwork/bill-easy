@@ -219,8 +219,73 @@ const testApiConfig = async () => {
   }
 };
 
+/**
+ * Send password reset email
+ */
+const sendPasswordResetEmail = async (email, resetUrl) => {
+  const subject = 'BillEasy - Password Reset Request';
+  const textContent = `You requested a password reset. Please go to this link to reset your password: ${resetUrl} \n\n If you did not request this, please ignore this email.`;
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+      <div style="background: #2563eb; color: white; padding: 20px;">
+        <h2 style="margin: 0; font-size: 20px;">Password Reset Request</h2>
+      </div>
+      <div style="padding: 20px;">
+        <p>You requested a password reset for your BillEasy account.</p>
+        <p>Click the button below to reset your password. This link is valid for 15 minutes.</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${resetUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Reset Password</a>
+        </div>
+        <p>Or copy and paste this link in your browser:</p>
+        <p style="word-break: break-all; color: #2563eb;">${resetUrl}</p>
+        <p style="margin-top: 30px; color: #6b7280; font-size: 14px;">If you did not request a password reset, please ignore this email.</p>
+      </div>
+    </div>
+  `;
+
+  return await sendEmailViaAPI({
+    to: email,
+    subject,
+    textContent,
+    htmlContent
+  });
+};
+
+/**
+ * Send email verification
+ */
+const sendVerificationEmail = async (email, verifyUrl) => {
+  const subject = 'BillEasy - Verify your Email';
+  const textContent = `Welcome to BillEasy! Please verify your email address by visiting this link: ${verifyUrl}`;
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+      <div style="background: #10b981; color: white; padding: 20px;">
+        <h2 style="margin: 0; font-size: 20px;">Verify Your Email</h2>
+      </div>
+      <div style="padding: 20px;">
+        <p>Welcome to BillEasy!</p>
+        <p>Please verify your email address to secure your account and access all features.</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${verifyUrl}" style="background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Verify Email</a>
+        </div>
+        <p>Or copy and paste this link in your browser:</p>
+        <p style="word-break: break-all; color: #10b981;">${verifyUrl}</p>
+      </div>
+    </div>
+  `;
+
+  return await sendEmailViaAPI({
+    to: email,
+    subject,
+    textContent,
+    htmlContent
+  });
+};
+
 module.exports = {
   sendEmailViaAPI,
   sendEnquiryEmail,
-  testApiConfig
+  testApiConfig,
+  sendPasswordResetEmail,
+  sendVerificationEmail
 };

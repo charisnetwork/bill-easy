@@ -5,6 +5,7 @@ const tokenService = require('../services/tokenService');
 const { incrementBruteForce, clearBruteForce } = require('../middleware/rateLimit');
 const { logSecurityEvent, EVENT_TYPES, SEVERITY } = require('../services/auditService');
 const { Op } = require('sequelize');
+const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/mailer');
 
 // Cookie configuration
 const REFRESH_COOKIE_NAME = 'refreshToken';
@@ -50,6 +51,7 @@ const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 12);  // Increased rounds
 
     // Create user
+    const verificationToken = crypto.randomBytes(20).toString('hex');
     const user = await User.create({
       company_id: company.id,
       email,
@@ -57,8 +59,16 @@ const register = async (req, res) => {
       name,
       mobile_number: mobileNumber,
       role: 'owner',
-      token_version: 1
+      token_version: 1,
+      verification_token: verificationToken
     });
+
+    const verifyUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email/${verificationToken}`;
+    try {
+      await sendVerificationEmail(user.email, verifyUrl);
+    } catch (err) {
+      console.error('Failed to send verification email', err);
+    }
 
     // Create UserCompany relationship
     await UserCompany.create({
@@ -647,6 +657,85 @@ const revokeSession = async (req, res) => {
   }
 };
 
+/* ===============================
+   EMAIL VERIFICATION
+================================ */
+const verifyEmail = async (req, res) => {
+  try {
+    const user = await User.findOne({ where: { verification_token: req.params.token } });
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid or expired verification token' });
+    }
+    user.email_verified = true;
+    user.verification_token = null;
+    await user.save();
+    res.json({ message: 'Email verified successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Verification failed' });
+  }
+};
+
+/* ===============================
+   FORGOT PASSWORD
+================================ */
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      // Return 200 to prevent email enumeration
+      return res.json({ message: 'If that email exists, a reset link has been sent.' });
+    }
+
+    const resetToken = crypto.randomBytes(20).toString('hex');
+    user.reset_password_token = resetToken;
+    user.reset_password_expire = Date.now() + 15 * 60 * 1000; // 15 mins
+    await user.save();
+
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password/${resetToken}`;
+    try {
+      await sendPasswordResetEmail(user.email, resetUrl);
+    } catch(err) {
+      console.error('Failed to send reset email', err);
+    }
+
+    res.json({ message: 'If that email exists, a reset link has been sent.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Forgot password failed' });
+  }
+};
+
+/* ===============================
+   RESET PASSWORD
+================================ */
+const resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    const user = await User.findOne({ 
+      where: { 
+        reset_password_token: token,
+        reset_password_expire: { [Op.gt]: Date.now() }
+      } 
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid or expired reset token' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+    user.password = hashedPassword;
+    user.reset_password_token = null;
+    user.reset_password_expire = null;
+    await user.save();
+
+    res.json({ message: 'Password reset successful. You can now login.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Reset password failed' });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -658,5 +747,8 @@ module.exports = {
   changePassword,
   switchCompany,
   getSessions,
-  revokeSession
+  revokeSession,
+  verifyEmail,
+  forgotPassword,
+  resetPassword
 };

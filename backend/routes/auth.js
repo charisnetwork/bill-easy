@@ -12,7 +12,10 @@ const {
   changePassword,
   switchCompany,
   getSessions,
-  revokeSession
+  revokeSession,
+  verifyEmail,
+  forgotPassword,
+  resetPassword
 } = require('../controllers/authController');
 const { authenticateToken } = require('../middleware/auth');
 const { 
@@ -44,6 +47,13 @@ router.post('/login',
 
 // Refresh token - requires HttpOnly cookie
 router.post('/refresh', refreshToken);
+
+// Email Verification
+router.get('/verify-email/:token', verifyEmail);
+
+// Password Reset
+router.post('/forgot-password', authLimiter, forgotPassword);
+router.post('/reset-password/:token', authLimiter, resetPassword);
 
 /* ===============================
    PROTECTED ROUTES
