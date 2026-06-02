@@ -15,7 +15,8 @@ const {
   revokeSession,
   verifyEmail,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  resendVerification
 } = require('../controllers/authController');
 const { authenticateToken } = require('../middleware/auth');
 const { 
@@ -50,6 +51,7 @@ router.post('/refresh', refreshToken);
 
 // Email Verification
 router.get('/verify-email/:token', verifyEmail);
+router.post('/resend-verification', authLimiter, resendVerification);
 
 // Password Reset
 router.post('/forgot-password', authLimiter, forgotPassword);

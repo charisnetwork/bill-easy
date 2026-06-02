@@ -658,6 +658,38 @@ const revokeSession = async (req, res) => {
 };
 
 /* ===============================
+   RESEND VERIFICATION EMAIL
+================================ */
+const resendVerification = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.json({ message: 'If that email exists, a verification link has been sent.' });
+    }
+    if (user.email_verified) {
+      return res.json({ message: 'Email is already verified.' });
+    }
+    
+    // Generate new token
+    const verificationToken = crypto.randomBytes(20).toString('hex');
+    user.verification_token = verificationToken;
+    await user.save();
+
+    const verifyUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email/${verificationToken}`;
+    try {
+      await sendVerificationEmail(user.email, verifyUrl);
+    } catch(err) {
+      console.error('Failed to send verification email', err);
+    }
+
+    res.json({ message: 'If that email exists, a verification link has been sent.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to resend verification email' });
+  }
+};
+
+/* ===============================
    EMAIL VERIFICATION
 ================================ */
 const verifyEmail = async (req, res) => {
@@ -728,6 +760,7 @@ const resetPassword = async (req, res) => {
     user.password = hashedPassword;
     user.reset_password_token = null;
     user.reset_password_expire = null;
+    user.email_verified = true;
     await user.save();
 
     res.json({ message: 'Password reset successful. You can now login.' });
@@ -750,5 +783,6 @@ module.exports = {
   revokeSession,
   verifyEmail,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  resendVerification
 };
