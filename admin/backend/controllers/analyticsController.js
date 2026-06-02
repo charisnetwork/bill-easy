@@ -83,7 +83,10 @@ exports.getSubscribers = async (req, res) => {
     const subscribers = await Subscription.findAll({
       include: [
         { model: Plan },
-        { model: Company },
+        { 
+          model: Company,
+          include: [{ model: User, where: { role: 'owner' }, required: false }]
+        },
         { model: Coupon }
       ],
       order: [['createdAt', 'DESC']]

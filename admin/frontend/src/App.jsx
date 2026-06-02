@@ -3,11 +3,12 @@ import axios from 'axios';
 import { 
   LayoutDashboard, Globe, Tag, Megaphone, DollarSign, 
   TrendingUp, TrendingDown, Shield, LogOut, Search, Filter,
-  Users, CreditCard, Calendar, BarChart3, Plus, Trash2, Edit, ChevronRight, ExternalLink
+  Users, CreditCard, Calendar, BarChart3, Plus, Trash2, Edit, ChevronRight, ExternalLink, Download, Clock
 } from 'lucide-react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line 
 } from 'recharts';
+import * as XLSX from 'xlsx';
 import Login from './components/Login';
 
 // Detect if we're running through the main gateway or standalone
@@ -41,6 +42,26 @@ const AdminApp = () => {
   const [affiliates, setAffiliates] = useState([]);
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [expireFilter, setExpireFilter] = useState('15days');
+
+  const handleExportXLSX = (filteredData) => {
+    const exportData = filteredData.map(s => {
+      const owner = s.Company?.Users?.[0] || {};
+      return {
+        'Company Name': s.Company?.name || 'N/A',
+        'Plan': s.Plan?.plan_name || 'N/A',
+        'Amount': s.price,
+        'Status': s.status,
+        'Expiry Date': s.expiry_date ? new Date(s.expiry_date).toLocaleDateString() : 'N/A',
+        'Owner Email': owner.email || 'N/A',
+        'Owner Mobile': owner.mobile_number || 'N/A'
+      };
+    });
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Expiring Users");
+    XLSX.writeFile(wb, "Expiring_Users.xlsx");
+  };
   
   const ALL_FEATURES = [
     { id: 'gst_billing', label: 'GST Invoicing' },
@@ -339,6 +360,7 @@ const AdminApp = () => {
           {[
             { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
             { id: 'subscribers', label: 'Subscribers', icon: Users },
+            { id: 'expiring-users', label: 'Expiring Users', icon: Clock },
             { id: 'plans', label: 'Plan Features', icon: Shield },
             { id: 'affiliates', label: 'Affiliates', icon: Globe },
             { id: 'coupons', label: 'Coupons', icon: Tag },
@@ -586,11 +608,12 @@ const AdminApp = () => {
         )}
 
         {activeTab === 'subscribers' && (
-           <div className="bg-slate-900/50 border border-slate-800 rounded-3xl overflow-hidden animate-in fade-in duration-500">
-              <table className="w-full text-left text-xs">
+           <div className="bg-slate-900/50 border border-slate-800 rounded-3xl overflow-hidden animate-in fade-in duration-500 overflow-x-auto">
+              <table className="w-full text-left text-xs whitespace-nowrap">
                 <thead className="bg-slate-950/50 text-slate-500 font-bold uppercase">
                   <tr>
                     <th className="px-6 py-4">Company</th>
+                    <th className="px-6 py-4">Contact (Owner)</th>
                     <th className="px-6 py-4">Plan</th>
                     <th className="px-6 py-4">Amount</th>
                     <th className="px-6 py-4">Coupon</th>
@@ -600,28 +623,127 @@ const AdminApp = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/50">
-                  {subscribers.map(s => (
-                    <tr key={s.id} className="hover:bg-slate-800/20">
-                      <td className="px-6 py-4">
-                        <div className="font-bold text-white">{s.Company?.name}</div>
-                        <div className="text-[10px] text-slate-500">{s.id}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                         <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px] font-black uppercase">{s.Plan?.plan_name}</span>
-                      </td>
-                      <td className="px-6 py-4 font-bold text-emerald-500">₹{s.price}</td>
-                      <td className="px-6 py-4 font-mono text-indigo-400">{s.Coupon?.code || '-'}</td>
-                      <td className="px-6 py-4">
-                         <span className={`text-[10px] font-black uppercase ${s.status === 'active' ? 'text-emerald-500' : 'text-rose-500'}`}>{s.status}</span>
-                      </td>
-                      <td className="px-6 py-4 text-slate-500">{s.expiry_date ? new Date(s.expiry_date).toLocaleDateString() : 'N/A'}</td>
-                      <td className="px-6 py-4 text-slate-500">{new Date(s.createdAt).toLocaleDateString()}</td>
-                    </tr>
-                  ))}
+                  {subscribers.map(s => {
+                    const owner = s.Company?.Users?.[0] || {};
+                    return (
+                      <tr key={s.id} className="hover:bg-slate-800/20">
+                        <td className="px-6 py-4">
+                          <div className="font-bold text-white">{s.Company?.name}</div>
+                          <div className="text-[10px] text-slate-500">{s.id}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-slate-300 font-medium">{owner.email || '-'}</div>
+                          <div className="text-[10px] text-slate-500">{owner.mobile_number || '-'}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                           <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px] font-black uppercase">{s.Plan?.plan_name}</span>
+                        </td>
+                        <td className="px-6 py-4 font-bold text-emerald-500">₹{s.price}</td>
+                        <td className="px-6 py-4 font-mono text-indigo-400">{s.Coupon?.code || '-'}</td>
+                        <td className="px-6 py-4">
+                           <span className={`text-[10px] font-black uppercase ${s.status === 'active' ? 'text-emerald-500' : 'text-rose-500'}`}>{s.status}</span>
+                        </td>
+                        <td className="px-6 py-4 text-slate-500">{s.expiry_date ? new Date(s.expiry_date).toLocaleDateString() : 'N/A'}</td>
+                        <td className="px-6 py-4 text-slate-500">{new Date(s.createdAt).toLocaleDateString()}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
            </div>
         )}
+
+        {activeTab === 'expiring-users' && (() => {
+          const now = new Date();
+          const filtered = subscribers.filter(s => {
+            if (!s.expiry_date || s.status !== 'active') return false;
+            const expiryDate = new Date(s.expiry_date);
+            const diffTime = expiryDate.getTime() - now.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (expireFilter === '15days') return diffDays >= 0 && diffDays <= 15;
+            if (expireFilter === '1month') return diffDays >= 0 && diffDays <= 30;
+            return false;
+          });
+
+          return (
+            <div className="space-y-6 animate-in fade-in duration-500">
+              <div className="flex justify-between items-center bg-slate-900/50 p-4 rounded-2xl border border-slate-800">
+                <div className="flex items-center gap-4">
+                  <span className="text-sm font-bold text-slate-400">Filter Expiry:</span>
+                  <div className="flex bg-slate-950 p-1 rounded-xl">
+                    <button 
+                      onClick={() => setExpireFilter('15days')}
+                      className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all ${expireFilter === '15days' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-white'}`}
+                    >
+                      Next 15 Days
+                    </button>
+                    <button 
+                      onClick={() => setExpireFilter('1month')}
+                      className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all ${expireFilter === '1month' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-white'}`}
+                    >
+                      Next 1 Month
+                    </button>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => handleExportXLSX(filtered)}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all"
+                >
+                  <Download className="w-4 h-4" /> EXPORT TO XLSX
+                </button>
+              </div>
+
+              <div className="bg-slate-900/50 border border-slate-800 rounded-3xl overflow-hidden overflow-x-auto">
+                <table className="w-full text-left text-xs whitespace-nowrap">
+                  <thead className="bg-slate-950/50 text-slate-500 font-bold uppercase">
+                    <tr>
+                      <th className="px-6 py-4">Company</th>
+                      <th className="px-6 py-4">Contact (Owner)</th>
+                      <th className="px-6 py-4">Plan</th>
+                      <th className="px-6 py-4">Amount</th>
+                      <th className="px-6 py-4">Expiry</th>
+                      <th className="px-6 py-4">Days Left</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/50">
+                    {filtered.length === 0 ? (
+                      <tr>
+                        <td colSpan="6" className="px-6 py-8 text-center text-slate-500 font-medium">
+                          No users expiring in this timeframe.
+                        </td>
+                      </tr>
+                    ) : filtered.map(s => {
+                      const owner = s.Company?.Users?.[0] || {};
+                      const daysLeft = Math.ceil((new Date(s.expiry_date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                      return (
+                        <tr key={s.id} className="hover:bg-slate-800/20">
+                          <td className="px-6 py-4">
+                            <div className="font-bold text-white">{s.Company?.name}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-slate-300 font-medium">{owner.email || '-'}</div>
+                            <div className="text-[10px] text-slate-500">{owner.mobile_number || '-'}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                             <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px] font-black uppercase">{s.Plan?.plan_name}</span>
+                          </td>
+                          <td className="px-6 py-4 font-bold text-emerald-500">₹{s.price}</td>
+                          <td className="px-6 py-4 text-slate-300 font-medium">{new Date(s.expiry_date).toLocaleDateString()}</td>
+                          <td className="px-6 py-4">
+                            <span className={`px-2 py-1 rounded font-black text-[10px] ${daysLeft <= 7 ? 'bg-rose-500/10 text-rose-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                              {daysLeft} Days
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })()}
 
         {activeTab === 'coupons' && (
           <div className="space-y-6 animate-in fade-in duration-500">

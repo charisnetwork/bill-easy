@@ -58,7 +58,7 @@ const User = saasDB.define('User', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
   name: { type: DataTypes.STRING },
   email: { type: DataTypes.STRING },
-  phone: { type: DataTypes.STRING },
+  mobile_number: { type: DataTypes.STRING },
   company_id: { type: DataTypes.UUID },
   role: { type: DataTypes.ENUM('owner', 'admin', 'staff'), defaultValue: 'staff' }
 }, { tableName: 'users' });
