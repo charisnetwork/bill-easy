@@ -12,10 +12,7 @@ import Login from './components/Login';
 
 // Detect if we're running through the main gateway or standalone
 const host = window.location.host;
-const isGateway = window.location.pathname.startsWith('/admin-portal') || 
-                  host === 'charisbilleasy.store' ||
-                  host === 'www.charisbilleasy.store' ||
-                  host === 'admin.charisbilleasy.store';
+const isGateway = window.location.pathname.startsWith('/admin-portal');
 
 // Admin API URL: all admin routes go through main backend at /api/admin/*
 const API_BASE_URL = isGateway 

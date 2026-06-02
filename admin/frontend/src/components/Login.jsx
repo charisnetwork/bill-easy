@@ -4,10 +4,7 @@ import axios from 'axios';
 
 // Detect if we're running through the main gateway or standalone
 const host = window.location.host;
-const isGateway = window.location.pathname.startsWith('/admin-portal') || 
-                  host === 'charisbilleasy.store' ||
-                  host === 'www.charisbilleasy.store' ||
-                  host === 'admin.charisbilleasy.store';
+const isGateway = window.location.pathname.startsWith('/admin-portal');
 
 // All admin API calls go through the main backend at /api/admin/*
 // Railway only exposes one port, admin routes are served from main backend
