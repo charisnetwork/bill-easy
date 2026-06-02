@@ -4,6 +4,7 @@ const { User, Company, Plan, Subscription, UserCompany } = require('../models');
 const tokenService = require('../services/tokenService');
 const { incrementBruteForce, clearBruteForce } = require('../middleware/rateLimit');
 const { logSecurityEvent, EVENT_TYPES, SEVERITY } = require('../services/auditService');
+const { Op } = require('sequelize');
 
 // Cookie configuration
 const REFRESH_COOKIE_NAME = 'refreshToken';
@@ -21,12 +22,19 @@ const REFRESH_COOKIE_OPTIONS = {
 ================================ */
 const register = async (req, res) => {
   try {
-    const { companyName, email, password, name, phone, gstNumber, address } = req.body;
+    const { companyName, email, password, name, mobileNumber, gstNumber, address } = req.body;
 
-    // Check existing email
-    const existingUser = await User.findOne({ where: { email } });
+    // Check existing email or mobile number
+    const existingUser = await User.findOne({ 
+      where: { 
+        [Op.or]: [
+          { email },
+          { mobile_number: mobileNumber }
+        ]
+      } 
+    });
     if (existingUser) {
-      return res.status(400).json({ error: 'Email already registered' });
+      return res.status(400).json({ error: 'You are already registered with us. Please choose the forgot password or username option to retrieve your username, email, or mobile number.' });
     }
 
     // Create company
@@ -47,7 +55,7 @@ const register = async (req, res) => {
       email,
       password: hashedPassword,
       name,
-      phone,
+      mobile_number: mobileNumber,
       role: 'owner',
       token_version: 1
     });
@@ -436,7 +444,7 @@ const getProfile = async (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
-        phone: user.phone,
+        phone: user.mobile_number,
         role: user.role,
         permissions: user.permissions
       },
@@ -487,11 +495,12 @@ const getProfile = async (req, res) => {
 ================================ */
 const updateProfile = async (req, res) => {
   try {
-    const { name, phone } = req.body;
+    const { name, phone, mobileNumber } = req.body;
+    const newMobile = mobileNumber || phone;
 
     await req.user.update({
       name,
-      phone
+      mobile_number: newMobile
     });
 
     res.json({ message: 'Profile updated successfully' });

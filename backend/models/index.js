@@ -88,7 +88,7 @@ const User = sequelize.define('User',{
   email:{ type:DataTypes.STRING, allowNull:false, unique:true },
   password:{ type:DataTypes.STRING, allowNull:false }, 
   name:{ type:DataTypes.STRING, allowNull:false },
-  phone:{ type:DataTypes.STRING },
+  mobile_number:{ type:DataTypes.STRING, unique:true },
   role:{ type:DataTypes.ENUM('owner','admin','staff'), defaultValue:'staff' },
   permissions:{ type:DataTypes.JSON, defaultValue:{} },
   is_active:{ type:DataTypes.BOOLEAN, defaultValue:true },

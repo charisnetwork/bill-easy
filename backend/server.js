@@ -600,6 +600,25 @@ const startServer = async () => {
             defaultValue: 'staff'
           });
         }
+
+        if (!userTableInfo.mobile_number) {
+          // Migration: mobile_number column and drop phone
+          await queryInterface.addColumn('users', 'mobile_number', {
+            type: DataTypes.STRING,
+            unique: true
+          });
+          
+          // Optionally populate mobile_number from phone before dropping
+          try {
+             await sequelize.query('UPDATE "users" SET "mobile_number" = "phone" WHERE "phone" IS NOT NULL');
+          } catch(e) {
+             console.warn("Could not copy phone to mobile_number", e.message);
+          }
+          
+          if (userTableInfo.phone) {
+             await queryInterface.removeColumn('users', 'phone');
+          }
+        }
       }
 
       // Migration: Add missing columns to companies table
