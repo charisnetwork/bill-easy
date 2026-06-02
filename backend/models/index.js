@@ -33,6 +33,7 @@ const PlanFeature = sequelize.define('PlanFeature', {
 
 const Company = sequelize.define('Company',{
   id:{ type:DataTypes.UUID, defaultValue:DataTypes.UUIDV4, primaryKey:true },
+  owner_id:{ type:DataTypes.UUID, allowNull: true },
   name:{ type:DataTypes.STRING, allowNull:false },
   gst_number:{ type:DataTypes.STRING },
   address:{ type:DataTypes.TEXT },
@@ -490,6 +491,9 @@ const AIUsage = sequelize.define('AIUsage', {
 
 Company.hasMany(User,{foreignKey:'company_id'});
 User.belongsTo(Company,{foreignKey:'company_id'});
+
+Company.belongsTo(User, { as: 'Owner', foreignKey: 'owner_id' });
+User.hasMany(Company, { as: 'OwnedCompanies', foreignKey: 'owner_id' });
 
 User.hasMany(AIUsage, { foreignKey: 'user_id' });
 AIUsage.belongsTo(User, { foreignKey: 'user_id' });

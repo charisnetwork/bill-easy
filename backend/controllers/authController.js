@@ -67,6 +67,9 @@ const register = async (req, res) => {
       role: 'owner'
     });
 
+    // Update Company with owner_id
+    await company.update({ owner_id: user.id });
+
     // Find or create Free plan
     let freePlan = await Plan.findOne({ where: { plan_name: 'Free Account' } });
 

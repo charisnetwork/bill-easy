@@ -489,8 +489,9 @@ const addCompany = async (req, res) => {
 
     // 3. Validation: Block if limit reached
     if (currentCount >= maxBusinesses) {
+      const planName = currentHighestPlan === 'Free Account' ? 'Free' : currentHighestPlan;
       return res.status(403).json({ 
-        error: `Limit Reached: Your ${currentHighestPlan} plan allows up to ${maxBusinesses} businesses. You already have ${currentCount}.`,
+        error: `Company creation limit reached. Your ${currentHighestPlan} plan allows a maximum of ${maxBusinesses} companies.`,
         currentCount,
         maxLimit: maxBusinesses,
         needsUpgrade: true
@@ -499,6 +500,7 @@ const addCompany = async (req, res) => {
 
     // 4. Create new company
     const company = await Company.create({
+      owner_id: req.user.id,
       name, gst_number, address, city, state, pincode, phone, email
     });
 
@@ -509,21 +511,8 @@ const addCompany = async (req, res) => {
       role: 'owner'
     });
 
-    // 6. Assign a default 'Zero Account' (Free) plan to the new business
-    const freePlan = await Plan.findOne({ where: { plan_name: 'Free Account' } });
-    if (freePlan) {
-      const expiryDate = new Date();
-      expiryDate.setFullYear(expiryDate.getFullYear() + 10);
-      
-      await Subscription.create({
-        company_id: company.id,
-        plan_id: freePlan.id,
-        status: 'active',
-        payment_status: 'paid',
-        expiry_date: expiryDate,
-        usage: { invoices: 0, products: 0, eway_bills: 0, godowns: 0 }
-      });
-    }
+    // Note: We no longer assign a default Free plan here. 
+    // Subscription access is now inherited globally from the owner's best active subscription tier.
 
     res.status(201).json({ 
       message: 'New business created successfully', 
