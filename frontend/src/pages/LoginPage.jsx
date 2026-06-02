@@ -70,7 +70,12 @@ export const LoginPage = () => {
                 </div>
 
                 <div className="form-field">
-                  <Label htmlFor="password" className="form-label">Password</Label>
+                  <div className="flex justify-between items-center mb-1">
+                    <Label htmlFor="password" className="form-label mb-0">Password</Label>
+                    <Link to="/forgot-password" className="text-sm text-[#1E40AF] hover:underline font-medium">
+                      Forgot Password?
+                    </Link>
+                  </div>
                   <InputGroup
                     id="password"
                     type={showPassword ? 'text' : 'password'}
