@@ -7,7 +7,7 @@ const drawHeader = (doc, invoice, company, uploadsPath, baseSize, accentColor) =
     try { doc.image(path.join(uploadsPath, company.logo), 40, 30, { height: 55 }); } catch (e) {}
   }
   doc.fontSize(baseSize + 2).fillColor(accentColor).font('Helvetica-Bold')
-    .text(company.name || '', 110, 32);
+    .text(String(company.name || ''), 110, 32);
   doc.fontSize(baseSize - 1).fillColor('#475569').font('Helvetica')
     .text(company.address || '', 110, 50)
     .text(`${company.city || ''}, ${company.state || ''} - ${company.pincode || ''}`, 110, 62)
@@ -31,7 +31,7 @@ const drawAddressBlock = (doc, invoice, company, baseSize, topY) => {
   doc.fontSize(baseSize - 1).font('Helvetica-Bold').fillColor('#475569')
     .text('FROM:', 40, topY);
   doc.font('Helvetica-Bold').fontSize(baseSize).fillColor('#000000')
-    .text(company.name || '', 40, topY + 13);
+    .text(String(company.name || ''), 40, topY + 13);
   doc.font('Helvetica').fontSize(baseSize - 2).fillColor('#64748b')
     .text(company.address || '', 40, topY + 26, { width: 200 })
     .text(`Ph: ${company.phone || ''}`, 40, topY + 52);
@@ -39,7 +39,7 @@ const drawAddressBlock = (doc, invoice, company, baseSize, topY) => {
   doc.fontSize(baseSize - 1).font('Helvetica-Bold').fillColor('#475569')
     .text('BILL TO:', 340, topY);
   doc.font('Helvetica-Bold').fontSize(baseSize).fillColor('#000000')
-    .text(invoice.Customer?.name || '', 340, topY + 13);
+    .text(String(invoice.Customer?.name || ''), 340, topY + 13);
   doc.font('Helvetica').fontSize(baseSize - 2).fillColor('#64748b')
     .text(invoice.Customer?.address || '', 340, topY + 26, { width: 200 })
     .text(`${invoice.Customer?.city || ''}, ${invoice.Customer?.state || ''}`, 340, topY + 38)
@@ -114,7 +114,7 @@ const drawFooter = (doc, company, uploadsPath, baseSize, footerY) => {
   if (ownerName) {
     doc.moveTo(sigX, sigY + 60).lineTo(sigX + 130, sigY + 60).strokeColor('#000').stroke();
     doc.fillColor('#000000').fontSize(9).font('Helvetica-Bold')
-      .text(ownerName, sigX, sigY + 64, { width: 130, align: 'center' });
+      .text(String(ownerName), sigX, sigY + 64, { width: 130, align: 'center' });
   }
 };
 
@@ -142,7 +142,7 @@ const generateModernPdf = (doc, invoice, company, uploadsPath, baseSize) => {
   (invoice.items || []).forEach((item, i) => {
     const total = parseFloat(item.total || 0);
     doc.text((i + 1).toString(), 45, itemY, { width: 20 })
-      .text(item.Product?.name || 'Item', 70, itemY, { width: 200 })
+      .text(String(item.Product?.name || 'Item'), 70, itemY, { width: 200 })
       .text(String(item.quantity), 275, itemY, { width: 50, align: 'center' })
       .text(parseFloat(item.unit_price).toFixed(2), 330, itemY, { width: 70, align: 'right' })
       .text(`${item.tax_rate || 0}%`, 405, itemY, { width: 45, align: 'center' })
@@ -180,8 +180,8 @@ const generateClassicPdf = (doc, invoice, company, uploadsPath, baseSize) => {
   (invoice.items || []).forEach((item, i) => {
     if (i % 2 === 1) doc.rect(40, itemY - 4, 515, 20).fill('#eef3fb').fillColor('#000000');
     doc.text((i + 1).toString(), 45, itemY, { width: 20 })
-      .text(item.Product?.name || 'Item', 70, itemY, { width: 190 })
-      .text(item.Product?.hsn_code || '-', 265, itemY, { width: 55, align: 'center' })
+      .text(String(item.Product?.name || 'Item'), 70, itemY, { width: 190 })
+      .text(String(item.Product?.hsn_code || '-'), 265, itemY, { width: 55, align: 'center' })
       .text(String(item.quantity), 325, itemY, { width: 40, align: 'center' })
       .text(parseFloat(item.unit_price).toFixed(2), 370, itemY, { width: 65, align: 'right' })
       .text(`${item.tax_rate || 0}%`, 440, itemY, { width: 35, align: 'center' })
@@ -201,7 +201,7 @@ const generateMinimalPdf = (doc, invoice, company, uploadsPath, baseSize) => {
     try { doc.image(path.join(uploadsPath, company.logo), 40, 40, { height: 45 }); } catch (e) {}
   }
   doc.fontSize(baseSize + 4).fillColor('#0f172a').font('Helvetica-Bold')
-    .text(company.name || '', 40, company.logo ? 92 : 40);
+    .text(String(company.name || ''), 40, company.logo ? 92 : 40);
   doc.fontSize(baseSize - 2).fillColor('#94a3b8').font('Helvetica')
     .text(`${company.address || ''}  |  ${company.city || ''}, ${company.state || ''}  |  ${company.phone || ''}`, 40, company.logo ? 106 : 56);
   if (company.gst_number) {
@@ -219,7 +219,7 @@ const generateMinimalPdf = (doc, invoice, company, uploadsPath, baseSize) => {
   // Bill to
   const billTop = 150;
   doc.fontSize(baseSize - 2).fillColor('#94a3b8').font('Helvetica-Bold').text('BILLED TO', 40, billTop);
-  doc.fontSize(baseSize).fillColor('#0f172a').font('Helvetica-Bold').text(invoice.Customer?.name || '', 40, billTop + 14);
+  doc.fontSize(baseSize).fillColor('#0f172a').font('Helvetica-Bold').text(String(invoice.Customer?.name || ''), 40, billTop + 14);
   doc.fontSize(baseSize - 2).fillColor('#64748b').font('Helvetica')
     .text(`${invoice.Customer?.address || ''}`, 40, billTop + 28)
     .text(`${invoice.Customer?.city || ''}, ${invoice.Customer?.state || ''}`, 40, billTop + 40)
@@ -239,7 +239,7 @@ const generateMinimalPdf = (doc, invoice, company, uploadsPath, baseSize) => {
   let itemY = tableTop + 22;
   doc.font('Helvetica').fontSize(baseSize - 1).fillColor('#1e293b');
   (invoice.items || []).forEach((item) => {
-    doc.text(item.Product?.name || 'Item', 40, itemY, { width: 220 })
+    doc.text(String(item.Product?.name || 'Item'), 40, itemY, { width: 220 })
       .text(String(item.quantity), 265, itemY, { width: 60, align: 'center' })
       .text(parseFloat(item.unit_price).toFixed(2), 330, itemY, { width: 80, align: 'right' })
       .text(parseFloat(item.total || 0).toFixed(2), 415, itemY, { width: 140, align: 'right' });
@@ -262,7 +262,7 @@ const generateGstStandardPdf = (doc, invoice, company, uploadsPath, baseSize) =>
     try { doc.image(path.join(uploadsPath, company.logo), 40, 20, { height: 50 }); } catch (e) {}
   }
   doc.fontSize(baseSize + 3).fillColor('#0f172a').font('Helvetica-Bold')
-    .text(company.name || '', 0, 22, { align: 'center' });
+    .text(String(company.name || ''), 0, 22, { align: 'center' });
   doc.fontSize(baseSize - 2).fillColor('#475569').font('Helvetica')
     .text(`${company.address || ''}, ${company.city || ''}, ${company.state || ''} - ${company.pincode || ''}`, 0, 38, { align: 'center' })
     .text(`Ph: ${company.phone || ''}  |  Email: ${company.email || ''}`, 0, 50, { align: 'center' });
@@ -283,7 +283,7 @@ const generateGstStandardPdf = (doc, invoice, company, uploadsPath, baseSize) =>
   doc.font('Helvetica').fillColor('#000000')
     .text(String(invoice.invoice_number || ''), 40, detY + 20)
     .text(new Date(invoice.invoice_date).toLocaleDateString('en-IN'), 200, detY + 20)
-    .text(invoice.Customer?.name || '', 350, detY + 20)
+    .text(String(invoice.Customer?.name || ''), 350, detY + 20)
     .text(`${invoice.Customer?.address || ''}`, 350, detY + 32, { width: 200 })
     .text(`${invoice.Customer?.city || ''}, ${invoice.Customer?.state || ''}`, 350, detY + 44)
     .text(`Ph: ${invoice.Customer?.phone || ''}`, 350, detY + 56);
@@ -315,7 +315,7 @@ const generateGstStandardPdf = (doc, invoice, company, uploadsPath, baseSize) =>
     totalCgst += cgst; totalSgst += sgst;
     if (i % 2 === 1) doc.rect(40, itemY - 3, 515, 18).fill('#ecfdf5').fillColor('#000000');
     doc.text((i + 1).toString(), 42, itemY, { width: 18 })
-      .text(item.Product?.name || 'Item', 62, itemY, { width: 140 })
+      .text(String(item.Product?.name || 'Item'), 62, itemY, { width: 140 })
       .text(String(item.Product?.hsn_code || '-'), 205, itemY, { width: 45, align: 'center' })
       .text(String(item.quantity), 253, itemY, { width: 35, align: 'center' })
       .text(parseFloat(item.unit_price).toFixed(2), 291, itemY, { width: 55, align: 'right' })
