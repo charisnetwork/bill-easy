@@ -608,48 +608,59 @@ const AdminApp = () => {
         )}
 
         {activeTab === 'subscribers' && (
-           <div className="bg-slate-900/50 border border-slate-800 rounded-3xl overflow-hidden animate-in fade-in duration-500 overflow-x-auto">
-              <table className="w-full text-left text-xs whitespace-nowrap">
-                <thead className="bg-slate-950/50 text-slate-500 font-bold uppercase">
-                  <tr>
-                    <th className="px-6 py-4">Company</th>
-                    <th className="px-6 py-4">Contact (Owner)</th>
-                    <th className="px-6 py-4">Plan</th>
-                    <th className="px-6 py-4">Amount</th>
-                    <th className="px-6 py-4">Coupon</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4">Expiry</th>
-                    <th className="px-6 py-4">Date</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/50">
-                  {subscribers.map(s => {
-                    const owner = s.Company?.Users?.[0] || {};
-                    return (
-                      <tr key={s.id} className="hover:bg-slate-800/20">
-                        <td className="px-6 py-4">
-                          <div className="font-bold text-white">{s.Company?.name}</div>
-                          <div className="text-[10px] text-slate-500">{s.id}</div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-slate-300 font-medium">{owner.email || '-'}</div>
-                          <div className="text-[10px] text-slate-500">{owner.mobile_number || '-'}</div>
-                        </td>
-                        <td className="px-6 py-4">
-                           <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px] font-black uppercase">{s.Plan?.plan_name}</span>
-                        </td>
-                        <td className="px-6 py-4 font-bold text-emerald-500">₹{s.price}</td>
-                        <td className="px-6 py-4 font-mono text-indigo-400">{s.Coupon?.code || '-'}</td>
-                        <td className="px-6 py-4">
-                           <span className={`text-[10px] font-black uppercase ${s.status === 'active' ? 'text-emerald-500' : 'text-rose-500'}`}>{s.status}</span>
-                        </td>
-                        <td className="px-6 py-4 text-slate-500">{s.expiry_date ? new Date(s.expiry_date).toLocaleDateString() : 'N/A'}</td>
-                        <td className="px-6 py-4 text-slate-500">{new Date(s.createdAt).toLocaleDateString()}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+           <div className="space-y-4 animate-in fade-in duration-500">
+             {/* Top bar with export button */}
+             <div className="flex justify-end">
+               <button
+                 onClick={() => handleExportXLSX(subscribers)}
+                 className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all"
+               >
+                 <Download className="w-4 h-4" /> EXPORT TO XLSX
+               </button>
+             </div>
+
+             <div className="bg-slate-900/50 border border-slate-800 rounded-3xl overflow-hidden overflow-x-auto">
+               <table className="w-full text-left text-xs whitespace-nowrap">
+                 <thead className="bg-slate-950/50 text-slate-500 font-bold uppercase">
+                   <tr>
+                     <th className="px-6 py-4">Company</th>
+                     <th className="px-6 py-4">Email</th>
+                     <th className="px-6 py-4">Mobile No</th>
+                     <th className="px-6 py-4">Plan</th>
+                     <th className="px-6 py-4">Amount</th>
+                     <th className="px-6 py-4">Coupon</th>
+                     <th className="px-6 py-4">Status</th>
+                     <th className="px-6 py-4">Expiry</th>
+                     <th className="px-6 py-4">Date</th>
+                   </tr>
+                 </thead>
+                 <tbody className="divide-y divide-slate-800/50">
+                   {subscribers.map(s => {
+                     const owner = s.Company?.Users?.[0] || {};
+                     return (
+                       <tr key={s.id} className="hover:bg-slate-800/20">
+                         <td className="px-6 py-4">
+                           <div className="font-bold text-white">{s.Company?.name}</div>
+                           <div className="text-[10px] text-slate-500">{s.id}</div>
+                         </td>
+                         <td className="px-6 py-4 text-slate-300">{owner.email || '-'}</td>
+                         <td className="px-6 py-4 text-indigo-300 font-medium">{owner.mobile_number || '-'}</td>
+                         <td className="px-6 py-4">
+                            <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px] font-black uppercase">{s.Plan?.plan_name}</span>
+                         </td>
+                         <td className="px-6 py-4 font-bold text-emerald-500">₹{s.price}</td>
+                         <td className="px-6 py-4 font-mono text-indigo-400">{s.Coupon?.code || '-'}</td>
+                         <td className="px-6 py-4">
+                            <span className={`text-[10px] font-black uppercase ${s.status === 'active' ? 'text-emerald-500' : 'text-rose-500'}`}>{s.status}</span>
+                         </td>
+                         <td className="px-6 py-4 text-slate-500">{s.expiry_date ? new Date(s.expiry_date).toLocaleDateString() : 'N/A'}</td>
+                         <td className="px-6 py-4 text-slate-500">{new Date(s.createdAt).toLocaleDateString()}</td>
+                       </tr>
+                     );
+                   })}
+                 </tbody>
+               </table>
+             </div>
            </div>
         )}
 
