@@ -63,7 +63,8 @@ const register = async (req, res) => {
       verification_token: verificationToken
     });
 
-    const verifyUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email/${verificationToken}`;
+    const baseUrl = process.env.FRONTEND_URL && !process.env.FRONTEND_URL.includes(',') ? process.env.FRONTEND_URL : (isProduction ? 'https://charisbilleasy.store' : 'http://localhost:3000');
+    const verifyUrl = `${baseUrl}/verify-email/${verificationToken}`;
     try {
       await sendVerificationEmail(user.email, verifyUrl);
     } catch (err) {
@@ -676,7 +677,8 @@ const resendVerification = async (req, res) => {
     user.verification_token = verificationToken;
     await user.save();
 
-    const verifyUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email/${verificationToken}`;
+    const baseUrl = process.env.FRONTEND_URL && !process.env.FRONTEND_URL.includes(',') ? process.env.FRONTEND_URL : (isProduction ? 'https://charisbilleasy.store' : 'http://localhost:3000');
+    const verifyUrl = `${baseUrl}/verify-email/${verificationToken}`;
     try {
       await sendVerificationEmail(user.email, verifyUrl);
     } catch(err) {
@@ -724,7 +726,8 @@ const forgotPassword = async (req, res) => {
     user.reset_password_expire = Date.now() + 15 * 60 * 1000; // 15 mins
     await user.save();
 
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password/${resetToken}`;
+    const baseUrl = process.env.FRONTEND_URL && !process.env.FRONTEND_URL.includes(',') ? process.env.FRONTEND_URL : (isProduction ? 'https://charisbilleasy.store' : 'http://localhost:3000');
+    const resetUrl = `${baseUrl}/reset-password/${resetToken}`;
     try {
       await sendPasswordResetEmail(user.email, resetUrl);
     } catch(err) {
