@@ -126,7 +126,7 @@ const adminProxy = createProxy(
 
 const mainProxy = createProxy(
   'http://localhost:8001', 
-  null,
+  { '^/': '/api/' }, // Express strips /api when mounted at app.use('/api',...) — re-add it
   'Main'
 );
 
