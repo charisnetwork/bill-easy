@@ -31,7 +31,7 @@ const isNative = Capacitor.isNativePlatform();
 if (isNative && (!envBackendUrl || envBackendUrl.includes('localhost'))) {
   // Fallback to production if env not set in native build
   // Set VITE_BACKEND_URL in your capacitor build env to override this
-  envBackendUrl = 'https://billeasy-production.up.railway.app';
+  envBackendUrl = 'https://bill-easy-production.up.railway.app';
   console.warn('[API] Native platform detected — using production backend. Set VITE_BACKEND_URL to override.');
 } else if (!envBackendUrl || envBackendUrl.includes('localhost:')) {
   envBackendUrl = 'http://localhost:8001';
