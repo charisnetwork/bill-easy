@@ -302,7 +302,7 @@ const addUser = async (req, res) => {
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12); // Consistent with authController (rounds=12)
 
     const user = await User.create({
       company_id: req.companyId,

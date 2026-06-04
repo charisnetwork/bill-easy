@@ -10,17 +10,18 @@ const rateLimit = require('express-rate-limit');
 const { logSecurityEvent } = require('../services/auditService');
 
 // General API rate limiting
+// 300/15min = ~20 req/min per IP — sufficient for a SaaS dashboard that fires 5-8 calls on page load
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per window
+  max: 300, // Raised from 100 — normal users won't hit this; abusers will
   message: {
-    error: 'Too many requests, please try again later',
+    error: 'Too many requests, please try again later.',
     code: 'RATE_LIMITED',
     retryAfter: 900
   },
-  standardHeaders: true,
+  standardHeaders: true, // Sends RateLimit-* headers to client
   legacyHeaders: false,
-  // Use default keyGenerator which handles IPv6 properly
+  skip: (req) => req.path === '/health' || req.path === '/api/health', // Don't rate-limit health checks
   handler: (req, res, next, options) => {
     console.warn(`[Rate Limit] Exceeded for ${req.ip} on ${req.path}`);
     res.status(options.statusCode).json(options.message);

@@ -3,19 +3,83 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#000000" />
-        <meta name="description" content="A product of Charis network" />
+        <meta name="theme-color" content="#059669" />
+
+        <!-- ===== SEO Meta Tags ===== -->
+        <title>Bill Easy | GST Billing & Inventory Management for Indian SMBs</title>
+        <meta name="description" content="Bill Easy is an all-in-one GST billing, invoicing, and inventory management software for Indian small businesses. Create GST invoices, manage stock, track expenses and generate 25+ reports. Free to start." />
+        <meta name="keywords" content="GST billing software, invoice software India, inventory management, GST invoice generator, billing app for small business, e-way bill software, accounting software India, Bill Easy" />
+        <meta name="author" content="Charis Network" />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://charisbilleasy.store/" />
+
+        <!-- ===== Open Graph (Facebook / WhatsApp / LinkedIn) ===== -->
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://charisbilleasy.store/" />
+        <meta property="og:title" content="Bill Easy | GST Billing & Inventory for Indian SMBs" />
+        <meta property="og:description" content="Create professional GST invoices, manage inventory, track expenses and generate reports — all in one platform. Trusted by 10,000+ businesses." />
+        <meta property="og:image" content="https://charisbilleasy.store/og-image.png" />
+        <meta property="og:locale" content="en_IN" />
+        <meta property="og:site_name" content="Bill Easy" />
+
+        <!-- ===== Twitter Card ===== -->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Bill Easy | GST Billing & Inventory Software" />
+        <meta name="twitter:description" content="All-in-one GST billing and inventory platform for Indian businesses. Free to start." />
+        <meta name="twitter:image" content="https://charisbilleasy.store/og-image.png" />
+
+        <!-- ===== Structured Data (JSON-LD) ===== -->
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "Bill Easy",
+          "applicationCategory": "BusinessApplication",
+          "description": "GST billing, invoicing and inventory management for Indian SMBs",
+          "url": "https://charisbilleasy.store",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "INR"
+          },
+          "operatingSystem": "Web"
+        }
+        </script>
+
+        <!-- ===== Fonts ===== -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900&display=swap" rel="stylesheet" />
+
+        <!-- ===== Icons & Manifest ===== -->
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/logo192.png" />
         <link rel="manifest" href="/manifest.json" />
-        
-        <title>Bill Easy | Complete Bill Book</title>
+
+        <!-- ===== Google Analytics 4 ===== -->
+        <!-- Set VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX in your Cloudflare environment variables -->
+        <script>
+          (function() {
+            var gaId = '%VITE_GA_MEASUREMENT_ID%';
+            // The placeholder is replaced at build time by Vite.
+            // If the ID is missing or still the placeholder, skip GA.
+            if (!gaId || gaId === '%VITE_GA_MEASUREMENT_ID%' || !gaId.startsWith('G-')) return;
+            var s = document.createElement('script');
+            s.async = true;
+            s.src = 'https://www.googletagmanager.com/gtag/js?id=' + gaId;
+            document.head.appendChild(s);
+            window.dataLayer = window.dataLayer || [];
+            window.gtag = function() { window.dataLayer.push(arguments); };
+            window.gtag('js', new Date());
+            window.gtag('config', gaId, { send_page_view: false }); // Page views sent by React hook
+          })();
+        </script>
+
+        <!-- ===== Razorpay ===== -->
         <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+        <!-- ===== Suppress noisy DOMException from browser extensions ===== -->
         <script>window.addEventListener("error",function(e){if(e.error instanceof DOMException&&e.error.name==="DataCloneError"&&e.message&&e.message.includes("PerformanceServerTiming")){e.stopImmediatePropagation();e.preventDefault()}},true);</script>
-        
     </head>
     <body>
         <noscript>You need to enable JavaScript to run this app.</noscript>

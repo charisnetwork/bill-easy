@@ -73,32 +73,34 @@ if (process.env.FRONTEND_URL) {
 
 // Helper to check if origin matches allowed patterns
 const isOriginAllowed = (origin) => {
-  // Allow all origins in production for health checks and flexibility
+  // Server-to-server / curl / mobile app requests have no origin — allow them
   if (!origin) return true;
-  
-  // Exact match
+
+  // Exact match against our curated whitelist
   if (ALLOWED_ORIGINS.includes(origin)) return true;
-  
-  // Allow all Vercel preview deployments (xxx.vercel.app)
+
+  // Allow Vercel preview deployments (xxx.vercel.app)
   if (origin.endsWith('.vercel.app')) return true;
-  
-  // Allow Railway app domains
+
+  // Allow Railway app domains (our own backend-to-backend calls)
   if (origin.includes('.up.railway.app')) return true;
-  
-  // Allow Cloudflare Pages domains (xxx.pages.dev and custom *.pages.dev)
+
+  // Allow Cloudflare Pages domains
   if (origin.includes('.pages.dev')) return true;
-  
-  // Allow Railway public domains (for health checks)
-  if (origin.includes('railway.app')) return true;
-  
-  return true; // Allow all origins by default for now
+
+  // Deny everything else
+  return false;
 };
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow all origins - health checks, mobile apps, curl, server-to-server
-      callback(null, true);
+      if (isOriginAllowed(origin)) {
+        callback(null, true);
+      } else {
+        console.warn(`[CORS] Blocked origin: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-company-id', 'x-admin-secret', 'x-admin-token'],
@@ -110,7 +112,9 @@ app.use(
    REQUEST LOGGER
 ========================================= */
 
-app.use(morgan('dev'));
+// Use 'combined' (Apache-style) in production for structured logging;
+// use 'dev' locally for colourized output
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 /* =========================================
    RATE LIMITING
@@ -174,27 +178,8 @@ app.use('/api/enquiries', enquiryRoutes);
 app.use('/api/staff', require('./routes/staff'));
 app.use("/api/utilities", require("./routes/utilities"));
 
-// Direct routes without /api prefix (for Railway direct access)
-// These handle cases where Railway strips the /api prefix
-app.use('/auth', authRoutes);
-app.use('/company', companyRoutes);
-app.use('/customers', customerRoutes);
-app.use('/suppliers', supplierRoutes);
-app.use("/products", productRoutes);
-app.use("/invoices", invoiceRoutes);
-app.use("/quotations", quotationRoutes);
-app.use("/purchases", purchaseRoutes);
-app.use("/purchase-orders", purchaseOrderRoutes);
-app.use("/expenses", expenseRoutes);
-app.use('/payments', paymentRoutes);
-app.use('/reports', reportRoutes);
-app.use('/subscription', subscriptionRoutes);
-app.use('/eway-bills', ewayBillRoutes);
-app.use('/credit-notes', creditNoteRoutes);
-app.use('/ai', aiRoutes);
-app.use('/enquiries', enquiryRoutes);
-app.use('/staff', require('./routes/staff'));
-app.use("/utilities", require("./routes/utilities"));
+// NOTE: Bare-path duplicate routes removed — Railway now correctly preserves /api/ prefix.
+// All API calls must go through /api/* routes above.
 
 /* =========================================
    ADMIN PORTAL ROUTES
@@ -210,8 +195,18 @@ const ADMIN_JWT_SECRET = process.env.JWT_SECRET || process.env.ADMIN_SECRET || '
 // Build a single admin router with auth + data routes
 const adminRouter = express.Router();
 
-// --- Public: Admin Login ---
-adminRouter.post('/auth/login', (req, res) => {
+// Rate limiter for admin login — 5 attempts per 15 minutes
+const { rateLimit: _rl } = require('express-rate-limit');
+const adminAuthLimiter = _rl({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { error: 'Too many admin login attempts. Try again in 15 minutes.', code: 'ADMIN_RATE_LIMITED' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// --- Public: Admin Login (rate limited) ---
+adminRouter.post('/auth/login', adminAuthLimiter, (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -315,18 +310,23 @@ app.get('/api-info', (req, res) => {
 ========================================= */
 
 app.use((err, req, res, next) => {
-  // Handle CORS errors specifically
+  // Return proper 403 for CORS violations — do NOT bypass them
   if (err.message === 'Not allowed by CORS') {
-    // CORS error logged but allow for now
-    return res.status(200).json({
-      status: 'ok',
-      message: 'CORS bypassed'
+    return res.status(403).json({
+      error: 'CORS policy: Origin not allowed',
+      code: 'CORS_REJECTED'
     });
   }
-  
-  console.error('ERROR:', err);
+
+  // Log server-side errors (5xx) but not client errors (4xx)
+  if (!err.status || err.status >= 500) {
+    console.error('[Server Error]', err.message, err.stack?.split('\n')[1]?.trim());
+  }
+
   res.status(err.status || 500).json({
-    error: err.message || 'Internal server error'
+    error: process.env.NODE_ENV === 'production'
+      ? (err.status < 500 ? err.message : 'Internal server error')
+      : err.message
   });
 });
 

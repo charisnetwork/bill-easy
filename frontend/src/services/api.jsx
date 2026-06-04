@@ -81,6 +81,7 @@ export const authAPI = {
   getSessions: () => api.get('/auth/sessions'),
   revokeSession: (sessionId) => api.post(`/auth/sessions/${sessionId}/revoke`),
   verifyEmail: (token) => api.get(`/auth/verify-email/${token}`),
+  resendVerification: (data) => api.post('/auth/resend-verification', data),
   forgotPassword: (data) => api.post('/auth/forgot-password', data),
   resetPassword: (token, data) => api.post(`/auth/reset-password/${token}`, data)
 };

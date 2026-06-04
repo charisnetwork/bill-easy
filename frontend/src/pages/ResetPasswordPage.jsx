@@ -13,6 +13,7 @@ export const ResetPasswordPage = () => {
   const { token } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     password: '',
@@ -38,7 +39,7 @@ export const ResetPasswordPage = () => {
     try {
       const response = await authAPI.resetPassword(token, { password: formData.password });
       toast.success(response.data.message || 'Password reset successfully!');
-      navigate('/login');
+      setIsSuccess(true);
     } catch (error) {
       toast.error(getErrorMessage(error, 'Failed to reset password. Token may be expired.'));
     } finally {
@@ -66,57 +67,69 @@ export const ResetPasswordPage = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="px-4 sm:px-6">
-              <form onSubmit={handleSubmit} className="space-y-5">
-                
-                <div className="form-field">
-                  <Label htmlFor="password" className="form-label">New Password</Label>
-                  <InputGroup
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    leftIcon={<Lock className="w-4 h-4" />}
-                    rightElement={
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="text-slate-400 hover:text-slate-600 transition-colors p-1"
-                      >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    }
-                    required
-                  />
-                  <p className="text-xs text-slate-500 mt-2">Must be at least 8 characters long</p>
-                </div>
+              {!isSuccess ? (
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  
+                  <div className="form-field">
+                    <Label htmlFor="password" className="form-label">New Password</Label>
+                    <InputGroup
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      leftIcon={<Lock className="w-4 h-4" />}
+                      rightElement={
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="text-slate-400 hover:text-slate-600 transition-colors p-1"
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      }
+                      required
+                    />
+                    <p className="text-xs text-slate-500 mt-2">Must be at least 8 characters long</p>
+                  </div>
 
-                <div className="form-field">
-                  <Label htmlFor="confirmPassword" className="form-label">Confirm Password</Label>
-                  <InputGroup
-                    id="confirmPassword"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    value={formData.confirmPassword}
-                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    leftIcon={<Lock className="w-4 h-4" />}
-                    required
-                  />
-                </div>
+                  <div className="form-field">
+                    <Label htmlFor="confirmPassword" className="form-label">Confirm Password</Label>
+                    <InputGroup
+                      id="confirmPassword"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={formData.confirmPassword}
+                      onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                      leftIcon={<Lock className="w-4 h-4" />}
+                      required
+                    />
+                  </div>
 
-                <Button 
-                  type="submit" 
-                  className="w-full btn-primary h-11 mt-2 flex items-center justify-center gap-2"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Saving...</span>
-                    </>
-                  ) : 'Reset Password'}
-                </Button>
-              </form>
+                  <Button 
+                    type="submit" 
+                    className="w-full btn-primary h-11 mt-2 flex items-center justify-center gap-2"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Saving...</span>
+                      </>
+                    ) : 'Reset Password'}
+                  </Button>
+                </form>
+              ) : (
+                <div className="text-center p-4">
+                  <p className="text-slate-600 mb-6">Your password has been successfully reset. You can now use your new password to log in.</p>
+                  <Button 
+                    className="w-full btn-primary h-11"
+                    onClick={() => navigate('/login')}
+                  >
+                    Proceed to Login
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

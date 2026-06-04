@@ -72,9 +72,14 @@ export const LoginPage = () => {
                 <div className="form-field">
                   <div className="flex justify-between items-center mb-1">
                     <Label htmlFor="password" className="form-label mb-0">Password</Label>
-                    <Link to="/forgot-password" className="text-sm text-[#1E40AF] hover:underline font-medium">
-                      Forgot Password?
-                    </Link>
+                    <div className="flex gap-3">
+                      <Link to="/resend-verification" className="text-sm text-slate-500 hover:text-slate-700 transition-colors font-medium">
+                        Verify Email?
+                      </Link>
+                      <Link to="/forgot-password" className="text-sm text-[#1E40AF] hover:underline font-medium">
+                        Forgot Password?
+                      </Link>
+                    </div>
                   </div>
                   <InputGroup
                     id="password"

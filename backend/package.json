@@ -1,7 +1,7 @@
 {
-  "name": "mybillbook-backend",
+  "name": "billeasy-backend",
   "version": "1.0.0",
-  "description": "MyBillBook SaaS Billing Platform Backend",
+  "description": "billeasy SaaS Billing Platform Backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
