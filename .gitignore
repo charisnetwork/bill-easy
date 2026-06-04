@@ -54,3 +54,10 @@ output_project/
 *.sqlite3
 *.zip
 *.sql
+
+# Capacitor Android — generated build artifacts
+frontend/android/.gradle/
+frontend/android/app/build/
+frontend/android/build/
+frontend/android/.idea/
+frontend/android/local.properties

@@ -53,7 +53,7 @@ app.use(
 
 // Default allowed origins
 const ALLOWED_ORIGINS = [
-  // Production custom domain (if using)
+  // Production custom domain
   'https://charisbilleasy.store',
   'https://www.charisbilleasy.store',
   'https://admin.charisbilleasy.store',
@@ -61,7 +61,11 @@ const ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'http://localhost:5173',
   'http://127.0.0.1:3000',
-  'http://127.0.0.1:5173'
+  'http://127.0.0.1:5173',
+  // Capacitor Android app (native WebView origin)
+  'capacitor://localhost',
+  'http://localhost',          // Android WebView uses this for capacitor:// scheme
+  'ionic://localhost'          // Ionic compatibility
 ];
 
 // Add FRONTEND_URL from env (comma-separated for multiple origins)

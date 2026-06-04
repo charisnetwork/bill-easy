@@ -10,6 +10,7 @@
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
@@ -21,3 +22,14 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Capacitor Android — generated files, do not commit
+# Only capacitor.config.json should be committed
+/android/.gradle
+/android/app/build
+/android/build
+/android/.idea
+/android/local.properties
+# Uncomment the line below to also exclude the full android folder
+# /android
+

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Bill Easy</string>
+    <string name="title_activity_main">Bill Easy</string>
+    <string name="package_name">com.charisnetwork.billeasy</string>
+    <string name="custom_url_scheme">com.charisnetwork.billeasy</string>
+</resources>
