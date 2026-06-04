@@ -253,7 +253,8 @@ const login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        permissions: user.permissions
+        permissions: user.permissions,
+        email_verified: user.email_verified
       },
       maxBusinesses,
       company: user.Company ? {
@@ -460,7 +461,8 @@ const getProfile = async (req, res) => {
         email: user.email,
         phone: user.mobile_number,
         role: user.role,
-        permissions: user.permissions
+        permissions: user.permissions,
+        email_verified: user.email_verified
       },
       maxBusinesses,
       company: user.Company ? {
