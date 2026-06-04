@@ -511,8 +511,32 @@ const addCompany = async (req, res) => {
       role: 'owner'
     });
 
-    // Note: We no longer assign a default Free plan here. 
-    // Subscription access is now inherited globally from the owner's best active subscription tier.
+    // 6. Assign the best active subscription plan to the new company
+    // This gives it the Enterprise/Premium features but isolated usage tracking
+    let bestPlan = await Plan.findOne({ where: { plan_name: currentHighestPlan } });
+    if (!bestPlan) {
+      bestPlan = await Plan.findOne({ where: { plan_name: 'Free Account' } });
+    }
+
+    if (bestPlan) {
+      // Find the subscription that gave us this best plan to copy its expiry date
+      const sourceSub = subscriptions.find(s => s.Plan && s.Plan.plan_name === currentHighestPlan);
+      
+      await Subscription.create({
+        company_id: company.id,
+        plan_id: bestPlan.id,
+        start_date: new Date(),
+        expiry_date: sourceSub ? sourceSub.expiry_date : null,
+        status: sourceSub ? sourceSub.status : 'active',
+        payment_status: 'paid',
+        usage: {
+          invoices: 0,
+          products: 0,
+          eway_bills: 0,
+          godowns: 0
+        }
+      });
+    }
 
     res.status(201).json({ 
       message: 'New business created successfully', 
