@@ -12,7 +12,7 @@ const CharisAssistant = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef(null);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, subscription } = useAuth();
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -43,7 +43,8 @@ const CharisAssistant = () => {
     }
   };
 
-  if (!isAuthenticated) return null;
+  const planName = subscription?.plan?.plan_name || subscription?.Plan?.plan_name || 'Free Account';
+  if (!isAuthenticated || planName !== 'Enterprise') return null;
 
   return (
     <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end">

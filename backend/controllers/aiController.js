@@ -1,5 +1,5 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-const { Invoice, Product, Company, Expense, Subscription, Plan, AIUsage, Purchase, Supplier } = require("../models");
+const { GoogleGenerativeAI, SchemaType } = require("@google/generative-ai");
+const { Invoice, Product, Company, Expense, Subscription, Plan, AIUsage, Purchase, Supplier, Customer } = require("../models");
 const { Op, sequelize } = require("sequelize");
 
 // Initialize Gemini
@@ -65,10 +65,46 @@ const CHARIS_SYSTEM_INSTRUCTION = `You are Charis, the exclusive AI assistant fo
 
 Always be helpful, concise, and guide users step-by-step for Bill Easy operations.`;
 
+// Define Tools for Gemini
+const charisTools = {
+  functionDeclarations: [
+    {
+      name: "get_low_stock_products",
+      description: "Get a list of products that have low stock (stock quantity is at or below the low stock alert level). Use this when the user asks about lowest stock, running out of items, or items needing reorder.",
+      parameters: { type: SchemaType.OBJECT, properties: {} }
+    },
+    {
+      name: "search_product",
+      description: "Search for a specific product by name to get its details like price, stock, HSN code, and tax rate.",
+      parameters: {
+        type: SchemaType.OBJECT,
+        properties: {
+          product_name: { type: SchemaType.STRING, description: "Name of the product to search for" }
+        },
+        required: ["product_name"]
+      }
+    },
+    {
+      name: "get_financial_summary",
+      description: "Get today's total sales, overall total sales, total expenses, and net profit.",
+      parameters: { type: SchemaType.OBJECT, properties: {} }
+    },
+    {
+      name: "get_recent_invoices",
+      description: "Get a list of the 5 most recent invoices with their totals, customer names, and status.",
+      parameters: { type: SchemaType.OBJECT, properties: {} }
+    },
+    {
+      name: "get_top_debtors",
+      description: "Get a list of the top 5 customers who owe the most money (highest outstanding balance).",
+      parameters: { type: SchemaType.OBJECT, properties: {} }
+    }
+  ]
+};
+
 const chatWithAssistant = async (req, res) => {
   const companyId = req.companyId;
   const userId = req.user.id;
-  // Charis Assistant request received
   
   try {
     const { question, pdfData, pdfType } = req.body;
@@ -78,41 +114,38 @@ const chatWithAssistant = async (req, res) => {
     }
 
     if (!process.env.GEMINI_API_KEY) {
-      // GEMINI_API_KEY missing error
       return res.status(500).json({ error: "AI service is not configured on the server." });
     }
 
-    // 1. Check Usage Limits
+    // 1. Check Usage Limits (Enterprise ONLY)
     const subscription = await Subscription.findOne({
       where: { company_id: companyId },
       include: [Plan]
     });
 
     const planName = subscription?.Plan?.plan_name || 'Free Account';
-    let dailyLimit = 12;
 
-    if (planName.toLowerCase().includes('premium')) {
-      dailyLimit = 50;
-    } else if (planName.toLowerCase().includes('enterprise')) {
-      dailyLimit = 100;
+    if (!planName.toLowerCase().includes('enterprise')) {
+      return res.status(403).json({ 
+        error: `Charis AI Assistant is exclusive to Enterprise users. Please upgrade your plan to access this feature.` 
+      });
     }
-
+    
+    const dailyLimit = 50;
     const today = new Date().toISOString().split('T')[0];
-    const [usage, created] = await AIUsage.findOrCreate({
+    const [usage] = await AIUsage.findOrCreate({
       where: { user_id: userId, date: today },
       defaults: { company_id: companyId, count: 0 }
     });
 
     if (usage.count >= dailyLimit) {
       return res.status(403).json({ 
-        error: `Daily limit reached. Your ${planName} allows ${dailyLimit} messages per day. Please upgrade for more access.` 
+        error: `Daily limit reached. Your Enterprise plan allows ${dailyLimit} AI questions per day.` 
       });
     }
 
     // 2. STRICT Topic Filtering - Block non-Bill Easy topics
     const lowerQuestion = (question || '').toLowerCase();
-    
-    // STRICT BLOCK LIST - Topics Charis should NEVER answer
     const blockedTopics = [
       'code', 'coding', 'programming', 'script', 'python', 'javascript', 'java', 'c++',
       'news', 'weather', 'sports', 'cricket', 'football', 'movie', 'film', 'song',
@@ -120,128 +153,120 @@ const chatWithAssistant = async (req, res) => {
       'bitcoin', 'game', 'gaming', 'playstation', 'xbox', 'dating', 'relationship'
     ];
     
-    const isBlocked = blockedTopics.some(topic => lowerQuestion.includes(topic));
-    
-    if (isBlocked) {
+    if (blockedTopics.some(topic => lowerQuestion.includes(topic))) {
       return res.json({ 
         answer: "🚫 I'm Charis, your Bill Easy business assistant. I cannot help with coding, news, entertainment, or general topics.\n\n✅ I can help you with:\n• Creating invoices, e-way bills, purchase orders\n• Generating sales, GST, and stock reports\n• Managing products and inventory\n• Bill Easy platform features\n\nHow can I assist with your billing or inventory today?" 
       });
     }
 
-    // 3. Handle PDF Processing for Items/Purchases
-    let pdfContext = "";
-    if (pdfData && pdfType) {
-      // Processing PDF data
-      
-      if (pdfType === 'purchase_invoice' || pdfType === 'supplier_bill') {
-        pdfContext = `\n[PDF DATA PROVIDED - Purchase Document]\nExtract product details from this PDF and:\n1. If item exists in database: Add purchase quantity to stock\n2. If item is NEW: Create new product with details\n\nPDF Content Summary: ${pdfData.substring(0, 2000)}`;
-      } else if (pdfType === 'product_catalog') {
-        pdfContext = `\n[PDF DATA PROVIDED - Product Catalog]\nExtract products and add them to inventory. Create new products if they don't exist.\n\nPDF Content: ${pdfData.substring(0, 2000)}`;
-      }
-    }
-
-    // 4. Fetch Contextual Data
-    let financialContext = "";
-    let inventoryContext = "";
-
-    const isFinancialQuery = lowerQuestion.includes('profit') || lowerQuestion.includes('loss') || 
-                            lowerQuestion.includes('sales') || lowerQuestion.includes('money') || 
-                            lowerQuestion.includes('total') || lowerQuestion.includes('expense');
-    
-    const isInventoryQuery = lowerQuestion.includes('stock') || lowerQuestion.includes('inventory') || 
-                            lowerQuestion.includes('item') || lowerQuestion.includes('product') ||
-                            lowerQuestion.includes('low stock');
-
-    if (isFinancialQuery) {
-      // Fetching financial context
-      try {
-        const todayStart = new Date();
-        todayStart.setHours(0,0,0,0);
-
-        const [totalSalesData, todaySalesData, totalExpensesData] = await Promise.all([
-          Invoice.sum('total_amount', { where: { company_id: companyId } }),
-          Invoice.sum('total_amount', { where: { company_id: companyId, invoice_date: { [Op.gte]: todayStart } } }),
-          Expense.sum('amount', { where: { company_id: companyId } })
-        ]);
-
-        const totalSales = parseFloat(totalSalesData || 0);
-        const todaySales = parseFloat(todaySalesData || 0);
-        const totalExpenses = parseFloat(totalExpensesData || 0);
-        const netProfit = totalSales - totalExpenses;
-
-        financialContext = `\n[Financial Data] Today's Sales: ₹${todaySales.toFixed(2)}, Total Sales: ₹${totalSales.toFixed(2)}, Expenses: ₹${totalExpenses.toFixed(2)}, Net Profit: ₹${netProfit.toFixed(2)}`;
-      } catch (dbError) {
-        // DB error logged
-      }
-    }
-
-    if (isInventoryQuery) {
-      // Fetching inventory context
-      try {
-        const lowStockProducts = await Product.findAll({
-          where: { 
-            company_id: companyId,
-            stock_quantity: { [Op.lte]: sequelize.col('low_stock_alert') }
-          },
-          order: [['stock_quantity', 'ASC']],
-          limit: 10,
-          attributes: ['name', 'stock_quantity']
-        });
-
-        if (lowStockProducts.length > 0) {
-          inventoryContext = "\n[Inventory Alert] Low Stock Items: " + lowStockProducts.map(p => `${p.name} (${p.stock_quantity})`).join(", ");
-        }
-      } catch (dbError) {
-        // DB error logged
-      }
-    }
-
+    // 3. Setup Gemini Model with Tools
     const company = await Company.findByPk(companyId, { attributes: ['name'] });
     const businessName = company?.name || "your business";
-
-    // 5. Construct Prompt
-    const contextStr = (financialContext || inventoryContext || pdfContext) ? 
-      `\nContext:${financialContext}${inventoryContext}${pdfContext}` : "";
     
-    const fullPrompt = `${CHARIS_SYSTEM_INSTRUCTION}\n\nBusiness: ${businessName}${contextStr}\n\nUser: ${question || 'Process the PDF data'}`;
+    // We add business name dynamically to the system instruction
+    const systemInstruction = \`\${CHARIS_SYSTEM_INSTRUCTION}\n\nYou are currently assisting the business named "\${businessName}".\nAnswer using the provided tools when the user asks for specific data.\`;
 
-    // 6. Call Gemini
-    let text;
-    // Use Gemini 3.0 Flash as primary, fallback to 2.5 Flash if available
-    const modelNames = ["gemini-3.0-flash", "gemini-2.5-flash", "gemini-2.0-flash-exp"];
-    let lastError = null;
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-3.0-flash",
+      tools: [charisTools],
+      systemInstruction: systemInstruction
+    });
 
-    for (const modelName of modelNames) {
+    const chat = model.startChat();
+    const result = await chat.sendMessage(question || 'Process the PDF data');
+    let response = await result.response;
+
+    // 4. Handle Function Calls
+    if (response.functionCalls && response.functionCalls.length > 0) {
+      const call = response.functionCalls[0];
+      let functionResponseData = {};
+
       try {
-        // Calling AI model
-        const model = genAI.getGenerativeModel({ model: modelName });
-        const result = await model.generateContent(fullPrompt);
-        const response = await result.response;
-        text = response.text();
-        
-        if (text) {
-          await usage.increment('count');
-          break;
+        if (call.name === "get_low_stock_products") {
+          const lowStockProducts = await Product.findAll({
+            where: { company_id: companyId, stock_quantity: { [Op.lte]: sequelize.col('low_stock_alert') } },
+            order: [['stock_quantity', 'ASC']],
+            limit: 10,
+            attributes: ['name', 'stock_quantity', 'low_stock_alert']
+          });
+          functionResponseData = { products: lowStockProducts };
+        } 
+        else if (call.name === "search_product") {
+          const { product_name } = call.args;
+          const products = await Product.findAll({
+            where: { company_id: companyId, name: { [Op.iLike]: \`%\${product_name}%\` } },
+            limit: 5,
+            attributes: ['name', 'stock_quantity', 'sale_price', 'hsn_code', 'gst_rate']
+          });
+          functionResponseData = { products };
         }
-      } catch (apiError) {
-        // API error logged
-        lastError = apiError;
-        // Continue to next model
-        continue;
+        else if (call.name === "get_financial_summary") {
+          const todayStart = new Date();
+          todayStart.setHours(0,0,0,0);
+          const [totalSalesData, todaySalesData, totalExpensesData] = await Promise.all([
+            Invoice.sum('total_amount', { where: { company_id: companyId } }),
+            Invoice.sum('total_amount', { where: { company_id: companyId, invoice_date: { [Op.gte]: todayStart } } }),
+            Expense.sum('amount', { where: { company_id: companyId } })
+          ]);
+          functionResponseData = {
+            today_sales: parseFloat(todaySalesData || 0),
+            total_sales: parseFloat(totalSalesData || 0),
+            total_expenses: parseFloat(totalExpensesData || 0),
+            net_profit: parseFloat(totalSalesData || 0) - parseFloat(totalExpensesData || 0)
+          };
+        }
+        else if (call.name === "get_recent_invoices") {
+          const invoices = await Invoice.findAll({
+            where: { company_id: companyId },
+            include: [{ model: Customer, attributes: ['name'] }],
+            order: [['invoice_date', 'DESC']],
+            limit: 5,
+            attributes: ['invoice_number', 'total_amount', 'payment_status', 'invoice_date']
+          });
+          functionResponseData = { invoices };
+        }
+        else if (call.name === "get_top_debtors") {
+          const debtors = await Customer.findAll({
+            where: { company_id: companyId, outstanding_balance: { [Op.gt]: 0 } },
+            order: [['outstanding_balance', 'DESC']],
+            limit: 5,
+            attributes: ['name', 'outstanding_balance', 'phone']
+          });
+          functionResponseData = { debtors };
+        }
+
+        // Send the function response back to the model
+        const secondResult = await chat.sendMessage([{
+          functionResponse: {
+            name: call.name,
+            response: functionResponseData
+          }
+        }]);
+        
+        response = await secondResult.response;
+      } catch (err) {
+        console.error("Function call execution error:", err);
+        const errorResult = await chat.sendMessage([{
+          functionResponse: {
+            name: call.name,
+            response: { error: "Failed to fetch data from database." }
+          }
+        }]);
+        response = await errorResult.response;
       }
     }
 
-    if (!text) {
-      return res.status(200).json({ 
-        answer: "I'm having trouble connecting right now. Please try again in a few seconds." 
-      });
+    const text = response.text();
+
+    if (text) {
+      await usage.increment('count');
+      res.json({ answer: text, usage: usage.count + 1, limit: dailyLimit });
+    } else {
+      res.status(200).json({ answer: "I'm having trouble connecting right now. Please try again." });
     }
 
-    // Response generated
-    res.json({ answer: text, usage: usage.count + 1, limit: dailyLimit });
-
   } catch (error) {
-    // Assistant error logged
+    console.error("Charis Assistant error:", error);
     res.status(500).json({ 
       error: "Charis is temporarily unavailable", 
       details: error.message 
