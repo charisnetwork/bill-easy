@@ -244,7 +244,7 @@ const sendToCA = async (req, res) => {
     const meta = {
       companyName: company.name,
       gstin: company.gst_number || '',
-      period: \`\${new Date(startDate).toLocaleDateString()} to \${new Date(endDate).toLocaleDateString()}\`
+      period: `${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()}`
     };
 
     const excelBuffer = await generateGstr1Excel(invoices, meta);
@@ -253,19 +253,19 @@ const sendToCA = async (req, res) => {
     const base64Content = excelBuffer.toString('base64');
     const attachment = {
       content: base64Content,
-      name: \`GSTR1_\${company.name.replace(/\\s+/g, '_')}_\${startDate}_\${endDate}.xlsx\`
+      name: `GSTR1_${company.name.replace(/\s+/g, '_')}_${startDate}_${endDate}.xlsx`
     };
 
-    const subject = \`GSTR-1 Report: \${company.name}\`;
-    const textContent = \`Hello,\\n\\nPlease find attached the GSTR-1 Excel report for \${company.name} for the period \${meta.period}.\\n\\nRegards,\\nBillEasy System\`;
-    const htmlContent = \`
+    const subject = `GSTR-1 Report: ${company.name}`;
+    const textContent = `Hello,\n\nPlease find attached the GSTR-1 Excel report for ${company.name} for the period ${meta.period}.\n\nRegards,\nBillEasy System`;
+    const htmlContent = `
       <div style="font-family: Arial, sans-serif; padding: 20px;">
         <h2 style="color: #2563eb;">GSTR-1 Report</h2>
         <p>Hello,</p>
-        <p>Please find attached the GSTR-1 Excel report for <strong>\${company.name}</strong> for the period \${meta.period}.</p>
+        <p>Please find attached the GSTR-1 Excel report for <strong>${company.name}</strong> for the period ${meta.period}.</p>
         <p>Regards,<br>BillEasy System</p>
       </div>
-    \`;
+    `;
 
     // Manually call the Brevo API object if sendEmailViaAPI doesn't directly support attachments via our abstraction,
     // but the abstraction passes along the full object. We need to tweak mailer.js if it doesn't support attachments, 
