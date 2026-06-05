@@ -258,7 +258,7 @@ const getUsers = async (req, res) => {
         "id",
         "name",
         "email",
-        "phone",
+        "mobile_number",
         "role",
         "permissions",
         "is_active",
@@ -290,7 +290,8 @@ const addUser = async (req, res) => {
 
   try {
 
-    const { name, email, password, phone, role, permissions } = req.body;
+    const { name, email, password, phone, mobile_number, role, permissions } = req.body;
+    const mobileNum = mobile_number || phone; // accept either field name from frontend
 
     const existingUser = await User.findOne({
       where: { email }
@@ -309,7 +310,7 @@ const addUser = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      phone,
+      mobile_number: mobileNum,
       role: role || "staff",
       permissions: permissions || {}
     });
@@ -347,7 +348,8 @@ const updateUser = async (req, res) => {
 
     const { id } = req.params;
 
-    const { name, phone, role, permissions, is_active } = req.body;
+    const { name, phone, mobile_number, role, permissions, is_active } = req.body;
+    const mobileNum = mobile_number || phone; // accept either field name from frontend
 
     const user = await User.findOne({
       where: {
@@ -364,7 +366,7 @@ const updateUser = async (req, res) => {
 
     await user.update({
       name,
-      phone,
+      mobile_number: mobileNum,
       role,
       permissions,
       is_active
