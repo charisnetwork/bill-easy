@@ -3,7 +3,7 @@ const { Invoice, Product, Company, Expense, Subscription, Plan, AIUsage, Purchas
 const { Op, sequelize } = require("sequelize");
 
 // Initialize Gemini
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_CHAT);
 
 // STRICT SYSTEM INSTRUCTION FOR CHARIS
 const CHARIS_SYSTEM_INSTRUCTION = `You are Charis, the exclusive AI assistant for Bill Easy - a GST billing and inventory management platform.
@@ -113,7 +113,7 @@ const chatWithAssistant = async (req, res) => {
       return res.status(400).json({ error: "Question or PDF data is required" });
     }
 
-    if (!process.env.GEMINI_API_KEY) {
+    if (!process.env.GEMINI_API_CHAT) {
       return res.status(500).json({ error: "AI service is not configured on the server." });
     }
 
