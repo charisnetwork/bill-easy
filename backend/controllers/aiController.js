@@ -167,7 +167,7 @@ const chatWithAssistant = async (req, res) => {
     const systemInstruction = `${CHARIS_SYSTEM_INSTRUCTION}\n\nYou are currently assisting the business named "${businessName}".\nAnswer using the provided tools when the user asks for specific data.`;
 
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-3.0-flash",
+      model: "gemini-1.5-flash",
       tools: [charisTools],
       systemInstruction: systemInstruction
     });

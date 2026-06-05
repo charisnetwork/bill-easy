@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../co
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '../components/ui/table';
-import { Crown, Star, Share2, Filter, Lock } from 'lucide-react';
+import { Share2, Filter, Lock, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -16,13 +16,8 @@ const formatCurrency = (amount) => new Intl.NumberFormat('en-IN', { style: 'curr
 const formatDate = (date) => new Date(date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
 const reportCategories = {
-  favourite: [
-    { id: 'balance-sheet', title: 'Balance Sheet', tier: 'ENTERPRISE', isFavourite: true },
-    { id: 'gstr-1', title: 'GSTR-1 (Sales)', tier: 'ENTERPRISE', isFavourite: true },
-    { id: 'profit-loss', title: 'Profit And Loss Report', tier: 'PREMIUM', isFavourite: true },
-    { id: 'sales', title: 'Sales Summary', tier: 'FREE', isFavourite: true },
-  ],
-  gst: [
+  taxCompliance: [
+    { id: 'gstr-1', title: 'GSTR-1 (Sales)', tier: 'ENTERPRISE' },
     { id: 'gstr-2', title: 'GSTR-2 (Purchase)', tier: 'ENTERPRISE' },
     { id: 'gstr-3b', title: 'GSTR-3b', tier: 'ENTERPRISE' },
     { id: 'gst-purchase', title: 'GST Purchase (With HSN)', tier: 'PREMIUM' },
@@ -34,7 +29,10 @@ const reportCategories = {
     { id: 'tds-tcs', title: 'TCS Receivable', tier: 'ENTERPRISE' },
     { id: 'gst', title: 'GST Summary', tier: 'PREMIUM' }
   ],
-  transaction: [
+  businessActivities: [
+    { id: 'balance-sheet', title: 'Balance Sheet', tier: 'ENTERPRISE' },
+    { id: 'profit-loss', title: 'Profit And Loss Report', tier: 'PREMIUM' },
+    { id: 'sales', title: 'Sales Summary', tier: 'FREE' },
     { id: 'bill-profit', title: 'Bill Wise Profit', tier: 'PREMIUM' },
     { id: 'cash-bank', title: 'Cash and Bank Report (All Payments)', tier: 'PREMIUM' },
     { id: 'daybook', title: 'Daybook', tier: 'PREMIUM' },
@@ -62,6 +60,7 @@ export const ReportsPage = () => {
   });
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const checkAccess = (tier) => {
     if (tier === 'FREE') return true;
@@ -360,23 +359,27 @@ export const ReportsPage = () => {
     );
   };
 
-  const renderReportList = (reports, showStar = false) => (
-    <div className="space-y-1">
-      {reports.map(report => (
-        <div 
-          key={report.id + report.title}
-          onClick={() => handleReportClick(report)}
-          className={`flex items-center justify-between p-3 rounded hover:bg-slate-50 cursor-pointer transition-colors ${activeReport === report.id ? 'bg-slate-50 border-l-4 border-indigo-600' : 'border-l-4 border-transparent'}`}
-        >
-          <span className="text-sm font-medium text-slate-700">{report.title}</span>
-          <div className="flex items-center gap-2">
-            {report.tier !== 'FREE' && <Crown className="w-4 h-4 text-amber-500 fill-amber-500" />}
-            {report.isFavourite && <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />}
+  const renderReportList = (reports) => {
+    const filteredReports = reports.filter(r => r.title.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    if (filteredReports.length === 0) {
+      return <div className="text-sm text-slate-500 py-4 px-2">No reports match your search.</div>;
+    }
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredReports.map(report => (
+          <div 
+            key={report.id + report.title}
+            onClick={() => handleReportClick(report)}
+            className={\`flex items-center justify-between p-4 rounded-lg border hover:bg-slate-50 cursor-pointer transition-colors \${activeReport === report.id ? 'bg-indigo-50 border-indigo-300' : 'bg-white border-slate-200'}\`}
+          >
+            <span className="text-sm font-medium text-slate-700">{report.title}</span>
           </div>
-        </div>
-      ))}
-    </div>
-  );
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6 animate-fade-in" data-testid="reports-page">
@@ -388,42 +391,42 @@ export const ReportsPage = () => {
         </Button>
       </div>
 
-      {/* Filter Pills */}
-      <div className="flex items-center gap-4 text-sm">
-        <span className="text-slate-400 flex items-center gap-1"><Filter className="w-4 h-4"/> Filter By</span>
-        {['Party', 'Category', 'Payment Collection', 'Item', 'Invoice Details', 'Summary'].map(filter => (
-          <div key={filter} className="px-4 py-1.5 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer">
-            {filter}
-          </div>
-        ))}
+      {/* Search Filter */}
+      <div className="flex items-center gap-4 text-sm relative">
+        <div className="relative w-full max-w-md">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Input 
+            placeholder="Search reports..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 h-11 bg-white border-slate-200"
+          />
+        </div>
       </div>
 
-      {/* Reports Grid Layout */}
-      <div className="grid md:grid-cols-3 gap-6 border rounded-lg bg-white overflow-hidden shadow-sm">
-        <div className="border-r">
-          <div className="p-4 border-b bg-slate-50/50 flex items-center gap-2 text-slate-600 font-medium">
-            <Star className="w-4 h-4 text-slate-400" /> Favourite
+      {/* Reports Row Layout */}
+      <div className="space-y-6">
+        
+        {/* Tax & Compliance Section */}
+        <div className="border rounded-lg bg-slate-50/50 overflow-hidden shadow-sm">
+          <div className="p-4 border-b bg-white flex items-center gap-2 text-slate-800 font-semibold">
+            <span className="border rounded px-1.5 py-0.5 text-xs bg-slate-100 text-slate-600">%</span> Tax & Compliance
           </div>
-          <div className="p-2">
-            {renderReportList(reportCategories.favourite, true)}
-          </div>
-        </div>
-        <div className="border-r">
-          <div className="p-4 border-b bg-slate-50/50 flex items-center gap-2 text-slate-600 font-medium">
-            <span className="border rounded px-1.5 text-xs bg-slate-200">%</span> GST
-          </div>
-          <div className="p-2">
-            {renderReportList(reportCategories.gst)}
+          <div className="p-4">
+            {renderReportList(reportCategories.taxCompliance)}
           </div>
         </div>
-        <div>
-          <div className="p-4 border-b bg-slate-50/50 flex items-center gap-2 text-slate-600 font-medium">
-            <FileTextIcon /> Transaction
+
+        {/* Business Activities Section */}
+        <div className="border rounded-lg bg-slate-50/50 overflow-hidden shadow-sm">
+          <div className="p-4 border-b bg-white flex items-center gap-2 text-slate-800 font-semibold">
+            <FileTextIcon /> Business Activities
           </div>
-          <div className="p-2">
-            {renderReportList(reportCategories.transaction)}
+          <div className="p-4">
+            {renderReportList(reportCategories.businessActivities)}
           </div>
         </div>
+
       </div>
 
       {/* Date Range Selector */}
