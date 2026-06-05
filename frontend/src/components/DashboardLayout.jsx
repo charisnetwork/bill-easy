@@ -305,7 +305,7 @@ export const DashboardLayout = ({ children }) => {
           <div className="flex items-center gap-4">
 
             <button
-              className="md:hidden p-2 hover:bg-slate-100 rounded-lg"
+              className="hidden p-2 hover:bg-slate-100 rounded-lg"
               onClick={() => setSidebarOpen(true)}
             >
               <Menu className="w-5 h-5" />
@@ -427,7 +427,7 @@ export const DashboardLayout = ({ children }) => {
         </header>
 
         {/* Page */}
-        <main className="flex-1 overflow-y-auto flex flex-col print:overflow-visible print:bg-white relative">
+        <main className="flex-1 overflow-y-auto flex flex-col print:overflow-visible print:bg-white relative pb-20 md:pb-0">
           <div className="p-4 md:p-6 lg:p-8 print:p-0">
             {children}
           </div>
@@ -438,6 +438,56 @@ export const DashboardLayout = ({ children }) => {
 
       </div>
 
+    </div>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <div className="flex items-center justify-around h-16 px-2">
+          <Link to="/dashboard" className={cn("flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors", location.pathname === '/dashboard' ? "text-emerald-600" : "text-slate-500 hover:text-slate-900")}>
+            <LayoutDashboard className={cn("w-5 h-5", location.pathname === '/dashboard' && "fill-emerald-100")} />
+            <span className="text-[10px] font-bold">Home</span>
+          </Link>
+          <Link to="/invoices" className={cn("flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors", location.pathname.startsWith('/invoices') ? "text-emerald-600" : "text-slate-500 hover:text-slate-900")}>
+            <FileText className={cn("w-5 h-5", location.pathname.startsWith('/invoices') && "fill-emerald-100")} />
+            <span className="text-[10px] font-bold">Invoices</span>
+          </Link>
+          
+          <div className="relative -top-5 flex justify-center w-full">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center justify-center w-14 h-14 bg-emerald-500 hover:bg-emerald-600 transition-colors text-white rounded-full shadow-lg shadow-emerald-500/40 ring-4 ring-slate-50 active:scale-95">
+                  <Plus className="w-6 h-6 stroke-[3px]" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center" sideOffset={15} className="w-56 rounded-2xl shadow-xl p-2 border-slate-100 mb-2">
+                <DropdownMenuLabel className="text-xs font-bold text-slate-400 uppercase tracking-wider px-2 py-1.5">Quick Actions</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/invoices/new')} className="py-3 cursor-pointer rounded-xl hover:bg-emerald-50 focus:bg-emerald-50">
+                  <FileText className="w-4 h-4 mr-3 text-emerald-600" />
+                  <span className="font-semibold text-slate-700">Create Invoice</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/purchases/new')} className="py-3 cursor-pointer rounded-xl hover:bg-blue-50 focus:bg-blue-50">
+                  <ShoppingCart className="w-4 h-4 mr-3 text-blue-600" />
+                  <span className="font-semibold text-slate-700">Create Purchase</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/eway-bills/new')} className="py-3 cursor-pointer rounded-xl hover:bg-indigo-50 focus:bg-indigo-50">
+                  <Truck className="w-4 h-4 mr-3 text-indigo-600" />
+                  <span className="font-semibold text-slate-700">Create E-Way Bill</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          <Link to="/products" className={cn("flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors", location.pathname.startsWith('/products') ? "text-emerald-600" : "text-slate-500 hover:text-slate-900")}>
+            <Package className={cn("w-5 h-5", location.pathname.startsWith('/products') && "fill-emerald-100")} />
+            <span className="text-[10px] font-bold">Items</span>
+          </Link>
+          <button onClick={() => setSidebarOpen(true)} className={cn("flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors", sidebarOpen ? "text-emerald-600" : "text-slate-500 hover:text-slate-900")}>
+            <Menu className="w-5 h-5" />
+            <span className="text-[10px] font-bold">Menu</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

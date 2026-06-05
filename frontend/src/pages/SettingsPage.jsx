@@ -745,7 +745,7 @@ export const SettingsPage = () => {
     { id: 'business-godowns', label: 'Godowns', icon: Warehouse },
     { id: 'payments', label: 'Payment & Bank', icon: CreditCard },
     { id: 'reminders', label: 'Reminders', icon: Bell },
-    { id: 'send-to-ca', label: 'Send to CA', icon: Mail },
+    { id: 'send-to-ca', label: 'CA Portal', icon: Mail },
     { id: 'refer', label: 'Refer & Earn', icon: Gift },
     { id: 'help', label: 'Help And Support', icon: HelpCircle },
   ];
@@ -762,7 +762,7 @@ export const SettingsPage = () => {
     'payments': { title: 'Payment & Bank Settings', subtitle: 'Manage banking and payment details' },
     'team': { title: 'Manage Users', subtitle: 'Add and manage team members' },
     'reminders': { title: 'Reminders', subtitle: 'Set up automated reminders' },
-    'send-to-ca': { title: 'Send to CA', subtitle: 'Directly send GSTR-1 Excel reports to your CA' },
+    'send-to-ca': { title: 'CA Portal', subtitle: 'Directly send GSTR-1 Excel reports to your CA' },
     'refer': { title: 'Refer & Earn', subtitle: 'Share Bill Easy and earn rewards' },
     'help': { title: 'Help And Support', subtitle: 'Get help with Bill Easy' },
   };
@@ -1721,7 +1721,7 @@ export const SettingsPage = () => {
             {activeSection === 'send-to-ca' && (
               <div className="space-y-8">
                 <div className="space-y-1">
-                  <h3 className="text-lg font-bold text-slate-900">Send to CA</h3>
+                  <h3 className="text-lg font-bold text-slate-900">CA Portal</h3>
                   <p className="text-sm text-slate-500">Automatically generate and email your GSTR-1 return in Excel format directly to your Chartered Accountant.</p>
                 </div>
                 

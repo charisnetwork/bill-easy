@@ -27,12 +27,12 @@ const FreeDashboard = ({ data }) => {
       {/* Top Header with Add Business */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Zero Account Dashboard</h1>
-          <p className="text-slate-500 font-medium">Manage your growing business</p>
+          <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Zero Account Dashboard</h1>
+          <p className="text-slate-500 font-medium text-sm">Manage your growing business</p>
         </div>
         <Button 
           onClick={() => handleRestrictedClick('Multiple Businesses')}
-          className="bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-100 font-bold px-6"
+          className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-100 font-bold px-6 h-11"
         >
           <Building2 className="w-4 h-4 mr-2" />
           Add Business
@@ -40,17 +40,17 @@ const FreeDashboard = ({ data }) => {
       </div>
 
       {/* Promotion Banner */}
-      <div className="bg-slate-900 rounded-[2rem] p-8 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+      <div className="bg-slate-900 rounded-3xl md:rounded-[2rem] p-6 md:p-8 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
         <div className="relative z-10 space-y-2 text-center md:text-left">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-widest mb-2">
             Zero Account Active
           </div>
-          <h2 className="text-3xl font-black tracking-tight">Ready to scale?</h2>
-          <p className="text-slate-400 font-medium max-w-md">Upgrade to Premium for E-Way Bills, Multi-Business support, and Unlimited Godowns.</p>
+          <h2 className="text-2xl md:text-3xl font-black tracking-tight">Ready to scale?</h2>
+          <p className="text-slate-400 font-medium max-w-md text-sm md:text-base">Upgrade to Premium for E-Way Bills, Multi-Business support, and Unlimited Godowns.</p>
         </div>
-        <Link to="/subscription" className="relative z-10">
-          <Button className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 h-12 px-8 font-black rounded-2xl">
+        <Link to="/subscription" className="relative z-10 w-full md:w-auto">
+          <Button className="w-full md:w-auto bg-emerald-500 hover:bg-emerald-400 text-slate-900 h-12 px-8 font-black rounded-xl md:rounded-2xl shadow-lg shadow-emerald-500/20">
             UPGRADE NOW
           </Button>
         </Link>

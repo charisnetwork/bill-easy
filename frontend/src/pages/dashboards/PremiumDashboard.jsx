@@ -23,28 +23,28 @@ const PremiumDashboard = ({ data }) => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-amber-100 rounded-2xl text-amber-600 shadow-inner">
-            <Crown className="w-8 h-8 fill-amber-600" />
+            <Crown className="w-6 h-6 md:w-8 md:h-8 fill-amber-600" />
           </div>
           <div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Premium Dashboard</h1>
-            <p className="text-slate-500 font-medium text-sm uppercase tracking-widest">Enhanced Analytics & Multi-Business</p>
+            <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Premium Dashboard</h1>
+            <p className="text-slate-500 font-medium text-[10px] md:text-sm uppercase tracking-widest">Enhanced Analytics</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <Link to="/eway-bills/new">
-            <Button variant="outline" className="h-11 border-2 border-indigo-100 text-indigo-600 font-bold px-6">
+        <div className="flex w-full md:w-auto items-center gap-3">
+          <Link to="/eway-bills/new" className="flex-1 md:flex-none">
+            <Button variant="outline" className="w-full h-11 border-2 border-indigo-100 text-indigo-600 font-bold px-4 md:px-6 text-xs md:text-sm">
               <Truck className="w-4 h-4 mr-2" /> E-Way Bill
             </Button>
           </Link>
-          <Link to="/invoices/new">
-            <Button className="h-11 bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-100 px-6 font-bold">
-              <Plus className="w-5 h-5 mr-2" /> New Sales
+          <Link to="/invoices/new" className="flex-1 md:flex-none">
+            <Button className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-100 px-4 md:px-6 font-bold text-xs md:text-sm">
+              <Plus className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" /> New Sales
             </Button>
           </Link>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
         {[
           { title: "Today's Sales", value: data.todaySales, icon: IndianRupee, color: 'text-emerald-600', bg: 'bg-emerald-50' },
           { title: "Monthly Revenue", value: data.monthlySales, icon: Calendar, color: 'text-blue-600', bg: 'bg-blue-50' },
@@ -54,11 +54,11 @@ const PremiumDashboard = ({ data }) => {
           <Card key={i} className="border-none shadow-sm overflow-hidden">
             <CardContent className="p-6">
               <div className="flex justify-between items-start">
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.title}</p>
-                  <p className="text-xl font-black text-slate-900">{stat.isString ? stat.value : formatCurrency(stat.value)}</p>
+                <div className="space-y-1 overflow-hidden pr-2">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">{stat.title}</p>
+                  <p className="text-lg md:text-xl font-black text-slate-900 truncate">{stat.isString ? stat.value : formatCurrency(stat.value)}</p>
                 </div>
-                <div className={`p-2.5 rounded-lg ${stat.bg} ${stat.color}`}><stat.icon className="w-5 h-5" /></div>
+                <div className={`p-2 md:p-2.5 rounded-lg ${stat.bg} ${stat.color} shrink-0`}><stat.icon className="w-4 h-4 md:w-5 md:h-5" /></div>
               </div>
             </CardContent>
           </Card>

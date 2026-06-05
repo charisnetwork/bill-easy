@@ -22,7 +22,7 @@ const EnterpriseDashboard = ({ data }) => {
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-12 animate-fade-in">
       {/* High-End Header */}
-      <div className="relative overflow-hidden bg-slate-900 rounded-[2rem] p-8 text-white shadow-2xl">
+      <div className="relative overflow-hidden bg-slate-900 rounded-3xl md:rounded-[2rem] p-6 md:p-8 text-white shadow-2xl">
         <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" />
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
           <div className="flex items-center gap-6">
@@ -34,20 +34,20 @@ const EnterpriseDashboard = ({ data }) => {
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">Enterprise Edition</span>
               </div>
-              <h1 className="text-4xl font-black tracking-tight">Business Intelligence</h1>
+              <h1 className="text-2xl md:text-4xl font-black tracking-tight">Business Intelligence</h1>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-4">
-            <div className="px-6 py-3 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10">
+            <div className="px-5 py-3 md:px-6 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 w-full md:w-auto">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Active Businesses</p>
-              <p className="text-xl font-black">
+              <p className="text-lg md:text-xl font-black">
                 {String(data.activeBusinessesCount || 0).padStart(2, '0')} 
                 <span className="text-xs font-medium text-slate-500"> / {String(data.totalBusinessesLimit || 0).padStart(2, '0')}</span>
               </p>
             </div>
             <Link to="/invoices/new">
-              <Button className="h-14 bg-emerald-500 hover:bg-emerald-400 text-slate-900 px-8 font-black rounded-2xl shadow-xl shadow-emerald-500/20">
-                <Plus className="w-6 h-6 mr-2 stroke-[3px]" />
+              <Button className="h-12 md:h-14 w-full md:w-auto bg-emerald-500 hover:bg-emerald-400 text-slate-900 px-6 md:px-8 font-black rounded-xl md:rounded-2xl shadow-xl shadow-emerald-500/20 active:scale-95 transition-transform">
+                <Plus className="w-5 h-5 md:w-6 md:h-6 mr-2 stroke-[3px]" />
                 DIRECT BILLING
               </Button>
             </Link>
@@ -56,7 +56,7 @@ const EnterpriseDashboard = ({ data }) => {
       </div>
 
       {/* Main Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
         {[
           { title: "Revenue Flow", value: data.monthlySales, icon: Zap, color: 'emerald' },
           { title: "Net Profitability", value: data.netProfit, icon: TrendingUp, color: 'blue' },
@@ -67,9 +67,9 @@ const EnterpriseDashboard = ({ data }) => {
             <CardContent className="p-6">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mb-2">{stat.title}</p>
               <div className="flex items-end justify-between">
-                <h3 className="text-2xl font-black text-slate-900">{formatCurrency(stat.value)}</h3>
-                <div className={`p-2 rounded-lg bg-${stat.color}-50 text-${stat.color}-600`}>
-                  <stat.icon className="w-5 h-5" />
+                <h3 className="text-lg md:text-2xl font-black text-slate-900 truncate">{formatCurrency(stat.value)}</h3>
+                <div className={`p-1.5 md:p-2 rounded-lg bg-${stat.color}-50 text-${stat.color}-600 shrink-0 ml-2`}>
+                  <stat.icon className="w-4 h-4 md:w-5 md:h-5" />
                 </div>
               </div>
             </CardContent>
