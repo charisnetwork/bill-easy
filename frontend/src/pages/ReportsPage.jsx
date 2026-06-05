@@ -372,7 +372,7 @@ export const ReportsPage = () => {
           <div 
             key={report.id + report.title}
             onClick={() => handleReportClick(report)}
-            className={\`flex items-center justify-between p-4 rounded-lg border hover:bg-slate-50 cursor-pointer transition-colors \${activeReport === report.id ? 'bg-indigo-50 border-indigo-300' : 'bg-white border-slate-200'}\`}
+            className={`flex items-center justify-between p-4 rounded-lg border hover:bg-slate-50 cursor-pointer transition-colors ${activeReport === report.id ? 'bg-indigo-50 border-indigo-300' : 'bg-white border-slate-200'}`}
           >
             <span className="text-sm font-medium text-slate-700">{report.title}</span>
           </div>
