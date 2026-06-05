@@ -1,9 +1,11 @@
-const { GoogleGenerativeAI, SchemaType } = require("@google/generative-ai");
+const { GoogleGenAI, Type } = require("@google/genai");
 const { Invoice, Product, Company, Expense, Subscription, Plan, AIUsage, Purchase, Supplier, Customer } = require("../models");
 const { Op, sequelize } = require("sequelize");
 
 // Initialize Gemini
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_CHAT);
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_CHAT,
+});
 
 // STRICT SYSTEM INSTRUCTION FOR CHARIS
 const CHARIS_SYSTEM_INSTRUCTION = `You are Charis, the exclusive AI assistant for Bill Easy - a GST billing and inventory management platform.
@@ -71,15 +73,15 @@ const charisTools = {
     {
       name: "get_low_stock_products",
       description: "Get a list of products that have low stock (stock quantity is at or below the low stock alert level). Use this when the user asks about lowest stock, running out of items, or items needing reorder.",
-      parameters: { type: SchemaType.OBJECT, properties: {} }
+      parameters: { type: Type.OBJECT, properties: {} }
     },
     {
       name: "search_product",
       description: "Search for a specific product by name to get its details like price, stock, HSN code, and tax rate.",
       parameters: {
-        type: SchemaType.OBJECT,
+        type: Type.OBJECT,
         properties: {
-          product_name: { type: SchemaType.STRING, description: "Name of the product to search for" }
+          product_name: { type: Type.STRING, description: "Name of the product to search for" }
         },
         required: ["product_name"]
       }
@@ -87,17 +89,17 @@ const charisTools = {
     {
       name: "get_financial_summary",
       description: "Get today's total sales, overall total sales, total expenses, and net profit.",
-      parameters: { type: SchemaType.OBJECT, properties: {} }
+      parameters: { type: Type.OBJECT, properties: {} }
     },
     {
       name: "get_recent_invoices",
       description: "Get a list of the 5 most recent invoices with their totals, customer names, and status.",
-      parameters: { type: SchemaType.OBJECT, properties: {} }
+      parameters: { type: Type.OBJECT, properties: {} }
     },
     {
       name: "get_top_debtors",
       description: "Get a list of the top 5 customers who owe the most money (highest outstanding balance).",
-      parameters: { type: SchemaType.OBJECT, properties: {} }
+      parameters: { type: Type.OBJECT, properties: {} }
     }
   ]
 };
@@ -166,15 +168,26 @@ const chatWithAssistant = async (req, res) => {
     // We add business name dynamically to the system instruction
     const systemInstruction = `${CHARIS_SYSTEM_INSTRUCTION}\n\nYou are currently assisting the business named "${businessName}".\nAnswer using the provided tools when the user asks for specific data.`;
 
-    const model = genAI.getGenerativeModel({ 
+    const chat = ai.chats.create({ 
       model: "gemini-3.5-flash",
-      tools: [charisTools],
-      systemInstruction: systemInstruction
+      config: {
+        tools: [charisTools],
+        systemInstruction: systemInstruction,
+        temperature: 1,
+        thinkingConfig: {
+          thinkingLevel: "MEDIUM",
+        },
+        safetySettings: [
+          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'OFF' },
+          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'OFF' },
+          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'OFF' },
+          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'OFF' }
+        ]
+      }
     });
 
-    const chat = model.startChat();
-    const result = await chat.sendMessage(question || 'Process the PDF data');
-    let response = await result.response;
+    const result = await chat.sendMessage({ message: question || 'Process the PDF data' });
+    let response = result; // The new SDK sendMessage returns the response object directly
 
     // 4. Handle Function Calls
     if (response.functionCalls && response.functionCalls.length > 0) {
@@ -236,14 +249,13 @@ const chatWithAssistant = async (req, res) => {
         }
 
         // Send the function response back to the model
-        const secondResult = await chat.sendMessage([{
+        const functionResult = await chat.sendMessage([{
           functionResponse: {
             name: call.name,
             response: functionResponseData
           }
         }]);
-        
-        response = await secondResult.response;
+        response = functionResult;
       } catch (err) {
         console.error("Function call execution error:", err);
         const errorResult = await chat.sendMessage([{
@@ -252,11 +264,11 @@ const chatWithAssistant = async (req, res) => {
             response: { error: "Failed to fetch data from database." }
           }
         }]);
-        response = await errorResult.response;
+        response = errorResult;
       }
     }
 
-    const text = response.text();
+    const text = typeof response.text === 'function' ? response.text() : response.text;
 
     if (text) {
       await usage.increment('count');
