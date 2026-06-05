@@ -164,7 +164,7 @@ const chatWithAssistant = async (req, res) => {
     const businessName = company?.name || "your business";
     
     // We add business name dynamically to the system instruction
-    const systemInstruction = \`\${CHARIS_SYSTEM_INSTRUCTION}\n\nYou are currently assisting the business named "\${businessName}".\nAnswer using the provided tools when the user asks for specific data.\`;
+    const systemInstruction = `${CHARIS_SYSTEM_INSTRUCTION}\n\nYou are currently assisting the business named "${businessName}".\nAnswer using the provided tools when the user asks for specific data.`;
 
     const model = genAI.getGenerativeModel({ 
       model: "gemini-3.0-flash",
@@ -194,7 +194,7 @@ const chatWithAssistant = async (req, res) => {
         else if (call.name === "search_product") {
           const { product_name } = call.args;
           const products = await Product.findAll({
-            where: { company_id: companyId, name: { [Op.iLike]: \`%\${product_name}%\` } },
+            where: { company_id: companyId, name: { [Op.iLike]: `%${product_name}%` } },
             limit: 5,
             attributes: ['name', 'stock_quantity', 'sale_price', 'hsn_code', 'gst_rate']
           });

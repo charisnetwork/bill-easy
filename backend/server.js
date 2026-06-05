@@ -474,7 +474,44 @@ process.on('unhandledRejection', (reason, promise) => {
 // All DB bootstrap work runs in the background after the server is already up.
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server listening on port ${PORT} — running DB bootstrap in background...`);
+  startKeepAlive();
 });
+
+/* =========================================
+   KEEP-ALIVE SELF-PING
+   Pings /health every 4 minutes so Railway
+   never puts the service to sleep.
+   Only active in production.
+========================================= */
+const startKeepAlive = () => {
+  if (process.env.NODE_ENV !== 'production') return;
+
+  const PING_INTERVAL_MS = 4 * 60 * 1000; // 4 minutes
+  const HEALTH_URL = process.env.SELF_URL
+    ? `${process.env.SELF_URL}/health`
+    : `https://bill-easy-production.up.railway.app/health`;
+
+  // Wait 30s after boot before starting pings (let DB bootstrap settle)
+  setTimeout(() => {
+    const ping = () => {
+      const lib = HEALTH_URL.startsWith('https') ? require('https') : require('http');
+      const req = lib.get(HEALTH_URL, (res) => {
+        console.log(`[KeepAlive] Pinged ${HEALTH_URL} → ${res.statusCode}`);
+      });
+      req.on('error', (err) => {
+        console.warn(`[KeepAlive] Ping failed: ${err.message}`);
+      });
+      req.setTimeout(10000, () => {
+        req.destroy();
+        console.warn('[KeepAlive] Ping timed out');
+      });
+    };
+
+    ping(); // immediate first ping
+    setInterval(ping, PING_INTERVAL_MS);
+    console.log(`[KeepAlive] Self-ping started — every 4 minutes → ${HEALTH_URL}`);
+  }, 30 * 1000);
+};
 
 // Migration v2 - Force rebuild 2026-04-17T20:30
 const startServer = async () => {
