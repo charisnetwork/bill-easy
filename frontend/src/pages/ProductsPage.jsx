@@ -16,7 +16,7 @@ import {
 } from '../components/ui/table';
 import { Badge } from '../components/ui/badge';
 import { Checkbox } from '../components/ui/checkbox';
-import { Plus, Search, Edit, Trash2, Package, AlertTriangle, Filter, FileUp, Loader2, X } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Package, AlertTriangle, Filter, FileUp, Loader2, X, Hash } from 'lucide-react';
 import { toast } from 'sonner';
 import { getErrorMessage } from '../config/api';
 
@@ -49,6 +49,237 @@ const ProductForm = ({ product, categories, onSave, fetchCategories, onClose }) 
   const [newCategoryDialogOpen, setNewCategoryDialogOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [creatingCategory, setCreatingCategory] = useState(false);
+  const [hsnQuery, setHsnQuery] = useState(formData.hsn_code || '');
+  const [hsnResults, setHsnResults] = useState([]);
+  const [hsnOpen, setHsnOpen] = useState(false);
+  const hsnRef = React.useRef(null);
+
+  // Common GST HSN codes reference list
+  const HSN_LIST = [
+    { code: '0101', desc: 'Live horses, asses, mules and hinnies' },
+    { code: '0201', desc: 'Meat of bovine animals, fresh or chilled' },
+    { code: '0301', desc: 'Live fish' },
+    { code: '0401', desc: 'Milk and cream, not concentrated' },
+    { code: '0601', desc: 'Bulbs, tubers, roots – live plants' },
+    { code: '0701', desc: 'Potatoes, fresh or chilled' },
+    { code: '0702', desc: 'Tomatoes, fresh or chilled' },
+    { code: '0703', desc: 'Onions, shallots, garlic, leeks' },
+    { code: '0901', desc: 'Coffee' },
+    { code: '0902', desc: 'Tea' },
+    { code: '1001', desc: 'Wheat and meslin' },
+    { code: '1006', desc: 'Rice' },
+    { code: '1101', desc: 'Wheat or meslin flour' },
+    { code: '1501', desc: 'Pig fat (lard)' },
+    { code: '1701', desc: 'Cane or beet sugar, sucrose' },
+    { code: '1801', desc: 'Cocoa beans, whole or broken' },
+    { code: '1901', desc: 'Malt extract, food preparations of flour' },
+    { code: '2101', desc: 'Extracts, essences and concentrates of coffee, tea or maté' },
+    { code: '2201', desc: 'Waters, including natural or artificial mineral waters' },
+    { code: '2202', desc: 'Waters, including mineral and aerated, with added sugar' },
+    { code: '2301', desc: 'Flours, meals and pellets of meat or meat offal' },
+    { code: '2401', desc: 'Unmanufactured tobacco' },
+    { code: '2501', desc: 'Salt and pure sodium chloride' },
+    { code: '2601', desc: 'Iron ores and concentrates' },
+    { code: '2701', desc: 'Coal; briquettes, ovoids and similar solid fuels' },
+    { code: '2710', desc: 'Petroleum oils and oils from bituminous minerals' },
+    { code: '2711', desc: 'Petroleum gas and other gaseous hydrocarbons' },
+    { code: '2801', desc: 'Fluorine, chlorine, bromine and iodine' },
+    { code: '2901', desc: 'Acyclic hydrocarbons' },
+    { code: '3001', desc: 'Glands and other organs for therapeutic uses' },
+    { code: '3002', desc: 'Human blood, vaccines, toxins, cultures' },
+    { code: '3003', desc: 'Medicaments (mixed or unmixed products) for therapeutic use' },
+    { code: '3004', desc: 'Medicaments in measured doses for retail sale' },
+    { code: '3101', desc: 'Animal or vegetable fertilisers' },
+    { code: '3201', desc: 'Tanning extracts of vegetable origin' },
+    { code: '3301', desc: 'Essential oils (terpeneless or not)' },
+    { code: '3401', desc: 'Soap, organic surface-active products for use as soap' },
+    { code: '3402', desc: 'Organic surface-active agents (detergents)' },
+    { code: '3501', desc: 'Caseins, caseinates and other casein derivatives' },
+    { code: '3601', desc: 'Propellant powders' },
+    { code: '3701', desc: 'Photographic plates and film in the flat, sensitised' },
+    { code: '3801', desc: 'Artificial graphite' },
+    { code: '3901', desc: 'Polymers of ethylene, in primary forms' },
+    { code: '3902', desc: 'Polymers of propylene, in primary forms' },
+    { code: '3903', desc: 'Polymers of styrene, in primary forms' },
+    { code: '3904', desc: 'Polymers of vinyl chloride (PVC), in primary forms' },
+    { code: '3919', desc: 'Self-adhesive plates, sheets, film of plastics' },
+    { code: '3920', desc: 'Plastic plates, sheets, film, foil and strip' },
+    { code: '3923', desc: 'Articles for conveyance/packing of goods, of plastics' },
+    { code: '4001', desc: 'Natural rubber, balata, gutta-percha' },
+    { code: '4011', desc: 'New pneumatic tyres, of rubber' },
+    { code: '4016', desc: 'Other articles of vulcanised rubber' },
+    { code: '4101', desc: 'Raw hides and skins of bovine or equine animals' },
+    { code: '4201', desc: 'Saddlery and harness for any animal' },
+    { code: '4301', desc: 'Raw furskins' },
+    { code: '4401', desc: 'Fuel wood' },
+    { code: '4412', desc: 'Plywood, veneered panels and similar laminated wood' },
+    { code: '4421', desc: 'Other articles of wood' },
+    { code: '4501', desc: 'Natural cork, raw or simply prepared' },
+    { code: '4601', desc: 'Plaiting materials; basket-ware, wickerwork' },
+    { code: '4701', desc: 'Mechanical wood pulp' },
+    { code: '4801', desc: 'Newsprint, in rolls or sheets' },
+    { code: '4802', desc: 'Uncoated paper and paperboard, writing/printing' },
+    { code: '4817', desc: 'Envelopes, letter cards, plain postcards and correspondence' },
+    { code: '4901', desc: 'Printed books, brochures, leaflets' },
+    { code: '4902', desc: 'Newspapers, journals and periodicals' },
+    { code: '5001', desc: 'Silkworm cocoons suitable for reeling' },
+    { code: '5101', desc: 'Wool, not carded or combed' },
+    { code: '5201', desc: 'Cotton, not carded or combed' },
+    { code: '5208', desc: 'Woven fabrics of cotton' },
+    { code: '5401', desc: 'Sewing thread of man-made filaments' },
+    { code: '5501', desc: 'Synthetic filament tow' },
+    { code: '5601', desc: 'Wadding of textile materials' },
+    { code: '5701', desc: 'Carpets and other textile floor coverings, knotted' },
+    { code: '5801', desc: 'Woven pile fabrics and chenille fabrics' },
+    { code: '5901', desc: 'Textile fabrics coated with gum or amylaceous substances' },
+    { code: '6001', desc: 'Pile fabrics, including long pile fabrics and terry fabrics' },
+    { code: '6101', desc: "Men's overcoats, car coats, cloaks and similar articles" },
+    { code: '6109', desc: 'T-shirts, singlets and other vests – knitted' },
+    { code: '6110', desc: 'Jerseys, pullovers, sweatshirts – knitted' },
+    { code: '6201', desc: "Men's overcoats, anoraks, wind-jackets" },
+    { code: '6301', desc: 'Blankets and travelling rugs' },
+    { code: '6401', desc: 'Waterproof footwear with outer soles' },
+    { code: '6501', desc: 'Hat-forms, hat bodies and hoods of felt' },
+    { code: '6601', desc: 'Umbrellas and sun umbrellas' },
+    { code: '6701', desc: 'Skins and other parts of birds with feathers' },
+    { code: '6801', desc: 'Setts, curbstones and flagstones, of natural stone' },
+    { code: '6901', desc: 'Bricks, blocks, tiles – non-refractory ceramic' },
+    { code: '6910', desc: 'Ceramic sinks, wash basins, baths, bidets, WC pans' },
+    { code: '7001', desc: 'Cullet and other waste and scrap of glass' },
+    { code: '7013', desc: 'Glassware for table, kitchen, toilet, office, indoor' },
+    { code: '7101', desc: 'Pearls, natural or cultured, whether or not worked' },
+    { code: '7108', desc: 'Gold (including gold plated with platinum)' },
+    { code: '7113', desc: 'Articles of jewellery and parts thereof' },
+    { code: '7201', desc: 'Pig iron and spiegeleisen in pigs, blocks or other forms' },
+    { code: '7210', desc: 'Flat-rolled products of iron or non-alloy steel' },
+    { code: '7214', desc: 'Other bars and rods of iron or non-alloy steel' },
+    { code: '7216', desc: 'Angles, shapes and sections of iron or non-alloy steel' },
+    { code: '7301', desc: 'Sheet piling of iron or steel' },
+    { code: '7401', desc: 'Copper mattes; cement copper' },
+    { code: '7501', desc: 'Nickel mattes, nickel oxide sinters' },
+    { code: '7601', desc: 'Unwrought aluminium' },
+    { code: '7610', desc: 'Aluminium structures and parts; plates, rods, profiles' },
+    { code: '7701', desc: 'Unwrought lead' },
+    { code: '7801', desc: 'Unwrought lead' },
+    { code: '7901', desc: 'Unwrought zinc' },
+    { code: '8001', desc: 'Unwrought tin' },
+    { code: '8101', desc: 'Tungsten (wolfram) and articles thereof' },
+    { code: '8201', desc: 'Hand tools: spades, shovels, mattocks, picks, hoes' },
+    { code: '8202', desc: 'Hand saws; blades for saws of all kinds' },
+    { code: '8301', desc: 'Padlocks and locks of base metal' },
+    { code: '8401', desc: 'Nuclear reactors; fuel elements for nuclear reactors' },
+    { code: '8408', desc: 'Compression-ignition internal combustion piston engines (diesel)' },
+    { code: '8409', desc: 'Parts for internal combustion piston engines' },
+    { code: '8414', desc: 'Air or vacuum pumps, air or other gas compressors and fans' },
+    { code: '8415', desc: 'Air conditioning machines' },
+    { code: '8418', desc: 'Refrigerators, freezers and other refrigerating/freezing equipment' },
+    { code: '8419', desc: 'Machinery for treating materials by heating/cooling' },
+    { code: '8422', desc: 'Dishwashing machines; machinery for filling, sealing, labelling' },
+    { code: '8428', desc: 'Other lifting, handling, loading or unloading machinery' },
+    { code: '8443', desc: 'Printing machinery; ink-jet printing machines' },
+    { code: '8450', desc: 'Household- or laundry-type washing machines' },
+    { code: '8451', desc: 'Machinery for washing, cleaning, drying textiles' },
+    { code: '8471', desc: 'Automatic data-processing machines (computers)' },
+    { code: '8473', desc: 'Parts and accessories for computers' },
+    { code: '8481', desc: 'Taps, cocks, valves and similar appliances for pipes' },
+    { code: '8501', desc: 'Electric motors and generators' },
+    { code: '8502', desc: 'Electric generating sets and rotary converters' },
+    { code: '8504', desc: 'Electrical transformers, static converters and inductors' },
+    { code: '8507', desc: 'Electric accumulators (batteries)' },
+    { code: '8516', desc: 'Electric instantaneous or storage water heaters, irons' },
+    { code: '8517', desc: 'Telephone sets; smartphones and other phones' },
+    { code: '8518', desc: 'Microphones, loudspeakers, headphones, amplifiers' },
+    { code: '8519', desc: 'Sound recording or reproducing apparatus' },
+    { code: '8521', desc: 'Video recording or reproducing apparatus' },
+    { code: '8523', desc: 'Discs, tapes, solid-state storage devices for recording' },
+    { code: '8525', desc: 'Transmission apparatus for radio-broadcasting/TV, cameras' },
+    { code: '8528', desc: 'Monitors and projectors; TV receivers' },
+    { code: '8536', desc: 'Electrical apparatus for switching, protecting circuits' },
+    { code: '8544', desc: 'Insulated wire, cable and other insulated electric conductors' },
+    { code: '8601', desc: 'Rail locomotives powered from an external source of electricity' },
+    { code: '8701', desc: 'Tractors' },
+    { code: '8702', desc: 'Motor vehicles for transport of ten or more persons' },
+    { code: '8703', desc: 'Motor cars and other motor vehicles for transport of persons' },
+    { code: '8704', desc: 'Motor vehicles for transport of goods' },
+    { code: '8711', desc: 'Motorcycles (including mopeds) and cycles with auxiliary motor' },
+    { code: '8714', desc: 'Parts and accessories of vehicles' },
+    { code: '8716', desc: 'Trailers and semi-trailers; other vehicles, not mechanically propelled' },
+    { code: '8801', desc: 'Balloons and dirigibles; gliders, hang gliders' },
+    { code: '8901', desc: 'Cruise ships, excursion boats, ferries, cargo ships' },
+    { code: '9001', desc: 'Optical fibres and optical fibre bundles' },
+    { code: '9006', desc: 'Photographic cameras' },
+    { code: '9018', desc: 'Instruments and appliances for medical, surgical use' },
+    { code: '9021', desc: 'Orthopaedic appliances, splints, artificial parts of the body' },
+    { code: '9101', desc: 'Wrist watches, pocket watches and other watches' },
+    { code: '9201', desc: 'Pianos; keyboard pipe organs' },
+    { code: '9301', desc: 'Military weapons (other than revolvers, pistols)' },
+    { code: '9401', desc: 'Seats (other than those of heading 9402)' },
+    { code: '9403', desc: 'Other furniture and parts thereof' },
+    { code: '9404', desc: 'Mattress supports; mattresses, sleeping bags' },
+    { code: '9405', desc: 'Lamps and lighting fittings; illuminated signs, nameplates' },
+    { code: '9406', desc: 'Prefabricated buildings' },
+    { code: '9501', desc: 'Wheeled toys designed to be ridden; dolls\' carriages' },
+    { code: '9503', desc: 'Tricycles, scooters, toy sets, other toys' },
+    { code: '9504', desc: 'Video games consoles and machines, games' },
+    { code: '9601', desc: 'Worked ivory, bone, tortoise-shell' },
+    { code: '9701', desc: 'Paintings, drawings and pastels' },
+    { code: '9801', desc: 'Project imports; laboratory chemicals' },
+    { code: '9802', desc: 'Software on media' },
+    { code: '9803', desc: 'Passenger baggage' },
+    { code: '9804', desc: 'Postal imports' },
+    { code: '9805', desc: 'Personal imports by Indian residents from abroad' },
+    { code: '9901', desc: 'Services by a hotel, inn, guest house' },
+    { code: '9954', desc: 'Construction services' },
+    { code: '9961', desc: 'Services in wholesale trade' },
+    { code: '9962', desc: 'Services in retail trade' },
+    { code: '9971', desc: 'Financial and related services' },
+    { code: '9972', desc: 'Real estate services' },
+    { code: '9973', desc: 'Leasing or rental services without operator' },
+    { code: '9981', desc: 'Research and development services' },
+    { code: '9982', desc: 'Legal and accounting services' },
+    { code: '9983', desc: 'Management consulting and other professional services' },
+    { code: '9984', desc: 'Telecommunications, broadcasting and information supply services' },
+    { code: '9985', desc: 'Support services' },
+    { code: '9986', desc: 'Agriculture, forestry, fishing and related support services' },
+    { code: '9987', desc: 'Maintenance, repair and installation services' },
+    { code: '9988', desc: 'Manufacturing services on physical inputs owned by others' },
+    { code: '9989', desc: 'Other manufacturing services' },
+    { code: '9991', desc: 'Public administration and other government services' },
+    { code: '9992', desc: 'Education services' },
+    { code: '9993', desc: 'Human health and social care services' },
+    { code: '9994', desc: 'Sewage and waste collection, disposal and other environmental services' },
+    { code: '9995', desc: 'Services of membership organisations' },
+    { code: '9996', desc: 'Recreational, cultural and sporting services' },
+    { code: '9997', desc: 'Other services' },
+    { code: '9998', desc: 'Domestic services' },
+    { code: '9999', desc: 'Services provided by extraterritorial organizations' },
+  ];
+
+  const searchHsn = (query) => {
+    setHsnQuery(query);
+    setFormData(prev => ({ ...prev, hsn_code: query }));
+    if (query.length < 2) { setHsnResults([]); setHsnOpen(false); return; }
+    const q = query.toLowerCase();
+    const matches = HSN_LIST.filter(h =>
+      h.code.startsWith(q) || h.desc.toLowerCase().includes(q)
+    ).slice(0, 8);
+    setHsnResults(matches);
+    setHsnOpen(matches.length > 0);
+  };
+
+  const selectHsn = (item) => {
+    setHsnQuery(item.code);
+    setFormData(prev => ({ ...prev, hsn_code: item.code }));
+    setHsnOpen(false);
+    setHsnResults([]);
+  };
+
+  // Close dropdown on outside click
+  React.useEffect(() => {
+    const handleOutside = (e) => { if (hsnRef.current && !hsnRef.current.contains(e.target)) setHsnOpen(false); };
+    document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, []);
 
   useEffect(() => {
     const fetchGodowns = async () => {
@@ -138,13 +369,73 @@ const ProductForm = ({ product, categories, onSave, fetchCategories, onClose }) 
             data-testid="product-sku-input"
           />
         </div>
-        <div className="form-field">
+        <div className="form-field" ref={hsnRef} style={{ position: 'relative' }}>
           <Label className="form-label">HSN Code</Label>
-          <Input
-            value={formData.hsn_code}
-            onChange={(e) => setFormData({ ...formData, hsn_code: e.target.value })}
-            data-testid="product-hsn-input"
-          />
+          <div className="flex gap-1.5 items-center">
+            <div className="relative flex-1">
+              <Hash className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+              <Input
+                value={hsnQuery}
+                onChange={(e) => searchHsn(e.target.value)}
+                onFocus={() => hsnQuery.length >= 2 && hsnResults.length > 0 && setHsnOpen(true)}
+                placeholder="Code or keyword…"
+                className="pl-7"
+                data-testid="product-hsn-input"
+                autoComplete="off"
+              />
+            </div>
+          </div>
+          {hsnOpen && hsnResults.length > 0 && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                zIndex: 50,
+                marginTop: '4px',
+                background: '#fff',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                maxHeight: '220px',
+                overflowY: 'auto',
+              }}
+            >
+              <div style={{ padding: '6px 10px 4px', fontSize: '10px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #f1f5f9' }}>
+                HSN Suggestions
+              </div>
+              {hsnResults.map((item) => (
+                <div
+                  key={item.code}
+                  onClick={() => selectHsn(item)}
+                  style={{
+                    padding: '8px 12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    borderBottom: '1px solid #f8fafc',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#f0f9ff'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                >
+                  <span style={{
+                    fontFamily: 'monospace',
+                    fontWeight: 700,
+                    fontSize: '13px',
+                    color: '#4f46e5',
+                    background: '#eef2ff',
+                    borderRadius: '4px',
+                    padding: '1px 6px',
+                    minWidth: '44px',
+                    textAlign: 'center',
+                  }}>{item.code}</span>
+                  <span style={{ fontSize: '12px', color: '#475569', flex: 1, lineHeight: 1.3 }}>{item.desc}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <div className="form-field">
           <Label className="form-label">Category</Label>
