@@ -290,6 +290,10 @@ export const SettingsPage = () => {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  // Send to CA States
+  const [caEmail, setCaEmail] = useState('');
+  const [caDateRange, setCaDateRange] = useState({ start: '', end: '' });
+
   // Data States
   const [users, setUsers] = useState([]);
   const [godowns, setGodowns] = useState([]);
@@ -700,6 +704,35 @@ export const SettingsPage = () => {
     }
   };
 
+  // --- Send to CA Handler ---
+  const handleSendToCA = async (e) => {
+    e.preventDefault();
+    if (!caEmail || !caDateRange.start || !caDateRange.end) {
+      return toast.error("Please fill all fields");
+    }
+    
+    // Feature Check
+    if (subscription?.plan?.plan_name !== 'Enterprise') {
+       return toast.error("This feature requires an Enterprise Plan.");
+    }
+    
+    setSubmitting(true);
+    try {
+      await api.post('/reports/send-to-ca', {
+        caEmail,
+        startDate: caDateRange.start,
+        endDate: caDateRange.end
+      });
+      toast.success("GSTR-1 sent to CA successfully");
+      setCaEmail('');
+      setCaDateRange({ start: '', end: '' });
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to send to CA"));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   // --- Navigation Items (Flat like MyBillBook) ---
 
   const navItems = [
@@ -712,6 +745,7 @@ export const SettingsPage = () => {
     { id: 'business-godowns', label: 'Godowns', icon: Warehouse },
     { id: 'payments', label: 'Payment & Bank', icon: CreditCard },
     { id: 'reminders', label: 'Reminders', icon: Bell },
+    { id: 'send-to-ca', label: 'Send to CA', icon: Mail },
     { id: 'refer', label: 'Refer & Earn', icon: Gift },
     { id: 'help', label: 'Help And Support', icon: HelpCircle },
   ];
@@ -728,6 +762,7 @@ export const SettingsPage = () => {
     'payments': { title: 'Payment & Bank Settings', subtitle: 'Manage banking and payment details' },
     'team': { title: 'Manage Users', subtitle: 'Add and manage team members' },
     'reminders': { title: 'Reminders', subtitle: 'Set up automated reminders' },
+    'send-to-ca': { title: 'Send to CA', subtitle: 'Directly send GSTR-1 Excel reports to your CA' },
     'refer': { title: 'Refer & Earn', subtitle: 'Share Bill Easy and earn rewards' },
     'help': { title: 'Help And Support', subtitle: 'Get help with Bill Easy' },
   };
@@ -1680,6 +1715,74 @@ export const SettingsPage = () => {
                     <p className="text-sm text-slate-500">Call us at +91 99869 95848 (Mon-Sat, 9 AM - 6 PM)</p>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {activeSection === 'send-to-ca' && (
+              <div className="space-y-8">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-bold text-slate-900">Send to CA</h3>
+                  <p className="text-sm text-slate-500">Automatically generate and email your GSTR-1 return in Excel format directly to your Chartered Accountant.</p>
+                </div>
+                
+                {subscription?.plan?.plan_name !== 'Enterprise' ? (
+                  <div className="p-6 bg-indigo-50 border border-indigo-200 rounded-xl text-center">
+                    <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Lock className="w-6 h-6" />
+                    </div>
+                    <h4 className="text-base font-semibold text-indigo-900 mb-1">Enterprise Feature</h4>
+                    <p className="text-sm text-indigo-700 max-w-md mx-auto mb-4">
+                      The "Send to CA" functionality is exclusively available for Enterprise plan users. Upgrade your plan to easily send automated government-compliant GST reports.
+                    </p>
+                    <Button onClick={() => navigate('/subscription')} className="bg-indigo-600 hover:bg-indigo-700">
+                      Upgrade to Enterprise
+                    </Button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSendToCA} className="space-y-6 max-w-md bg-white p-6 rounded-xl border border-slate-200">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>CA Email Address *</Label>
+                        <Input 
+                          type="email" 
+                          placeholder="chartered.accountant@example.com" 
+                          value={caEmail} 
+                          onChange={(e) => setCaEmail(e.target.value)}
+                          required 
+                          className="h-11"
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Start Date *</Label>
+                          <Input 
+                            type="date" 
+                            value={caDateRange.start} 
+                            onChange={(e) => setCaDateRange({...caDateRange, start: e.target.value})}
+                            required 
+                            className="h-11"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>End Date *</Label>
+                          <Input 
+                            type="date" 
+                            value={caDateRange.end} 
+                            onChange={(e) => setCaDateRange({...caDateRange, end: e.target.value})}
+                            required 
+                            className="h-11"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <Button type="submit" disabled={submitting} className="w-full bg-emerald-600 hover:bg-emerald-700 h-11 text-white font-semibold">
+                      {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Mail className="w-4 h-4 mr-2" />}
+                      {submitting ? 'Sending...' : 'Send GSTR-1 to CA'}
+                    </Button>
+                  </form>
+                )}
               </div>
             )}
 

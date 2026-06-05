@@ -46,7 +46,8 @@ const sendEmailViaAPI = async ({
   subject,
   textContent,
   htmlContent,
-  replyTo
+  replyTo,
+  attachments
 }) => {
   if (!configureApiKey()) {
     throw new Error('BREVO_API_KEY not configured');
@@ -84,6 +85,11 @@ const sendEmailViaAPI = async ({
   }
   if (textContent) {
     sendSmtpEmail.textContent = textContent;
+  }
+  
+  // Set attachments
+  if (attachments && attachments.length > 0) {
+    sendSmtpEmail.attachment = attachments;
   }
   
   console.log('[Brevo API] Sending email via HTTP API...');

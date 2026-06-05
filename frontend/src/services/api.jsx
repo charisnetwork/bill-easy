@@ -213,7 +213,8 @@ export const reportAPI = {
   getGST: (params) => api.get('/reports/gst', { params }),
   getCustomerOutstanding: () => api.get('/reports/customer-outstanding'),
   getSupplierOutstanding: () => api.get('/reports/supplier-outstanding'),
-  getStock: () => api.get('/reports/stock')
+  getStock: () => api.get('/reports/stock'),
+  sendToCA: (data) => api.post('/reports/send-to-ca', data)
 };
 
 // Subscription APIs
