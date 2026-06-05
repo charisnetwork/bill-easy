@@ -4,7 +4,7 @@ const { Op, sequelize } = require("sequelize");
 
 // Initialize Gemini
 const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_CHAT,
+  apiKey: process.env.GOOGLE_CLOUD_API_KEY || process.env.GEMINI_API_CHAT,
 });
 
 // STRICT SYSTEM INSTRUCTION FOR CHARIS
@@ -115,7 +115,7 @@ const chatWithAssistant = async (req, res) => {
       return res.status(400).json({ error: "Question or PDF data is required" });
     }
 
-    if (!process.env.GEMINI_API_CHAT) {
+    if (!process.env.GOOGLE_CLOUD_API_KEY && !process.env.GEMINI_API_CHAT) {
       return res.status(500).json({ error: "AI service is not configured on the server." });
     }
 
