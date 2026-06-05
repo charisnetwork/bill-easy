@@ -386,22 +386,20 @@ export const ReportsPage = () => {
       {/* Header aligned to match screenshot */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4">
         <h1 className="text-xl font-semibold text-slate-800">Reports</h1>
-        <Button className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2 rounded">
+        <Button onClick={() => navigate('/settings?section=send-to-ca')} className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2 rounded">
           <Share2 className="w-4 h-4" /> CA Reports Sharing
         </Button>
       </div>
 
       {/* Search Filter */}
-      <div className="flex items-center gap-4 text-sm relative">
-        <div className="relative w-full max-w-md">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <Input 
-            placeholder="Search reports..." 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-11 bg-white border-slate-200"
-          />
-        </div>
+      <div className="flex items-center gap-2 text-sm max-w-md bg-white border border-slate-200 rounded-md px-3 shadow-sm">
+        <Search className="w-4 h-4 text-slate-400 flex-shrink-0" />
+        <Input 
+          placeholder="Search reports..." 
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="border-0 focus-visible:ring-0 shadow-none px-2 h-11 w-full"
+        />
       </div>
 
       {/* Reports Row Layout */}
