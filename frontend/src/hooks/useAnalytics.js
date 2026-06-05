@@ -12,7 +12,7 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
-const GA_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
+const GA_ID = 'G-HMTBF15XC3';
 
 // Push to GA4's dataLayer queue (gtag.js loaded in index.html)
 const gtag = (...args) => {

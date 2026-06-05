@@ -56,23 +56,14 @@
         <link rel="apple-touch-icon" href="/logo192.png" />
         <link rel="manifest" href="/manifest.json" />
 
-        <!-- ===== Google Analytics 4 ===== -->
-        <!-- Set VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX in your Cloudflare environment variables -->
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-HMTBF15XC3"></script>
         <script>
-          (function() {
-            var gaId = '%VITE_GA_MEASUREMENT_ID%';
-            // The placeholder is replaced at build time by Vite.
-            // If the ID is missing or still the placeholder, skip GA.
-            if (!gaId || gaId === '%VITE_GA_MEASUREMENT_ID%' || !gaId.startsWith('G-')) return;
-            var s = document.createElement('script');
-            s.async = true;
-            s.src = 'https://www.googletagmanager.com/gtag/js?id=' + gaId;
-            document.head.appendChild(s);
-            window.dataLayer = window.dataLayer || [];
-            window.gtag = function() { window.dataLayer.push(arguments); };
-            window.gtag('js', new Date());
-            window.gtag('config', gaId, { send_page_view: false }); // Page views sent by React hook
-          })();
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+
+          gtag('config', 'G-HMTBF15XC3');
         </script>
 
         <!-- ===== Razorpay ===== -->
