@@ -141,9 +141,12 @@ app.use(express.urlencoded({ extended: true }));
 ========================================= */
 
 // Health check (both /api/health and /health) - MUST return 200 for Railway
+// Returns 'starting' while DB bootstrap is still running, 'ok' once ready.
+let serverReady = false;
+
 app.get('/api/health', (req, res) => {
   res.status(200).json({
-    status: 'ok',
+    status: serverReady ? 'ok' : 'starting',
     timestamp: new Date().toISOString(),
     service: 'main-backend'
   });
@@ -151,7 +154,7 @@ app.get('/api/health', (req, res) => {
 
 app.get('/health', (req, res) => {
   res.status(200).json({
-    status: 'ok',
+    status: serverReady ? 'ok' : 'starting',
     timestamp: new Date().toISOString(),
     service: 'main-backend'
   });
@@ -466,6 +469,13 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('UNHANDLED REJECTION:', reason);
 });
 
+// ✅ START LISTENING IMMEDIATELY so Railway/load-balancer health checks pass
+// and users are never hit with 504 during cold start.
+// All DB bootstrap work runs in the background after the server is already up.
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server listening on port ${PORT} — running DB bootstrap in background...`);
+});
+
 // Migration v2 - Force rebuild 2026-04-17T20:30
 const startServer = async () => {
   try {
@@ -762,16 +772,13 @@ const startServer = async () => {
       // Company setup warning
     }
 
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log('Charis is now powered by Gemini 3.0 Flash');
-    });
+    serverReady = true;
+    console.log(`✅ DB bootstrap complete — server is fully ready on port ${PORT}`);
+    console.log('Charis is now powered by Gemini Flash');
   } catch (error) {
-    console.error('Server startup error:', error);
-    // Still start the server even if DB fails - health check will work
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Server running on port ${PORT} (DB connection failed)`);
-    });
+    console.error('Server startup error (server still accepting requests):', error);
+    // Mark as ready anyway — individual route handlers will surface DB errors naturally
+    serverReady = true;
   }
 };
 
