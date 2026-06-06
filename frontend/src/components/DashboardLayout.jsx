@@ -118,7 +118,7 @@ export const DashboardLayout = ({ children }) => {
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed md:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform transition-transform duration-200 ease-in-out print:hidden",
+        "fixed md:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform transition-transform duration-200 ease-in-out print:hidden pt-safe",
         location.pathname.startsWith('/settings') ? "hidden" : "md:translate-x-0",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
@@ -300,7 +300,7 @@ export const DashboardLayout = ({ children }) => {
       <div className="flex-1 flex flex-col overflow-hidden">
 
         {/* Header */}
-        <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8 shrink-0 print:hidden">
+        <header className="min-h-20 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8 shrink-0 print:hidden pt-safe">
 
           <div className="flex items-center gap-4">
 
@@ -437,8 +437,6 @@ export const DashboardLayout = ({ children }) => {
         </main>
 
       </div>
-
-    </div>
 
       {/* Mobile Bottom Navigation Bar */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">

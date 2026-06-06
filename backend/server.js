@@ -64,8 +64,9 @@ const ALLOWED_ORIGINS = [
   'http://127.0.0.1:5173',
   // Capacitor Android app (native WebView origin)
   'capacitor://localhost',
-  'http://localhost',          // Android WebView uses this for capacitor:// scheme
-  'ionic://localhost'          // Ionic compatibility
+  'https://localhost',          // Android WebView uses this if androidScheme is https
+  'http://localhost',           // Android WebView uses this for capacitor:// scheme
+  'ionic://localhost'           // Ionic compatibility
 ];
 
 // Add FRONTEND_URL from env (comma-separated for multiple origins)
@@ -489,7 +490,7 @@ const startKeepAlive = () => {
   const PING_INTERVAL_MS = 4 * 60 * 1000; // 4 minutes
   const HEALTH_URL = process.env.SELF_URL
     ? `${process.env.SELF_URL}/health`
-    : `https://bill-easy-production.up.railway.app/health`;
+    : `https://bill-easy-production.up.railway.app/health`; // Set SELF_URL in Railway env to override
 
   // Wait 30s after boot before starting pings (let DB bootstrap settle)
   setTimeout(() => {

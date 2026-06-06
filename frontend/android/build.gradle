@@ -22,6 +22,10 @@ allprojects {
         google()
         mavenCentral()
     }
+
+    if (project != rootProject && !projectDir.path.startsWith(rootProject.projectDir.path)) {
+        buildDir = new File(rootProject.buildDir, project.name)
+    }
 }
 
 task clean(type: Delete) {

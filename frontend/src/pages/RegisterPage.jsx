@@ -43,7 +43,7 @@ export const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex pt-safe">
       {/* Left side - Branding */}
       <div className="hidden lg:flex flex-1 hero-gradient items-center justify-center p-12">
         <div className="max-w-md text-center">
