@@ -47,12 +47,12 @@ const CharisAssistant = () => {
   if (!isAuthenticated || planName !== 'Enterprise') return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end">
+    <div className="fixed bottom-24 right-6 z-[9999] flex flex-col items-end pointer-events-none">
       {/* Chat Window */}
       {isOpen && (
-        <div className="mb-4 w-[380px] h-[550px] bg-white rounded-3xl shadow-2xl border border-slate-100 flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+        <div className="mb-4 w-[calc(100vw-3rem)] sm:w-[380px] h-[550px] max-h-[calc(100vh-8rem)] bg-white rounded-3xl shadow-2xl border border-slate-100 flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-300 pointer-events-auto">
           {/* Header */}
-          <div className="bg-slate-900 p-5 text-white flex items-center justify-between">
+          <div className="bg-slate-900 p-5 text-white flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-cyan-400 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
                 <Sparkles className="w-5 h-5 text-white" />
@@ -139,7 +139,7 @@ const CharisAssistant = () => {
       <button 
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "group relative w-16 h-16 rounded-full flex items-center justify-center transition-all duration-500",
+          "group relative w-16 h-16 rounded-full flex items-center justify-center transition-all duration-500 pointer-events-auto",
           isOpen ? "rotate-90 scale-90 opacity-0 pointer-events-none" : "scale-100 opacity-100"
         )}
       >

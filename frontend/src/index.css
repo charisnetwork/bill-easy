@@ -1,17 +1,21 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* =================================
-   BASE COLOR SYSTEM (Tailwind HSL)
+   PREMIUM SAAS COLOR SYSTEM (Tailwind HSL)
 ================================= */
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
+    --background: 210 40% 98%; /* #F8FAFC Soft Gray */
+    --foreground: 222 47% 11%; /* #0F172A */
 
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
@@ -19,96 +23,106 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Brand Colors */
-    --primary: 224 76% 40%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary: Indigo (#6366F1) */
+    --primary: 238 81% 67%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 160 84% 39%;
+    /* Secondary: Purple (#8B5CF6) */
+    --secondary: 258 90% 66%;
     --secondary-foreground: 0 0% 100%;
+
+    /* Accent: Cyan (#06B6D4) */
+    --accent: 189 94% 43%;
+    --accent-foreground: 0 0% 100%;
 
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
 
-    --accent: 38 92% 50%;
-    --accent-foreground: 0 0% 100%;
-
+    /* Danger: Red (#EF4444) */
     --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    /* Brand Blue for form elements - Updated to #1E40AF */
-    --border: 224 76% 40%;
-    --input: 224 76% 48%;
-    --ring: 224 76% 48%;
-    --brand-blue: #1E40AF;
-    --brand-blue-dark: #1E3A8A;
-    --brand-blue-light: rgba(30, 64, 175, 0.15);
+    /* Border & Inputs */
+    --border: 214 32% 91%; /* slate-200 */
+    --input: 214 32% 91%;
+    --ring: 238 81% 67%;
 
     /* Standardized border radius */
-    --radius: 0.5rem;
+    --radius: 0.75rem; /* 12px for softer cards */
     --input-radius: 8px;
+  }
+
+  .dark {
+    --background: 0 0% 5%; /* #0D0D0D - Very deep grey/black */
+    --foreground: 0 0% 95%; /* #F2F2F2 */
+    
+    --card: 0 0% 9%; /* #171717 */
+    --card-foreground: 0 0% 95%;
+    
+    --popover: 0 0% 11%; /* #1C1C1C */
+    --popover-foreground: 0 0% 95%;
+    
+    --primary: 238 81% 67%; /* Indigo stays vibrant */
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 258 90% 66%; /* Purple */
+    --secondary-foreground: 0 0% 100%;
+    
+    --accent: 189 94% 43%; /* Cyan */
+    --accent-foreground: 0 0% 100%;
+    
+    --muted: 0 0% 15%; /* #262626 */
+    --muted-foreground: 0 0% 65%; /* #A6A6A6 */
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 0 0% 18%; /* #2E2E2E */
+    --input: 0 0% 15%; /* #262626 */
+    --ring: 238 81% 67%;
   }
 
   * {
     @apply border-border;
   }
 
-  /* =================================
-     STANDARDIZED FORM INPUTS
-  ================================= */
-  
+  body {
+    @apply bg-background text-foreground;
+    margin: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Form overrides */
   input:not([type="checkbox"]):not([type="radio"]):not([type="color"]), 
   textarea, 
   select,
   [role="combobox"] {
-    border: 1.5px solid #E2E8F0;
-    background-color: #ffffff;
+    border: 1.5px solid hsl(var(--border));
+    background-color: hsl(var(--card));
     padding: 10px 14px;
     min-height: 2.75rem;
-    transition: all 0.2s ease-in-out;
+    width: 100%;
     border-radius: var(--input-radius);
+    transition: all 0.2s ease-in-out;
   }
 
   input:focus, 
   textarea:focus, 
   select:focus,
   [role="combobox"]:focus,
-  [data-state="open"][role="combobox"],
-  .focus-visible {
-    border-color: var(--brand-blue);
-    box-shadow: 0 0 0 4px var(--brand-blue-light);
+  [data-state="open"][role="combobox"] {
+    border-color: hsl(var(--ring));
+    box-shadow: 0 0 0 3px hsla(238, 81%, 67%, 0.15);
     outline: none;
   }
 
-  /* Label spacing for better mobile readability */
   label, .form-label {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 500;
     color: hsl(var(--foreground));
-  }
-
-  /* Mobile-friendly form spacing */
-  @media (max-width: 640px) {
-    input:not([type="checkbox"]):not([type="radio"]):not([type="color"]), 
-    textarea, 
-    select,
-    [role="combobox"] {
-      padding: 12px 16px;
-      min-height: 3rem;
-    }
-    
-    label, .form-label {
-      margin-bottom: 0.625rem;
-      font-size: 0.9375rem;
-    }
-  }
-
-  body {
-    @apply bg-background text-foreground;
-    margin: 0;
-    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
   }
 }
 
@@ -117,7 +131,8 @@
 ================================= */
 
 .font-heading {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: -0.02em;
 }
 
 .font-mono {

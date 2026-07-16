@@ -82,14 +82,14 @@ export const LandingPage = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass pt-safe">
+      <nav className="fixed top-0 left-0 right-0 z-50 glass header-safe-padding border-b pb-4">
         <div className="container mx-auto px-4 md:px-6 max-w-7xl">
           <div className="flex items-center justify-between min-h-16 py-2">
-            <Link to="/" className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-2 relative z-10">
               <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
                 <Building2 className="w-5 h-5 text-white" />
               </div>
-              <span className="font-heading font-bold text-xl text-slate-900">Bill Easy</span>
+              <span className="font-heading font-bold text-xl text-slate-900 bg-white/80 backdrop-blur-sm px-1 rounded">Bill Easy</span>
             </Link>
             
             <div className="hidden md:flex items-center gap-8">
@@ -100,11 +100,11 @@ export const LandingPage = () => {
 
             <div className="flex items-center gap-3">
               <Link to="/login">
-                <Button variant="ghost" data-testid="login-btn">Login</Button>
+                <Button variant="outline" className="border-emerald-600 text-emerald-600 hover:bg-emerald-50 px-5 font-bold shadow-sm" data-testid="login-btn">Login</Button>
               </Link>
               <Link to="/register">
-                <Button className="bg-emerald-600 hover:bg-emerald-700" data-testid="get-started-btn">
-                  Get Started Free
+                <Button className="bg-emerald-600 hover:bg-emerald-700 px-5 font-bold shadow-lg shadow-emerald-100" data-testid="get-started-btn">
+                  Join Free
                 </Button>
               </Link>
             </div>
@@ -113,7 +113,7 @@ export const LandingPage = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 hero-gradient relative overflow-hidden">
+      <section className="pt-[calc(env(safe-area-inset-top)+12rem)] pb-20 hero-gradient relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 left-20 w-72 h-72 bg-emerald-500 rounded-full blur-3xl"></div>
           <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-500 rounded-full blur-3xl"></div>
@@ -144,7 +144,7 @@ export const LandingPage = () => {
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </Button>
                 </Link>
-                <a href="/downloads.html">
+                <a href="/downloads.html" className="hidden sm:block">
                   <Button size="lg" variant="outline" className="border-slate-500 text-white hover:bg-white/10 w-full sm:w-auto">
                     ⬇️ Download for Windows
                   </Button>

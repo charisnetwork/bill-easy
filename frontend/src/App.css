@@ -3,8 +3,17 @@
   padding-bottom: env(safe-area-inset-bottom, 20px);
 }
 .pt-safe {
-  padding-top: env(safe-area-inset-top, 0px);
+  padding-top: calc(env(safe-area-inset-top, 0px) + 2.5rem);
 }
+.mt-safe {
+  margin-top: calc(env(safe-area-inset-top, 0px) + 2.5rem);
+}
+
+/* Specific class for fixed headers to ensure they are well below status bar */
+.header-safe-padding {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 3rem);
+}
+
 * {
   -webkit-tap-highlight-color: transparent;
 }

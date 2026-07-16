@@ -1,10 +1,12 @@
-import React, { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { lazy, Suspense, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { ThemeProvider } from 'next-themes';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { DashboardLayout } from './components/DashboardLayout';
 import { Toaster } from './components/ui/sonner';
 import { usePageTracking } from './hooks/useAnalytics';
+import { App as CapacitorApp } from '@capacitor/app';
 
 import './App.css';
 
@@ -72,6 +74,25 @@ const PageLoader = () => (
 // ─────────────────────────────────────────────────────────────
 function AppRoutes() {
   usePageTracking(); // Tracks every page navigation to GA4
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Handle Android Back Button
+    const backHandler = CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+      if (location.pathname === '/' || location.pathname === '/dashboard') {
+        // If we are at root or dashboard, exit the app
+        CapacitorApp.exitApp();
+      } else {
+        // Otherwise, go back in history
+        navigate(-1);
+      }
+    });
+
+    return () => {
+      backHandler.then(h => h.remove());
+    };
+  }, [location, navigate]);
 
   return (
     <Routes>
@@ -133,15 +154,17 @@ function AppRoutes() {
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Suspense fallback={<PageLoader />}>
-          <AppRoutes />
-          <CharisAssistant />
-        </Suspense>
-      </BrowserRouter>
-      <Toaster position="top-right" richColors />
-    </AuthProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <AuthProvider>
+        <BrowserRouter>
+          <Suspense fallback={<PageLoader />}>
+            <AppRoutes />
+            <CharisAssistant />
+          </Suspense>
+        </BrowserRouter>
+        <Toaster position="top-right" richColors />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

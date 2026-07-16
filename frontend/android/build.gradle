@@ -23,7 +23,7 @@ allprojects {
         mavenCentral()
     }
 
-    if (project != rootProject && !projectDir.path.startsWith(rootProject.projectDir.path)) {
+    if (project != rootProject) {
         buildDir = new File(rootProject.buildDir, project.name)
     }
 }

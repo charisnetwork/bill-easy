@@ -56,23 +56,14 @@
         <link rel="apple-touch-icon" href="/logo192.png" />
         <link rel="manifest" href="/manifest.json" />
 
-        <!-- ===== Google Analytics 4 ===== -->
-        <!-- Set VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX in your Cloudflare environment variables -->
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-HMTBF15XC3"></script>
         <script>
-          (function() {
-            var gaId = '%VITE_GA_MEASUREMENT_ID%';
-            // The placeholder is replaced at build time by Vite.
-            // If the ID is missing or still the placeholder, skip GA.
-            if (!gaId || gaId === '%VITE_GA_MEASUREMENT_ID%' || !gaId.startsWith('G-')) return;
-            var s = document.createElement('script');
-            s.async = true;
-            s.src = 'https://www.googletagmanager.com/gtag/js?id=' + gaId;
-            document.head.appendChild(s);
-            window.dataLayer = window.dataLayer || [];
-            window.gtag = function() { window.dataLayer.push(arguments); };
-            window.gtag('js', new Date());
-            window.gtag('config', gaId, { send_page_view: false }); // Page views sent by React hook
-          })();
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+
+          gtag('config', 'G-HMTBF15XC3');
         </script>
 
         <!-- ===== Razorpay ===== -->
@@ -80,18 +71,18 @@
 
         <!-- ===== Suppress noisy DOMException from browser extensions ===== -->
         <script>window.addEventListener("error",function(e){if(e.error instanceof DOMException&&e.error.name==="DataCloneError"&&e.message&&e.message.includes("PerformanceServerTiming")){e.stopImmediatePropagation();e.preventDefault()}},true);</script>
-      <script type="module" crossorigin src="/assets/index-9YA4Uw6P.js"></script>
-      <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-Dw2cE7zH.js">
-      <link rel="modulepreload" crossorigin href="/assets/charts-CSeINtZZ.js">
-      <link rel="modulepreload" crossorigin href="/assets/react-vendor-BzrZvDmd.js">
-      <link rel="modulepreload" crossorigin href="/assets/radix-ui-Bnug9ys6.js">
-      <link rel="modulepreload" crossorigin href="/assets/vendor-oUl0Y78Q.js">
-      <link rel="modulepreload" crossorigin href="/assets/utils-CazBiCov.js">
-      <link rel="modulepreload" crossorigin href="/assets/api-uqLV8LwW.js">
-      <link rel="modulepreload" crossorigin href="/assets/AuthContext-Bb6vncaY.js">
-      <link rel="modulepreload" crossorigin href="/assets/Footer-moWq_eGg.js">
-      <link rel="modulepreload" crossorigin href="/assets/button-DV5opPAL.js">
-      <link rel="stylesheet" crossorigin href="/assets/index-CveVtlsL.css">
+      <script type="module" crossorigin src="/assets/index-DHCSLdf6.js"></script>
+      <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-COnpUsM8.js">
+      <link rel="modulepreload" crossorigin href="/assets/charts-DP-Vokey.js">
+      <link rel="modulepreload" crossorigin href="/assets/react-vendor-C8BzxVE_.js">
+      <link rel="modulepreload" crossorigin href="/assets/radix-ui-0DQ_dyKU.js">
+      <link rel="modulepreload" crossorigin href="/assets/vendor-B86dv529.js">
+      <link rel="modulepreload" crossorigin href="/assets/utils-C8VRGBh5.js">
+      <link rel="modulepreload" crossorigin href="/assets/api-3DnbyYHm.js">
+      <link rel="modulepreload" crossorigin href="/assets/AuthContext-Bj6K6NNs.js">
+      <link rel="modulepreload" crossorigin href="/assets/Footer-DaUo3s96.js">
+      <link rel="modulepreload" crossorigin href="/assets/button-CvHJqAty.js">
+      <link rel="stylesheet" crossorigin href="/assets/index-DS49whwV.css">
     </head>
     <body>
         <noscript>You need to enable JavaScript to run this app.</noscript>
