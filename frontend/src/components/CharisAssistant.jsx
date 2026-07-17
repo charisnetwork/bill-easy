@@ -69,7 +69,7 @@ const CharisAssistant = () => {
       {isOpen && (
         <div 
           ref={panelRef}
-          className="mb-4 w-[calc(100vw-3rem)] sm:w-[380px] h-[550px] max-h-[calc(100vh-8rem)] bg-white rounded-3xl shadow-2xl border border-slate-100 flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-300 pointer-events-auto"
+          className="mb-4 w-[calc(100vw-3rem)] sm:w-[380px] h-[550px] max-h-[calc(100vh-12rem)] bg-white rounded-3xl shadow-2xl border border-slate-100 flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-300 pointer-events-auto"
         >
           {/* Header */}
           <div className="bg-slate-900 p-5 text-white flex items-center justify-between shrink-0">
@@ -158,31 +158,44 @@ const CharisAssistant = () => {
 
       {/* Floating Ball Button */}
       <button 
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={(e) => {
+          e.stopPropagation(); // Prevent click outside from firing immediately
+          setIsOpen(!isOpen);
+        }}
         className={cn(
-          "group relative w-16 h-16 rounded-full flex items-center justify-center transition-all duration-500 pointer-events-auto",
-          isOpen ? "rotate-90 scale-90 opacity-0 pointer-events-none" : "scale-100 opacity-100"
+          "group relative w-16 h-16 rounded-full flex items-center justify-center transition-all duration-500 pointer-events-auto shadow-2xl",
+          isOpen ? "scale-90" : "scale-100"
         )}
       >
         {/* The 3D Sphere */}
         <div className={cn(
           "absolute inset-0 rounded-full shadow-2xl transition-all duration-500",
-          isLoading ? "animate-pulse bg-gradient-to-br from-purple-400 via-purple-600 to-indigo-800" : "bg-gradient-to-br from-cyan-400 via-blue-600 to-indigo-900 animate-breathing"
+          isOpen 
+            ? "bg-slate-800" 
+            : isLoading 
+              ? "animate-pulse bg-gradient-to-br from-purple-400 via-purple-600 to-indigo-800" 
+              : "bg-gradient-to-br from-cyan-400 via-blue-600 to-indigo-900 animate-breathing"
         )}>
-          {/* Sphere Highlights */}
-          <div className="absolute top-2 left-3 w-6 h-4 bg-white/30 rounded-full blur-[2px] -rotate-12"></div>
+          {/* Sphere Highlights (only when closed) */}
+          {!isOpen && <div className="absolute top-2 left-3 w-6 h-4 bg-white/30 rounded-full blur-[2px] -rotate-12"></div>}
           <div className="absolute inset-0 rounded-full ring-1 ring-white/20"></div>
         </div>
 
-        {/* Outer Glow */}
-        <div className={cn(
-          "absolute -inset-2 rounded-full blur-xl opacity-40 transition-colors duration-500",
-          isLoading ? "bg-purple-500" : "bg-cyan-500 animate-pulse"
-        )}></div>
+        {/* Outer Glow (only when closed) */}
+        {!isOpen && (
+          <div className={cn(
+            "absolute -inset-2 rounded-full blur-xl opacity-40 transition-colors duration-500",
+            isLoading ? "bg-purple-500" : "bg-cyan-500 animate-pulse"
+          )}></div>
+        )}
 
         {/* Icon */}
         <div className="relative z-10 text-white">
-          <Sparkles className={cn("w-7 h-7 transition-all", isLoading ? "animate-spin" : "group-hover:scale-110")} />
+          {isOpen ? (
+            <X className="w-7 h-7 transition-all" />
+          ) : (
+            <Sparkles className={cn("w-7 h-7 transition-all", isLoading ? "animate-spin" : "group-hover:scale-110")} />
+          )}
         </div>
       </button>
 
