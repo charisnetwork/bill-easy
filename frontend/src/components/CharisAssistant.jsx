@@ -12,6 +12,7 @@ const CharisAssistant = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef(null);
+  const panelRef = useRef(null);
   const { isAuthenticated, subscription } = useAuth();
 
   useEffect(() => {
@@ -19,6 +20,20 @@ const CharisAssistant = () => {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isLoading]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (panelRef.current && !panelRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -37,7 +52,9 @@ const CharisAssistant = () => {
 
       setMessages(prev => [...prev, { role: 'assistant', content: response.data.answer }]);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'assistant', content: "I'm sorry, I'm having trouble connecting right now. Please try again later." }]);
+      console.error("Chat Error:", error);
+      const errorMsg = error.response?.data?.error || error.response?.data?.details || "I'm sorry, I'm having trouble connecting right now. Please try again later.";
+      setMessages(prev => [...prev, { role: 'assistant', content: errorMsg }]);
     } finally {
       setIsLoading(false);
     }
@@ -50,7 +67,10 @@ const CharisAssistant = () => {
     <div className="fixed bottom-24 right-6 z-[9999] flex flex-col items-end pointer-events-none">
       {/* Chat Window */}
       {isOpen && (
-        <div className="mb-4 w-[calc(100vw-3rem)] sm:w-[380px] h-[550px] max-h-[calc(100vh-8rem)] bg-white rounded-3xl shadow-2xl border border-slate-100 flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-300 pointer-events-auto">
+        <div 
+          ref={panelRef}
+          className="mb-4 w-[calc(100vw-3rem)] sm:w-[380px] h-[550px] max-h-[calc(100vh-8rem)] bg-white rounded-3xl shadow-2xl border border-slate-100 flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-300 pointer-events-auto"
+        >
           {/* Header */}
           <div className="bg-slate-900 p-5 text-white flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3">
@@ -66,8 +86,9 @@ const CharisAssistant = () => {
               <button 
                 onClick={() => setIsOpen(false)}
                 className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                title="Close"
               >
-                <Minus className="w-4 h-4 text-slate-400" />
+                <X className="w-4 h-4 text-slate-400" />
               </button>
             </div>
           </div>
