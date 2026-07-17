@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import { FileText, MoreVertical, Download, Mail, ChevronRight } from 'lucide-react';
 import { formatCurrency } from '../../../utils/formatters';
+import { cn } from '../../../lib/utils';
 
 // Generate 1000 mock rows for virtualization test
 const MOCK_INVOICES = Array.from({ length: 1000 }).map((_, i) => ({
