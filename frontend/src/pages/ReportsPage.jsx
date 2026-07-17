@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../co
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '../components/ui/table';
-import { Share2, Filter, Lock, Search } from 'lucide-react';
+import { Share2, Filter, Lock, Search, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -155,6 +155,27 @@ export const ReportsPage = () => {
     }
   };
 
+  const handleDownloadGSTR1 = async () => {
+    try {
+      toast.info('Preparing GSTR-1 Excel file...');
+      const response = await reportAPI.downloadGSTR1(dateRange);
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `GSTR1_${dateRange.startDate}_to_${dateRange.endDate}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('GSTR-1 downloaded successfully');
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Failed to download GSTR-1');
+    }
+  };
+
   const renderReportContent = () => {
     if (!activeReport || !reportData) return null;
 
@@ -162,12 +183,19 @@ export const ReportsPage = () => {
     if (activeReport === 'sales' || activeReport === 'gstr-1' || activeReport === 'gst-sales') {
       return (
         <Card>
-          <CardHeader>
-            <CardTitle>{activeReportDetails?.title}</CardTitle>
-            <CardDescription>
-              Total: {formatCurrency(reportData.summary?.total_sales)} | 
-              Tax: {formatCurrency(reportData.summary?.total_tax)}
-            </CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>{activeReportDetails?.title}</CardTitle>
+              <CardDescription>
+                Total: {formatCurrency(reportData.summary?.total_sales)} | 
+                Tax: {formatCurrency(reportData.summary?.total_tax)}
+              </CardDescription>
+            </div>
+            {activeReport === 'gstr-1' && (
+              <Button onClick={handleDownloadGSTR1} className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2" size="sm">
+                <Download className="w-4 h-4" /> Export Excel
+              </Button>
+            )}
           </CardHeader>
           <CardContent className="p-0">
             <Table>

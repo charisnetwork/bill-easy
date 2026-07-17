@@ -19,7 +19,8 @@ const {
   getBalanceSheet,
   getGSTR3b,
   getTDSTCS,
-  sendToCA
+  sendToCA,
+  downloadGSTR1
 } = require('../controllers/reportController');
 const { authenticateToken } = require('../middleware/auth');
 const companyContext = require('../middleware/companyContext');
@@ -51,6 +52,7 @@ router.get('/bill-profit', checkReportAccess('PREMIUM'), getBillWiseProfit);
 // --- ENTERPRISE TIER REPORTS ---
 router.get('/balance-sheet', checkReportAccess('ENTERPRISE'), getBalanceSheet);
 router.get('/gstr-1', checkReportAccess('ENTERPRISE'), getGSTSales); // GSTR-1 logic
+router.get('/gstr-1/download', checkReportAccess('ENTERPRISE'), downloadGSTR1);
 router.get('/gstr-2', checkReportAccess('ENTERPRISE'), getGSTPurchase); // GSTR-2 logic
 router.get('/gstr-3b', checkReportAccess('ENTERPRISE'), getGSTR3b);
 router.get('/tds-tcs', checkReportAccess('ENTERPRISE'), getTDSTCS);

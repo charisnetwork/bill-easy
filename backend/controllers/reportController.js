@@ -288,6 +288,50 @@ const sendToCA = async (req, res) => {
     res.status(500).json({ error: 'Failed to send GSTR-1 to CA' });
   }
 };
+const downloadGSTR1 = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: 'Start date and end date are required' });
+    }
+
+    const company = await Company.findByPk(req.companyId);
+    if (!company) {
+      return res.status(404).json({ error: 'Company not found' });
+    }
+
+    const invoices = await Invoice.findAll({
+      where: {
+        company_id: req.companyId,
+        invoice_date: { [Op.between]: [new Date(startDate), new Date(endDate)] },
+        status: { [Op.ne]: 'cancelled' }
+      },
+      include: [
+        { model: Customer },
+        { model: InvoiceItem, as: 'items', include: [Product] }
+      ]
+    });
+
+    if (invoices.length === 0) {
+      return res.status(400).json({ error: 'No invoices found for the selected period' });
+    }
+
+    const meta = {
+      companyName: company.name,
+      gstin: company.gst_number || '',
+      period: `${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()}`
+    };
+
+    const excelBuffer = await generateGstr1Excel(invoices, meta);
+    
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=GSTR1_${company.name.replace(/\s+/g, '_')}_${startDate}_${endDate}.xlsx`);
+    res.send(excelBuffer);
+  } catch (error) {
+    console.error('Download GSTR-1 Error:', error);
+    res.status(500).json({ error: 'Failed to download GSTR-1 report' });
+  }
+};
 
 module.exports = {
   getDashboard,
@@ -308,5 +352,6 @@ module.exports = {
   getBalanceSheet,
   getGSTR3b,
   getTDSTCS,
-  sendToCA
+  sendToCA,
+  downloadGSTR1
 };

@@ -214,7 +214,8 @@ export const reportAPI = {
   getCustomerOutstanding: () => api.get('/reports/customer-outstanding'),
   getSupplierOutstanding: () => api.get('/reports/supplier-outstanding'),
   getStock: () => api.get('/reports/stock'),
-  sendToCA: (data) => api.post('/reports/send-to-ca', data)
+  sendToCA: (data) => api.post('/reports/send-to-ca', data),
+  downloadGSTR1: (params) => api.get('/reports/gstr-1/download', { params, responseType: 'blob' })
 };
 
 // Subscription APIs
