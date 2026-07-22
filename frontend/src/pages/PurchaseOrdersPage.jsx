@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { purchaseOrderAPI } from '../services/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { InputGroup } from '../components/ui/input-group';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow

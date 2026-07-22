@@ -7,6 +7,7 @@ import { DashboardLayout } from './components/DashboardLayout';
 import { Toaster } from './components/ui/sonner';
 import { usePageTracking } from './hooks/useAnalytics';
 import { App as CapacitorApp } from '@capacitor/app';
+import { IS_NATIVE } from './config/api';
 
 import './App.css';
 
@@ -17,6 +18,7 @@ import './App.css';
 // ─────────────────────────────────────────────────────────────
 
 // Public pages (loaded on first visit)
+const MobileOnboarding    = lazy(() => import('./pages/MobileOnboarding'));
 const LandingPage          = lazy(() => import('./pages/LandingPage'));
 const LoginPage            = lazy(() => import('./pages/LoginPage'));
 const RegisterPage         = lazy(() => import('./pages/RegisterPage'));
@@ -80,8 +82,8 @@ function AppRoutes() {
   useEffect(() => {
     // Handle Android Back Button
     const backHandler = CapacitorApp.addListener('backButton', ({ canGoBack }) => {
-      if (location.pathname === '/' || location.pathname === '/dashboard') {
-        // If we are at root or dashboard, exit the app
+      if (location.pathname === '/' || location.pathname === '/dashboard' || location.pathname === '/onboarding') {
+        // If we are at root, dashboard or onboarding, exit the app
         CapacitorApp.exitApp();
       } else {
         // Otherwise, go back in history
@@ -94,8 +96,21 @@ function AppRoutes() {
     };
   }, [location, navigate]);
 
+  useEffect(() => {
+    // Mobile Redirect Logic
+    if (IS_NATIVE && location.pathname === '/') {
+      const hasSeenOnboarding = localStorage.getItem('onboarding_complete');
+      if (!hasSeenOnboarding) {
+        navigate('/onboarding', { replace: true });
+      }
+    }
+  }, [location.pathname, navigate]);
+
   return (
     <Routes>
+      {/* ── Mobile Specific ── */}
+      <Route path="/onboarding"           element={<MobileOnboarding />} />
+
       {/* ── Public Routes ── */}
       <Route path="/"                     element={<LandingPage />} />
       <Route path="/login"                element={<LoginPage />} />
