@@ -19,9 +19,7 @@ RUN npm install --omit=dev
 COPY backend/package.json backend/package-lock.json ./backend/
 RUN cd backend && npm install --omit=dev
 
-# Copy admin backend package files
-COPY admin/backend/package.json admin/backend/package-lock.json ./admin/backend/
-RUN cd admin/backend && npm install --omit=dev
+
 
 # Copy the rest of the source code (frontends are excluded via .dockerignore)
 COPY . .
