@@ -11,6 +11,7 @@ dist/
 out/
 .vercel/
 **/dist/
+!backend/sdk/dist/
 **/build/
 
 # Environment variables
