@@ -7,6 +7,7 @@ const morgan = require('morgan');
 const http = require('http');
 
 const { rateLimit } = require('express-rate-limit');
+const { CharisSDK } = require('@charis/sdk');
 
 const { sequelize, Plan, Company, Subscription, Godown, User, UserCompany } = require('./models');
 
@@ -133,6 +134,9 @@ app.use('/api/', apiLimiter);
 /* =========================================
    BODY PARSER
 ========================================= */
+
+// Webhook route specifically needs raw buffer for HMAC validation
+app.use('/api/webhooks/charis', express.raw({ type: 'application/json' }));
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -312,6 +316,28 @@ app.get('/api-info', (req, res) => {
     version: '1.0.0'
   });
 });
+
+/* =========================================
+   CHARIS CONTROL CENTRE SDK & WEBHOOKS
+========================================= */
+
+try {
+  CharisSDK.init({
+    productId: 'billeasy',
+    applicationId: process.env.CONTROL_CENTER_APPLICATION_ID,
+    apiKey: process.env.CONTROL_CENTER_API_KEY,
+    gatewayUrl: process.env.CONTROL_CENTER_URL || 'https://chariscontrol-production.up.railway.app',
+    publicKey: process.env.CONTROL_CENTER_PUBLIC_KEY,
+    webhookSecret: process.env.CONTROL_CENTER_WEBHOOK_SECRET
+  });
+  
+  if (CharisSDK.entitlements) {
+    app.post('/api/webhooks/charis', CharisSDK.entitlements.webhookReceiver());
+    console.log('[CharisSDK] Webhook receiver mounted at /api/webhooks/charis');
+  }
+} catch (err) {
+  console.error('[CharisSDK] Failed to initialize:', err.message);
+}
 
 /* =========================================
    ERROR HANDLER

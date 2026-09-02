@@ -3,6 +3,7 @@ const { generateInvoiceNumber, peekInvoiceNumber } = require('../services/invoic
 const { generateInvoicePdf } = require('../services/invoicePdfService');
 const { Op } = require('sequelize');
 const SubscriptionGuard = require('../utils/subscriptionGuard');
+const { consumeInvoiceQuota } = require('../services/billingPeriodUsageService');
 
 const getInvoices = async (req, res) => {
   try {
@@ -275,13 +276,7 @@ const createInvoice = async (req, res) => {
       transaction
     });
 
-    // Increment Usage
-    const sub = await Subscription.findOne({ where: { company_id: req.companyId }, transaction });
-    if (sub) {
-      const usage = sub.usage || {};
-      usage.invoices = (usage.invoices || 0) + 1;
-      await sub.update({ usage }, { transaction });
-    }
+    await consumeInvoiceQuota({ Subscription, Plan: require('../models').Plan, companyId: req.companyId, transaction });
 
     await transaction.commit();
     res.status(201).json({

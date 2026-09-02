@@ -14,7 +14,7 @@ const {
   recordPayment
 } = require('../controllers/invoiceController');
 
-const { authenticateToken, checkSubscriptionQuota, checkFeatureAccess } = require('../middleware/auth');
+const { authenticateToken, checkFeatureAccess } = require('../middleware/auth');
 const { invoiceValidation } = require('../middleware/validation');
 const companyContext = require('../middleware/companyContext');
 
@@ -53,7 +53,6 @@ CREATE INVOICE
 
 router.post(
   '/',
-  checkSubscriptionQuota('invoices'),
   invoiceValidation,
   createInvoice
 );

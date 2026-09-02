@@ -227,6 +227,18 @@ const login = async (req, res) => {
     // Update last login
     await user.update({ last_login: new Date() });
 
+    // Trigger CharisSDK fetch for entitlements in the background
+    try {
+      const { CharisSDK } = require('@charis/sdk');
+      if (CharisSDK && CharisSDK.entitlements) {
+        for (const cid of companyIds) {
+          CharisSDK.entitlements.fetchEntitlement(cid).catch(e => console.warn('[CharisSDK] Async fetch failed for', cid));
+        }
+      }
+    } catch (err) {
+      console.warn('[CharisSDK] Not initialized or fetch error', err.message);
+    }
+
     // Generate session ID and tokens
     const sessionId = crypto.randomUUID();
     const fingerprint = tokenService.generateDeviceFingerprint(req);
@@ -591,6 +603,14 @@ const switchCompany = async (req, res) => {
     }
 
     await req.user.update({ company_id: companyId });
+
+    // Pre-fetch entitlement for the switched company
+    try {
+      const { CharisSDK } = require('@charis/sdk');
+      if (CharisSDK && CharisSDK.entitlements) {
+        CharisSDK.entitlements.fetchEntitlement(companyId).catch(e => console.warn('[CharisSDK] Async fetch failed for', companyId));
+      }
+    } catch (err) {}
 
     res.json({ message: 'Switched company successfully' });
   } catch (error) {

@@ -210,21 +210,32 @@ const checkSubscriptionQuota = (quotaType) => {
     }
 
     const usage = subscription.usage || {};
+    const now = new Date();
+
+    // Check lazy billing-period expiration: if a new period started, effective usage is 0
+    let effectiveInvoiceUsage = usage.invoices || 0;
+    if (usage.invoice_period_end && now >= new Date(usage.invoice_period_end)) {
+      effectiveInvoiceUsage = 0;
+    }
 
     // Limits Logic
     const isFreeAccount = plan.plan_name === 'Free Account' || plan.plan_name === 'Free' || plan.plan_name === 'Zero Account';
     const isPremium = plan.plan_name === 'Premium';
     
-    const invoiceLimit = isFreeAccount ? 50 : (isPremium ? 200 : plan.max_invoices_per_month);
-    const productLimit = isFreeAccount ? 100 : (isPremium ? 1000 : plan.max_products);
+    const invoiceLimit = Number.isFinite(plan.max_invoices_per_month) && plan.max_invoices_per_month >= 0
+      ? plan.max_invoices_per_month
+      : (isFreeAccount ? 50 : (isPremium ? 200 : 1000));
+    const productLimit = Number.isFinite(plan.max_products) && plan.max_products >= 0
+      ? plan.max_products
+      : (isFreeAccount ? 100 : (isPremium ? 1000 : 5000));
 
     switch (quotaType) {
       case 'invoices':
-        if ((usage.invoices || 0) >= invoiceLimit) {
+        if (effectiveInvoiceUsage >= invoiceLimit) {
           return res.status(403).json({ 
-            error: `Monthly invoice limit reached (${invoiceLimit}). Upgrade to ${isPremium ? 'Enterprise' : 'Premium'} for more.`, 
+            error: `Monthly invoice limit reached (${invoiceLimit}). Upgrade your plan for more.`, 
             limit: invoiceLimit,
-            used: (usage.invoices || 0),
+            used: effectiveInvoiceUsage,
             code: 'QUOTA_EXCEEDED'
           });
         }
@@ -232,7 +243,7 @@ const checkSubscriptionQuota = (quotaType) => {
       case 'products':
         if ((usage.products || 0) >= productLimit) {
           return res.status(403).json({ 
-            error: `Product limit reached (${productLimit}). Upgrade to ${isPremium ? 'Enterprise' : 'Premium'} for more.`, 
+            error: `Product limit reached (${productLimit}). Upgrade your plan for more.`, 
             limit: productLimit,
             used: (usage.products || 0),
             code: 'QUOTA_EXCEEDED'

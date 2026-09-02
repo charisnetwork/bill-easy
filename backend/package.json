@@ -8,14 +8,15 @@
     "dev": "node server.js"
   },
   "dependencies": {
+    "@charis/sdk": "file:../../charis_control_center/packages/sdk",
     "@google-cloud/storage": "^7.19.0",
     "@google/genai": "^2.8.0",
     "axios": "^1.13.6",
     "bcryptjs": "^3.0.3",
-    "exceljs": "^4.4.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
+    "exceljs": "^4.4.0",
     "express": "^5.2.1",
     "express-rate-limit": "^8.3.1",
     "express-validator": "^7.3.1",
