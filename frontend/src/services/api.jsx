@@ -56,6 +56,9 @@ api.interceptors.response.use(
     // Normalize error data to ensure .error is always a string
     if (error.response?.data) {
       const data = error.response.data;
+      if (data.upgradeRequired === true || data.error === 'FEATURE_NOT_AVAILABLE' || data.error === 'QUOTA_EXCEEDED') {
+        window.dispatchEvent(new CustomEvent('UPGRADE_REQUIRED', { detail: data }));
+      }
       if (data.error && typeof data.error !== 'string') {
         data.error = getErrorMessage(error);
       } else if (!data.error) {

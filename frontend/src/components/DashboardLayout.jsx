@@ -19,12 +19,55 @@ import { motion } from 'framer-motion';
 export const DashboardLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [cmdkOpen, setCmdkOpen] = useState(false);
+  const [upgradeDetail, setUpgradeDetail] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    const handleUpgradeRequired = (e) => {
+      setUpgradeDetail(e.detail || { message: 'Upgrade required to access this feature.' });
+    };
+    window.addEventListener('UPGRADE_REQUIRED', handleUpgradeRequired);
+    return () => window.removeEventListener('UPGRADE_REQUIRED', handleUpgradeRequired);
+  }, []);
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#F8FAFC]">
       <CommandPalette open={cmdkOpen} setOpen={setCmdkOpen} />
+      
+      {/* Upgrade Required Modal */}
+      {upgradeDetail && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-indigo-100 text-center space-y-5">
+            <div className="w-16 h-16 bg-amber-500/10 text-amber-500 rounded-2xl flex items-center justify-center mx-auto text-2xl font-black shadow-inner">
+              🔒
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold text-slate-900">Feature Locked</h3>
+              <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                {upgradeDetail.message || upgradeDetail.error || 'This feature or quota limit requires a higher subscription plan.'}
+              </p>
+            </div>
+            <div className="pt-2 flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => setUpgradeDetail(null)}
+                className="w-full sm:w-1/2 py-3 px-4 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-colors"
+              >
+                Dismiss
+              </button>
+              <button
+                onClick={() => {
+                  setUpgradeDetail(null);
+                  navigate('/subscription');
+                }}
+                className="w-full sm:w-1/2 py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-lg shadow-indigo-600/30 transition-all"
+              >
+                View Plans & Upgrade
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
 

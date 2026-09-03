@@ -76,7 +76,12 @@ export const Sidebar = ({ open, setOpen }) => {
     {
       title: 'Management',
       items: [
-        { path: '/eway-bills', icon: Truck, label: 'E-Way Bills', hidden: !hasFeature('eway_bills') },
+        { 
+          path: '/eway-bills', 
+          icon: Truck, 
+          label: hasFeature('eway_bills') ? 'E-Way Bills' : 'E-Way Bills 🔒', 
+          locked: !hasFeature('eway_bills') 
+        },
         { path: '/reports', icon: BarChart3, label: 'Reports' },
         { path: '/settings', icon: Settings, label: 'Settings' },
       ]
@@ -194,8 +199,15 @@ export const Sidebar = ({ open, setOpen }) => {
                     return (
                       <Link
                         key={item.path}
-                        to={item.path}
-                        onClick={() => setOpen(false)}
+                        to={item.locked ? '#' : item.path}
+                        onClick={(e) => {
+                          if (item.locked) {
+                            e.preventDefault();
+                            window.dispatchEvent(new CustomEvent('UPGRADE_REQUIRED', { detail: { message: `${item.label.replace(' 🔒', '')} requires a higher subscription plan.` } }));
+                          } else {
+                            setOpen(false);
+                          }
+                        }}
                         className={cn(
                           "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group relative",
                           isActive ? "text-indigo-700 bg-indigo-50/80 shadow-sm shadow-indigo-100/50" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"

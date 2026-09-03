@@ -414,8 +414,17 @@ export const ReportsPage = () => {
       {/* Header aligned to match screenshot */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4">
         <h1 className="text-xl font-semibold text-slate-800">Reports</h1>
-        <Button onClick={() => navigate('/settings?section=send-to-ca')} className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2 rounded">
-          <Share2 className="w-4 h-4" /> CA Reports Sharing
+        <Button 
+          onClick={() => {
+            if (!subscription?.features?.ca_share) {
+              window.dispatchEvent(new CustomEvent('UPGRADE_REQUIRED', { detail: { message: 'CA Reports Sharing requires a Premium or Enterprise subscription.' } }));
+            } else {
+              navigate('/settings?section=send-to-ca');
+            }
+          }} 
+          className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2 rounded"
+        >
+          <Share2 className="w-4 h-4" /> {subscription?.features?.ca_share ? 'CA Reports Sharing' : 'CA Reports Sharing 🔒'}
         </Button>
       </div>
 
