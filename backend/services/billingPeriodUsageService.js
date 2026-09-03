@@ -36,7 +36,13 @@ async function consumeInvoiceQuota({ Subscription, Plan, companyId, transaction 
   }
   const limit = plan.max_invoices_per_month;
   if (Number.isFinite(limit) && limit >= 0 && (usage.invoices || 0) >= limit) {
-    const error = new Error('Invoice quota exceeded'); error.code = 'QUOTA_EXCEEDED'; error.limit = limit; throw error;
+    const error = new Error('Invoice quota exceeded');
+    error.code = 'QUOTA_EXCEEDED';
+    error.limitCode = 'invoice.monthly';
+    error.limit = limit;
+    error.used = usage.invoices || 0;
+    error.upgradeRequired = true;
+    throw error;
   }
   usage.invoices = (usage.invoices || 0) + 1;
   await subscription.update({ usage }, { transaction });

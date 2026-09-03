@@ -286,6 +286,16 @@ const createInvoice = async (req, res) => {
     });
   } catch (error) {
     if (transaction) await transaction.rollback();
+    if (error.code === 'QUOTA_EXCEEDED') {
+      return res.status(403).json({
+        error: 'Invoice quota exceeded. Upgrade your plan for more.',
+        code: 'QUOTA_EXCEEDED',
+        limitCode: error.limitCode || 'invoice.monthly',
+        limit: error.limit,
+        used: error.used,
+        upgradeRequired: true
+      });
+    }
     console.error("Create invoice error:", error);
     res.status(500).json({
       error: "Failed to create invoice: " + error.message

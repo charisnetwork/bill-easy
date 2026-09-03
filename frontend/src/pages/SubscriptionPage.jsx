@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge';
 import { CheckCircle2, XCircle, Crown, Zap, Rocket, MonitorSmartphone, Users2, Building2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { usePublicCatalog } from '../hooks/usePublicCatalog';
 
 const formatCurrency = (amount) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount || 0);
 
@@ -19,6 +20,7 @@ export const SubscriptionPage = () => {
   const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [duration, setDuration] = useState(3); // Default 3 months
+  const { catalog, loading: catalogLoading, unavailable: catalogUnavailable } = usePublicCatalog();
 
   // The master list of all possible features across all plans
   const ALL_FEATURES = [
@@ -224,6 +226,10 @@ export const SubscriptionPage = () => {
           Upgrade your plan to unlock more features and grow your business.
         </p>
       </div>
+
+      {!catalogLoading && catalogUnavailable && (
+        <p className="text-center text-sm text-amber-700 mb-6">The current Control Centre plan catalog is unavailable. Final commercial terms will be confirmed before payment.</p>
+      )}
       </div>
 
       <div className="flex justify-center mb-10">
@@ -242,6 +248,12 @@ export const SubscriptionPage = () => {
 
       <div className="grid lg:grid-cols-3 gap-6">
         {plans.map((plan) => {
+          const expectedCode = {
+            'Free Account': 'FREE',
+            Premium: 'BILL_EASY_PRO',
+            Enterprise: 'BILL_EASY_ENTERPRISE'
+          }[plan.plan_name];
+          const catalogPlan = catalog?.find((item) => item.code === expectedCode || item.name === plan.plan_name);
           const isFree = plan.plan_name === 'Free Account';
           const isPremium = plan.plan_name === 'Premium';
           const isEnterprise = plan.plan_name === 'Enterprise';
@@ -254,12 +266,12 @@ export const SubscriptionPage = () => {
               <CardHeader className="p-6 text-left border-b border-slate-50">
                 <div className="flex justify-between items-start">
                     <div>
-                        <CardTitle className="text-2xl font-bold text-slate-800">{plan.plan_name}</CardTitle>
+                        <CardTitle className="text-2xl font-bold text-slate-800">{catalogPlan?.name || plan.plan_name}</CardTitle>
                         <p className={`text-sm mt-1 font-medium ${isPremium ? 'text-orange-600' : isEnterprise ? 'text-emerald-600' : 'text-slate-500'}`}>
-                            {isFree ? 'Start for free' : isPremium ? 'More flexibility' : 'Fully customizable'}
+                            {catalogPlan?.description || (isFree ? 'Start for free' : isPremium ? 'More flexibility' : 'Fully customizable')}
                         </p>
                     </div>
-                    {isPremium && <Badge className="bg-orange-500 hover:bg-orange-600 text-white">👑 Most Popular</Badge>}
+                    {(catalogPlan?.badge || isPremium) && <Badge className="bg-orange-500 hover:bg-orange-600 text-white">{catalogPlan?.badge || '👑 Most Popular'}</Badge>}
                 </div>
                 <div className="mt-6">
                   {plan.price > 0 || plan.price_per_month > 0 ? (

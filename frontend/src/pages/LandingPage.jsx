@@ -6,6 +6,7 @@ import {
   FileText, Package, Users, BarChart3, Shield, Smartphone,
   CheckCircle, ArrowRight, Star, Building2
 } from 'lucide-react';
+import { usePublicCatalog } from '../hooks/usePublicCatalog';
 
 const features = [
   {
@@ -40,45 +41,8 @@ const features = [
   }
 ];
 
-const plans = [
-  { 
-    name: 'Zero Account', 
-    price: '0', 
-    period: 'Free Forever',
-    features: ['50 Invoices/month', '100 Products', 'Basic Billing', 'Reports'],
-    popular: false 
-  },
-  { 
-    name: 'Premium', 
-    price: '299', 
-    period: '+ tax / 3 Months',
-    features: [
-      'Manage 3 Businesses',
-      '5 Users Access',
-      'GST Billing & Inventory',
-      'E-Way Bills Generation',
-      'Reports & Analytics',
-      'Quotations & Estimates'
-    ], 
-    popular: true 
-  },
-  { 
-    name: 'Enterprise', 
-    price: '699', 
-    period: '+ tax / 3 Months',
-    features: [
-      'Manage 10 Businesses',
-      '20 Users Access',
-      'Unlimited Godowns',
-      'Everything in Premium',
-      'Priority Support',
-      'Advanced Inventory'
-    ],
-    popular: false
-  }
-];
-
 export const LandingPage = () => {
+  const { catalog, loading: catalogLoading, unavailable: catalogUnavailable } = usePublicCatalog();
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
@@ -238,28 +202,35 @@ export const LandingPage = () => {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {plans.map((plan, index) => (
+            {catalogLoading && <p className="col-span-full text-center text-slate-500">Loading current plans…</p>}
+            {catalogUnavailable && <p className="col-span-full text-center text-slate-500">Current plan information is temporarily unavailable. Please contact Bill Easy for pricing.</p>}
+            {catalog?.map((plan, index) => {
+              const firstPrice = Array.isArray(plan.prices) ? plan.prices[0] : null;
+              const amount = firstPrice?.finalAmount ?? firstPrice?.amount ?? firstPrice?.price ?? null;
+              const duration = firstPrice?.durationMonths ?? firstPrice?.months ?? null;
+              const featureLabels = plan.features.map((feature) => typeof feature === 'string' ? feature : feature.label || feature.name || feature.code).filter(Boolean);
+              return (
               <div 
-                key={index}
+                key={plan.id || index}
                 className={`bg-white rounded-xl p-6 border-2 transition-all duration-200 ${
-                  plan.popular 
+                  plan.recommended
                     ? 'border-emerald-500 shadow-lg scale-105' 
                     : 'border-slate-200 hover:border-slate-300'
                 }`}
-                data-testid={`pricing-card-${plan.name.toLowerCase()}`}
+                data-testid={`pricing-card-${plan.name.toLowerCase().replace(/\s+/g, '-')}`}
               >
-                {plan.popular && (
+                {(plan.badge || plan.recommended) && (
                   <span className="bg-emerald-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
-                    Most Popular
+                    {plan.badge || 'Most Popular'}
                   </span>
                 )}
                 <h3 className="font-heading text-xl font-semibold text-slate-900 mt-4">{plan.name}</h3>
                 <div className="flex items-baseline gap-1 mt-2 mb-6">
-                  <span className="text-4xl font-bold text-slate-900">₹{plan.price}</span>
-                  <span className="text-slate-500 text-xs font-medium">{plan.period}</span>
+                  <span className="text-4xl font-bold text-slate-900">{amount === null ? 'Contact us' : `₹${amount}`}</span>
+                  {duration && <span className="text-slate-500 text-xs font-medium">/{duration} months</span>}
                 </div>
                 <ul className="space-y-3 mb-6">
-                  {plan.features.map((feature, i) => (
+                  {featureLabels.map((feature, i) => (
                     <li key={i} className="flex items-center gap-2 text-sm text-slate-600">
                       <CheckCircle className="w-4 h-4 text-emerald-500" />
                       {feature}
@@ -268,14 +239,15 @@ export const LandingPage = () => {
                 </ul>
                 <Link to="/register">
                   <Button 
-                    className={`w-full ${plan.popular ? 'bg-emerald-600 hover:bg-emerald-700' : ''}`}
-                    variant={plan.popular ? 'default' : 'outline'}
+                    className={`w-full ${plan.recommended ? 'bg-emerald-600 hover:bg-emerald-700' : ''}`}
+                    variant={plan.recommended ? 'default' : 'outline'}
                   >
                     Get Started
                   </Button>
                 </Link>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>

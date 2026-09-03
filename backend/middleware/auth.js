@@ -234,9 +234,11 @@ const checkSubscriptionQuota = (quotaType) => {
         if (effectiveInvoiceUsage >= invoiceLimit) {
           return res.status(403).json({ 
             error: `Monthly invoice limit reached (${invoiceLimit}). Upgrade your plan for more.`, 
+            limitCode: 'invoice.monthly',
             limit: invoiceLimit,
             used: effectiveInvoiceUsage,
-            code: 'QUOTA_EXCEEDED'
+            code: 'QUOTA_EXCEEDED',
+            upgradeRequired: true
           });
         }
         break;
@@ -244,9 +246,11 @@ const checkSubscriptionQuota = (quotaType) => {
         if ((usage.products || 0) >= productLimit) {
           return res.status(403).json({ 
             error: `Product limit reached (${productLimit}). Upgrade your plan for more.`, 
+            limitCode: 'product.total',
             limit: productLimit,
             used: (usage.products || 0),
-            code: 'QUOTA_EXCEEDED'
+            code: 'QUOTA_EXCEEDED',
+            upgradeRequired: true
           });
         }
         break;
@@ -271,6 +275,7 @@ const checkFeatureAccess = (featureKey) => {
     return res.status(403).json({ 
       error: `Your current plan (${planName}) does not include access to this feature. Please upgrade.`,
       code: 'FEATURE_NOT_AVAILABLE',
+      feature: featureKey,
       upgradeRequired: true
     });
   };

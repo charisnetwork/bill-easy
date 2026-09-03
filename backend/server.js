@@ -29,6 +29,7 @@ const creditNoteRoutes = require('./routes/creditNotes');
 const aiRoutes = require('./routes/ai');
 const enquiryRoutes = require('./routes/enquiry');
 const paymentRoutes = require('./routes/payments');
+const controlRoutes = require('./routes/control');
 
 const app = express();
 
@@ -189,6 +190,8 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/enquiries', enquiryRoutes);
 app.use('/api/staff', require('./routes/staff'));
 app.use("/api/utilities", require("./routes/utilities"));
+// Server-to-server Control Centre integration. Every endpoint enforces its own API key.
+app.use('/control', controlRoutes);
 
 // NOTE: Bare-path duplicate routes removed — Railway now correctly preserves /api/ prefix.
 // All API calls must go through /api/* routes above.
