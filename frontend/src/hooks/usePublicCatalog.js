@@ -2,21 +2,25 @@ import { useEffect, useState } from 'react';
 
 const catalogBaseUrl = () => {
   const configured = import.meta.env?.VITE_PUBLIC_CONTROL_CENTER_URL || '';
-  return configured ? configured.replace(/\/$/, '') : null;
+  return configured ? configured.replace(/\/$/, '') : 'https://chariscontrol-production.up.railway.app';
 };
 
 const normalizeCatalog = (payload) => {
-  const plans = Array.isArray(payload) ? payload : payload?.plans || payload?.data?.plans || [];
-  return plans.map((plan) => ({
+  let plans = Array.isArray(payload) ? payload : (payload?.plans || payload?.data?.plans || []);
+  if ((!plans || plans.length === 0) && payload?.subscriptionModels?.[0]?.plans) {
+    plans = payload.subscriptionModels[0].plans;
+  }
+  return (plans || []).map((plan) => ({
     id: plan.id || plan.planId || plan.code,
     code: plan.code || '',
     name: plan.name || plan.title || plan.displayName || plan.code || 'Plan',
     description: plan.publicDescription || plan.description || '',
     badge: plan.badge || null,
-    recommended: Boolean(plan.recommended),
+    recommended: Boolean(plan.recommended || plan.isRecommended),
     features: plan.features || [],
     limits: plan.limits || {},
     perks: plan.perks || [],
+    pricingMatrix: plan.pricingMatrix || {},
     prices: plan.prices || plan.priceOptions || plan.durationPricing || []
   }));
 };
