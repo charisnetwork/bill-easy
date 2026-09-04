@@ -19,7 +19,7 @@ let accessToken = null;
 let refreshPromise = null;
 
 // Backend URL - same logic as config/api.js but inlined to avoid circular imports
-const RAILWAY_BACKEND_URL = 'https://bill-easy-production-v4.up.railway.app';
+const RAILWAY_BACKEND_URL = 'https://bill-easy-production.up.railway.app';
 const API_BASE_URL = (() => {
   const envUrl = import.meta.env?.VITE_BACKEND_URL;
   if (envUrl && !envUrl.includes('localhost')) return envUrl;

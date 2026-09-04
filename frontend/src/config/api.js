@@ -6,7 +6,7 @@ import { Capacitor } from '@capacitor/core';
 let envBackendUrl =
   import.meta.env?.VITE_BACKEND_URL ||
   import.meta.env?.REACT_APP_BACKEND_URL ||
-  '';
+  'https://bill-easy-production.up.railway.app';
 
 // Sanitize: Remove trailing slash
 if (envBackendUrl && envBackendUrl.endsWith('/')) {
