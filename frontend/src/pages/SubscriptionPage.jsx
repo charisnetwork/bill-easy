@@ -4,11 +4,96 @@ import { getErrorMessage } from '../config/api';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-import { CheckCircle2, XCircle, Crown, Zap, Rocket, MonitorSmartphone, Users2, Building2, Loader2 } from 'lucide-react';
+import { CheckCircle2, XCircle, Crown, Zap, Rocket, MonitorSmartphone, Users2, Building2, Loader2, Lock, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePublicCatalog } from '../hooks/usePublicCatalog';
 
 const formatCurrency = (amount) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount || 0);
+
+const FEATURE_GROUPS = [
+  {
+    name: 'Sales Management',
+    code: 'sales',
+    features: [
+      { code: 'create_invoice', label: 'Create GST Invoice' },
+      { code: 'quotations', label: 'Estimates & Quotations' },
+      { code: 'payment_in', label: 'Payment In Collections' },
+      { code: 'sales_return', label: 'Sales Return & Credit Notes' },
+      { code: 'pos_billing', label: 'POS Counter Billing UI' },
+      { code: 'pdf_print', label: 'Custom PDF Branding & Sharing' },
+    ]
+  },
+  {
+    name: 'Purchases & Vendors',
+    code: 'purchases',
+    features: [
+      { code: 'purchase_entry', label: 'Purchase Bill Entry' },
+      { code: 'purchase_orders', label: 'Purchase Orders (PO)' },
+    ]
+  },
+  {
+    name: 'Expenses Tracker',
+    code: 'expenses',
+    features: [
+      { code: 'expense_tracker', label: 'Categorized Expense Tracking' },
+    ]
+  },
+  {
+    name: 'Inventory & Warehouses',
+    code: 'inventory',
+    features: [
+      { code: 'products_master', label: 'Product Catalog Master' },
+      { code: 'stock_transfer', label: 'Stock Transfer (Multi-Godowns)' },
+      { code: 'low_stock_alerts', label: 'Low Stock Safety Alerts' },
+    ]
+  },
+  {
+    name: 'Parties & Directory',
+    code: 'directory',
+    features: [
+      { code: 'customers_master', label: 'Customer Master & Ledgers' },
+      { code: 'suppliers_master', label: 'Supplier Master & Payables' },
+    ]
+  },
+  {
+    name: 'E-Way Bills & Tax Compliance',
+    code: 'eway_bills',
+    features: [
+      { code: 'eway_bills_create', label: 'Generate Direct E-Way Bills' },
+      { code: 'eway_bills_list', label: 'E-Way Bill History & Print' },
+      { code: 'gstr_reports', label: 'GSTR-1 & GSTR-3B Tax Summaries' },
+    ]
+  },
+  {
+    name: 'Financial & Tax Reports',
+    code: 'reports',
+    features: [
+      { code: 'sales_reports', label: 'Sales Analytics & Item Reports' },
+      { code: 'purchase_reports', label: 'Purchase & Vendor Summaries' },
+      { code: 'profit_loss_reports', label: 'Profit & Loss Statement (P&L)' },
+      { code: 'stock_reports', label: 'Stock Valuation Reports' },
+    ]
+  },
+  {
+    name: 'AI & Intelligent Tools',
+    code: 'ai_tools',
+    features: [
+      { code: 'ai_assistant', label: 'Charis AI Assistant Copilot' },
+      { code: 'ai_insights', label: 'Automated Business Insights' },
+    ]
+  },
+  {
+    name: 'Management & System Security',
+    code: 'management',
+    features: [
+      { code: 'multi_business', label: 'Multi-Business Workspaces' },
+      { code: 'max_users_access', label: 'Team Roles & Access Control' },
+      { code: 'staff_payroll', label: 'Staff Attendance & Payroll' },
+      { code: 'activity_tracker', label: 'User Action Audit Tracker' },
+      { code: 'tally_export', label: 'Tally Accounting Export' },
+    ]
+  }
+];
 
 export const SubscriptionPage = () => {
   const [plans, setPlans] = useState([]);
@@ -19,29 +104,15 @@ export const SubscriptionPage = () => {
   const [couponCode, setCouponCode] = useState('');
   const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
-  const [duration, setDuration] = useState(3); // Default 3 months
+  const [duration, setDuration] = useState(12); // Default 1 Year
   const { catalog, loading: catalogLoading, unavailable: catalogUnavailable } = usePublicCatalog();
-
-  // The master list of all possible features across all plans
-  const ALL_FEATURES = [
-    { id: 'gst_billing', label: 'GST Invoicing' },
-    { id: 'inventory_management', label: 'Inventory Management' },
-    { id: 'reports', label: '25+ Reports' },
-    { id: 'quotations', label: 'Quotations & Estimates' },
-    { id: 'eway_bills', label: 'E-way Bills', premiumLimit: '5/month', enterpriseLimit: 'Unlimited' },
-    { id: 'staff_attendance_payroll', label: 'Staff Attendance & Payroll' },
-    { id: 'multi_godowns', label: 'Multiple Godowns/Warehouses' },
-    { id: 'manage_businesses', label: 'Manage Multiple Businesses' },
-    { id: 'user_activity_tracker', label: 'User Activity Tracker' },
-    { id: 'priority_support', label: 'Priority Support' },
-  ];
 
   const fetchData = async () => {
     try {
       const plansRes = await subscriptionAPI.getPlans();
-      const filtered = plansRes.data.filter(p => ['Free Account', 'Premium', 'Enterprise'].includes(p.plan_name));
-      setPlans(filtered);
-      
+      const fetched = plansRes.data || [];
+      setPlans(fetched);
+
       const subRes = await subscriptionAPI.getCurrent();
       setCurrentSubscription(subRes.data);
 
@@ -85,7 +156,7 @@ export const SubscriptionPage = () => {
           coupon_id: couponId,
           duration_months: duration
         });
-        toast.success(`Switched to ${plan.plan_name} successfully`);
+        toast.success(`Switched to ${plan.plan_name || plan.name} successfully`);
         setAppliedCoupon(null);
         setCouponCode('');
         fetchData();
@@ -111,7 +182,7 @@ export const SubscriptionPage = () => {
         amount: order.amount,
         currency: order.currency,
         name: "BillEasy SaaS",
-        description: `Upgrade to ${plan.plan_name} Plan`,
+        description: `Upgrade to ${plan.plan_name || plan.name} Plan`,
         order_id: order.id,
         handler: async (response) => {
           try {
@@ -124,7 +195,7 @@ export const SubscriptionPage = () => {
               coupon_id: couponId,
               duration_months: duration
             });
-            toast.success(`Successfully upgraded to ${plan.plan_name}!`);
+            toast.success(`Successfully upgraded to ${plan.plan_name || plan.name}!`);
             setAppliedCoupon(null);
             setCouponCode('');
             fetchData();
@@ -132,14 +203,7 @@ export const SubscriptionPage = () => {
             toast.error("Payment verification failed. Please contact support.");
           }
         },
-        prefill: {
-          name: "",
-          email: "",
-          contact: ""
-        },
-        theme: {
-          color: "#10b981"
-        }
+        theme: { color: "#10b981" }
       };
 
       const rzp = new window.Razorpay(options);
@@ -152,6 +216,9 @@ export const SubscriptionPage = () => {
   };
 
   if (loading) return <div className="flex justify-center p-20"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div></div>;
+
+  // Merge backend plans with catalog metadata
+  const displayPlans = (catalog && catalog.length > 0) ? catalog : plans;
 
   return (
     <div className="max-w-[1400px] mx-auto p-4 md:p-10 bg-[#f8fafc]">
@@ -216,22 +283,21 @@ export const SubscriptionPage = () => {
         </div>
       )}
 
+      {/* Header */}
       <div className="text-center mb-10">
         <h1 className="text-3xl font-bold text-slate-800">
-          {currentSubscription?.Plan?.plan_name === 'Free Account' ? "Choose the best plan to grow your business" : "Upgrade your plan for more features"}
+          Choose the Right Subscription Plan for Your Business
         </h1>
-        <p className="text-slate-500 mt-2">Scale your business with advanced billing and inventory tools</p>
-        <div className="flex justify-center mt-4">
-            <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-          Upgrade your plan to unlock more features and grow your business.
+        <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
+          Full control over 9 main feature groups and 28 sub-features. Switch plans anytime.
         </p>
+
+        {!catalogLoading && catalogUnavailable && (
+          <p className="text-center text-xs text-amber-700 mt-3">Connecting to local pricing engine...</p>
+        )}
       </div>
 
-      {!catalogLoading && catalogUnavailable && (
-        <p className="text-center text-sm text-amber-700 mb-6">The current Control Centre plan catalog is unavailable. Final commercial terms will be confirmed before payment.</p>
-      )}
-      </div>
-
+      {/* Duration Billing Toggle */}
       <div className="flex justify-center mb-10">
         <div className="bg-slate-100 p-1.5 rounded-xl inline-flex shadow-inner">
           {[1, 3, 6, 12, 24, 36].map((m) => (
@@ -241,164 +307,134 @@ export const SubscriptionPage = () => {
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${duration === m ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200' : 'text-slate-600 hover:text-slate-900'}`}
             >
               {m} {m === 1 ? 'Month' : 'Months'}
+              {m === 12 && <span className="ml-1 text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-bold">Best Value</span>}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        {plans.map((plan) => {
-          const expectedCode = {
-            'Free Account': 'FREE',
-            Premium: 'BILL_EASY_PRO',
-            Enterprise: 'BILL_EASY_ENTERPRISE'
-          }[plan.plan_name];
-          const catalogPlan = catalog?.find((item) => item.code === expectedCode || item.name === plan.plan_name);
-          const isFree = plan.plan_name === 'Free Account';
-          const isPremium = plan.plan_name === 'Premium';
-          const isEnterprise = plan.plan_name === 'Enterprise';
-          const isCurrent = currentSubscription?.plan_id === plan.id;
+      {/* Subscription Pricing Cards */}
+      <div className="grid lg:grid-cols-4 gap-6 mb-16">
+        {displayPlans.map((plan) => {
+          const isCurrent = currentSubscription?.plan_id === plan.id || currentSubscription?.Plan?.plan_name === plan.name;
+          const isRecommended = plan.recommended || plan.code === 'pro';
+          const monthlyPrice = plan.priceMonthly || plan.price_per_month || 0;
+          const yearlyPrice = plan.priceYearly || (monthlyPrice * 12);
+          const calculatedPrice = duration === 12 ? yearlyPrice : (monthlyPrice * duration);
 
           return (
-            <Card key={plan.id} className={`border-t-4 shadow-sm bg-white flex flex-col ${
-                isPremium ? 'border-t-orange-500' : isEnterprise ? 'border-t-emerald-500' : 'border-t-slate-300'
+            <Card key={plan.id || plan.code} className={`border-t-4 shadow-sm bg-white flex flex-col ${
+              isRecommended ? 'border-t-emerald-500 shadow-lg ring-2 ring-emerald-500/20' : 'border-t-slate-300'
             }`}>
-              <CardHeader className="p-6 text-left border-b border-slate-50">
-                <div className="flex justify-between items-start">
-                    <div>
-                        <CardTitle className="text-2xl font-bold text-slate-800">{catalogPlan?.name || plan.plan_name}</CardTitle>
-                        <p className={`text-sm mt-1 font-medium ${isPremium ? 'text-orange-600' : isEnterprise ? 'text-emerald-600' : 'text-slate-500'}`}>
-                            {catalogPlan?.description || (isFree ? 'Start for free' : isPremium ? 'More flexibility' : 'Fully customizable')}
-                        </p>
-                    </div>
-                    {(catalogPlan?.badge || isPremium) && <Badge className="bg-orange-500 hover:bg-orange-600 text-white">{catalogPlan?.badge || '👑 Most Popular'}</Badge>}
-                </div>
+              <CardHeader className="p-6 text-left border-b border-slate-50 relative">
+                {plan.badge && (
+                  <Badge className="absolute top-4 right-4 bg-emerald-500 text-white font-bold">{plan.badge}</Badge>
+                )}
+                <CardTitle className="text-2xl font-bold text-slate-800">{plan.name}</CardTitle>
+                
+                <p className="text-xs text-slate-500 mt-2 min-h-[48px] leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100 italic">
+                  "{plan.description || 'No plan description text set.'}"
+                </p>
+
                 <div className="mt-6">
-                  {plan.price > 0 || plan.price_per_month > 0 ? (
+                  {monthlyPrice > 0 ? (
                     <div className="space-y-1">
                       <div className="flex items-baseline gap-2">
-                        {appliedCoupon && appliedCoupon.planId === plan.id && (
-                          <span className="text-2xl line-through text-slate-400">{formatCurrency(plan.price_per_month > 0 ? plan.price_per_month * duration : plan.price)}</span>
-                        )}
-                        <span className="text-4xl font-black text-slate-900">
-                          {appliedCoupon && appliedCoupon.planId === plan.id ? formatCurrency(appliedCoupon.finalPrice) : formatCurrency(plan.price_per_month > 0 ? plan.price_per_month * duration : plan.price)}
+                        <span className="text-3xl font-black text-slate-900">
+                          {formatCurrency(calculatedPrice)}
                         </span>
-                        <span className="text-slate-500 text-sm font-medium">/{duration} {duration === 1 ? 'month' : 'months'}</span>
+                        <span className="text-slate-500 text-xs font-medium">/{duration}m</span>
                       </div>
-                      <p className="text-xs text-slate-400">Approx. {formatCurrency(plan.price_per_month > 0 ? plan.price_per_month : Math.round(plan.price/3))}/month</p>
+                      <p className="text-xs text-emerald-600 font-semibold">Equivalent to {formatCurrency(monthlyPrice)}/month</p>
                     </div>
                   ) : (
                     <div className="h-14 flex items-baseline gap-2">
-                        <span className="text-4xl font-black text-slate-900">Free</span>
-                        <span className="text-slate-500 text-sm font-medium">Forever</span>
+                      <span className="text-3xl font-black text-slate-900">Free</span>
+                      <span className="text-slate-500 text-xs font-medium">Forever</span>
                     </div>
                   )}
                 </div>
 
-                {!isFree && !isCurrent && (
-                  <div className="mt-4 flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Coupon Code"
-                      value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                      className="flex-1 px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 border-slate-200"
-                    />
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => handleValidateCoupon(plan.id)}
-                      disabled={validatingCoupon}
-                      className="border-emerald-600 text-emerald-600 hover:bg-emerald-50"
-                    >
-                      {validatingCoupon ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Apply'}
-                    </Button>
-                  </div>
-                )}
-
                 <Button 
-                  className={`w-full mt-6 py-6 text-lg font-bold border transition-all ${
+                  className={`w-full mt-6 py-5 text-base font-bold transition-all ${
                     isCurrent 
-                      ? 'bg-slate-50 text-slate-400 border-slate-100' 
-                      : isPremium 
-                        ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600' 
-                        : 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700'
+                      ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' 
+                      : isRecommended 
+                        ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-600/30' 
+                        : 'bg-slate-800 text-white hover:bg-slate-900'
                   }`} 
                   disabled={isCurrent || upgrading}
                   onClick={() => handleUpgrade(plan)}
                 >
-                    {upgrading ? <Loader2 className="animate-spin h-5 w-5" /> : isCurrent ? 'Active Plan' : `Buy ${plan.plan_name}`}
+                  {upgrading ? <Loader2 className="animate-spin h-5 w-5" /> : isCurrent ? 'Current Active Plan' : `Subscribe to ${plan.name}`}
                 </Button>
               </CardHeader>
-
-              <CardContent className="p-6 flex-grow space-y-6">
-                {/* Access Details Section */}
-                <div className="space-y-4 pb-6 border-b border-slate-100">
-                    <div className="flex items-center gap-3 text-sm text-slate-600">
-                        <Building2 size={18} className="text-slate-400" />
-                        <span>Manage <strong>{plan.granular_features?.find(f => f.feature_key === 'manage_businesses')?.is_enabled ? plan.features?.manage_businesses : (plan.features?.manage_businesses || '1')} Business</strong></span>
-                    </div>
-                    <div className="flex items-center gap-3 text-sm text-slate-600">
-                        <Users2 size={18} className="text-slate-400" />
-                        <span>Access for <strong>{plan.max_users} Users</strong></span>
-                    </div>
-                    <div className="flex items-center gap-3 text-sm text-slate-600">
-                        <Zap size={18} className="text-slate-400" />
-                        <span><strong>{plan.max_invoices_per_month} Invoices</strong> /month</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-sm text-slate-600">
-                        <MonitorSmartphone size={18} className="text-slate-400" />
-                        <span>Auto sync across devices</span>
-                    </div>
-                </div>
-
-                {/* Features Box Section */}
-                <div>
-                    <h3 className={`text-xs font-bold uppercase tracking-wider mb-4 ${isPremium ? 'text-orange-600' : isEnterprise ? 'text-emerald-600' : 'text-slate-500'}`}>
-                        Features included
-                    </h3>
-                    <div className="space-y-4">
-                        {ALL_FEATURES.map((feature) => {
-                            const granularFeatures = plan.granular_features || [];
-                            const granularFeature = granularFeatures.find(f => f.feature_key === feature.id);
-                            
-                            // Check both existing features JSON and new PlanFeature table
-                            const isEnabled = granularFeature ? granularFeature.is_enabled : !!plan.features?.[feature.id];
-                            
-                            let label = feature.label;
-                            if (feature.id === 'eway_bills' && isEnabled) {
-                              label = `${feature.label} (${isPremium ? feature.premiumLimit : feature.enterpriseLimit})`;
-                            }
-
-                            return (
-                                <div key={feature.id} className="flex items-start gap-3">
-                                    {isEnabled ? (
-                                        <CheckCircle2 size={18} className="text-emerald-500 mt-0.5 shrink-0" />
-                                    ) : (
-                                        <div className="flex items-center gap-1">
-                                          <Crown size={16} className="text-amber-400 mt-0.5 shrink-0" />
-                                          <span className="text-[10px] bg-amber-50 text-amber-600 px-1 rounded font-bold uppercase">Upgrade</span>
-                                        </div>
-                                    )}
-                                    <span className={`text-sm ${!isEnabled ? 'text-slate-400' : 'text-slate-600 font-medium'}`}>
-                                        {label}
-                                    </span>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-              </CardContent>
             </Card>
           );
         })}
       </div>
-      
+
+      {/* 9 Feature Groups & 28 Sub-Features Comparison Matrix */}
+      <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-bold text-slate-900">Detailed Feature Comparison Matrix</h2>
+          <p className="text-slate-500 text-sm mt-1">
+            Compare all 28 sub-features across all 4 subscription plans
+          </p>
+        </div>
+
+        <div className="space-y-8">
+          {FEATURE_GROUPS.map((group, groupIdx) => (
+            <div key={group.code} className="border border-slate-100 rounded-2xl overflow-hidden">
+              <div className="bg-slate-50 px-6 py-3 border-b border-slate-100 flex items-center justify-between">
+                <h3 className="text-sm font-bold text-slate-800 tracking-wide flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 text-xs flex items-center justify-center font-bold">
+                    {groupIdx + 1}
+                  </span>
+                  {group.name}
+                </h3>
+              </div>
+
+              <div className="divide-y divide-slate-100">
+                {group.features.map((feature) => (
+                  <div key={feature.code} className="p-4 grid grid-cols-1 md:grid-cols-5 items-center gap-4 hover:bg-slate-50/50 transition-colors">
+                    <div className="md:col-span-1">
+                      <div className="text-sm font-semibold text-slate-800">{feature.label}</div>
+                      <div className="text-[11px] font-mono text-slate-400">{feature.code}</div>
+                    </div>
+
+                    <div className="md:col-span-4 grid grid-cols-4 gap-2 text-center">
+                      {displayPlans.map((plan) => {
+                        const isEnabled = plan.entitlements ? Boolean(plan.entitlements[feature.code]) : true;
+                        return (
+                          <div key={plan.id || plan.code} className="flex justify-center items-center py-1">
+                            {isEnabled ? (
+                              <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full text-xs font-semibold">
+                                <Check size={14} /> Included
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1 text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full text-xs">
+                                <Lock size={12} /> Locked
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="mt-12 text-center text-xs text-slate-400">
-        Prices are exclusive of 18% GST. Support: 9986995848
+        Prices are exclusive of 18% GST. Priority Support Helpline: +91 9986995848
       </div>
     </div>
   );
 };
 
 export default SubscriptionPage;
+
