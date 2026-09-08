@@ -56,7 +56,12 @@ const normalizeCatalog = (payload) => {
     const existingCompleteness = (existing?.features.length || 0) + (existingPrice > 0 ? 1 : 0);
     if (!existing || planCompleteness > existingCompleteness) uniquePlans.set(key, plan);
   }
-  return Array.from(uniquePlans.values());
+  const planOrder = ['free account', 'starter plan', 'pro plan', 'enterprise plan'];
+  return Array.from(uniquePlans.values()).sort((left, right) => {
+    const leftIndex = planOrder.indexOf(left.name.trim().toLowerCase());
+    const rightIndex = planOrder.indexOf(right.name.trim().toLowerCase());
+    return (leftIndex === -1 ? planOrder.length : leftIndex) - (rightIndex === -1 ? planOrder.length : rightIndex);
+  });
 };
 
 /** Fetches the unauthenticated Control Centre catalog without sending credentials. */
