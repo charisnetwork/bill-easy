@@ -43,6 +43,15 @@ const features = [
 
 export const LandingPage = () => {
   const { catalog, loading: catalogLoading, unavailable: catalogUnavailable } = usePublicCatalog();
+
+  const formatPlanPrice = (amount, currency = 'INR') => {
+    if (amount === null || amount === undefined || Number.isNaN(Number(amount))) return 'Contact us';
+    return new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency,
+      maximumFractionDigits: 0,
+    }).format(Number(amount));
+  };
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
@@ -226,7 +235,7 @@ export const LandingPage = () => {
                 )}
                 <h3 className="font-heading text-xl font-semibold text-slate-900 mt-4">{plan.name}</h3>
                 <div className="flex items-baseline gap-1 mt-2 mb-6">
-                  <span className="text-4xl font-bold text-slate-900">{amount === null ? 'Contact us' : `₹${amount}`}</span>
+                  <span className="text-4xl font-bold text-slate-900">{formatPlanPrice(amount, firstPrice?.currency || plan.currency)}</span>
                   {duration && <span className="text-slate-500 text-xs font-medium">/{duration} months</span>}
                 </div>
                 <ul className="space-y-3 mb-6">

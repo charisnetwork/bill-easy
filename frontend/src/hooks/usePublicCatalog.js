@@ -10,13 +10,19 @@ const normalizeCatalog = (payload) => {
   if ((!plans || plans.length === 0) && payload?.subscriptionModels?.[0]?.plans) {
     plans = payload.subscriptionModels[0].plans;
   }
-  return (plans || []).map((plan) => {
+  const normalizedPlans = (plans || []).map((plan) => {
     // Build entitlements map from either flat object or features array
     let entitlements = plan.entitlements || null;
     if (!entitlements && Array.isArray(plan.features) && plan.features.length > 0 && plan.features[0]?.code) {
       entitlements = {};
       plan.features.forEach(f => { entitlements[f.code] = Boolean(f.isEnabled); });
     }
+
+    const explicitPrices = plan.prices || plan.priceOptions || plan.durationPricing || [];
+    const fallbackMonthlyPrice = plan.priceMonthly ?? plan.monthlyPrice;
+    const prices = explicitPrices.length > 0 || fallbackMonthlyPrice === undefined || fallbackMonthlyPrice === null
+      ? explicitPrices
+      : [{ durationMonths: 1, currency: plan.currency || 'INR', amount: fallbackMonthlyPrice }];
 
     return {
       id: plan.id || plan.planId || plan.code,
@@ -33,9 +39,19 @@ const normalizeCatalog = (payload) => {
       priceMonthly: plan.priceMonthly || 0,
       priceYearly: plan.priceYearly || 0,
       currency: plan.currency || 'INR',
-      prices: plan.prices || plan.priceOptions || plan.durationPricing || []
+      prices
     };
   });
+
+  // A stale or duplicated product mapping must not result in duplicate checkout
+  // choices. Test-only catalog rows are never customer-facing pricing offers.
+  const uniquePlans = new Map();
+  for (const plan of normalizedPlans) {
+    const key = (plan.code || plan.name).trim().toLowerCase();
+    if (!key || key === 'test' || plan.name.trim().toLowerCase() === 'test') continue;
+    if (!uniquePlans.has(key)) uniquePlans.set(key, plan);
+  }
+  return Array.from(uniquePlans.values());
 };
 
 /** Fetches the unauthenticated Control Centre catalog without sending credentials. */
