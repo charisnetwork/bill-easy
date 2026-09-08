@@ -236,7 +236,7 @@ export const LandingPage = () => {
                 <h3 className="font-heading text-xl font-semibold text-slate-900 mt-4">{plan.name}</h3>
                 <div className="flex items-baseline gap-1 mt-2 mb-6">
                   <span className="text-4xl font-bold text-slate-900">{formatPlanPrice(amount, firstPrice?.currency || plan.currency)}</span>
-                  {duration && <span className="text-slate-500 text-xs font-medium">/{duration} months</span>}
+                  {duration && <span className="text-slate-500 text-xs font-medium">{duration === 1 ? '/month' : `/${duration} months`}</span>}
                 </div>
                 <ul className="space-y-3 mb-6">
                   {featureLabels.map((feature, i) => (

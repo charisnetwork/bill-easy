@@ -47,9 +47,14 @@ const normalizeCatalog = (payload) => {
   // choices. Test-only catalog rows are never customer-facing pricing offers.
   const uniquePlans = new Map();
   for (const plan of normalizedPlans) {
-    const key = (plan.code || plan.name).trim().toLowerCase();
-    if (!key || key === 'test' || plan.name.trim().toLowerCase() === 'test') continue;
-    if (!uniquePlans.has(key)) uniquePlans.set(key, plan);
+    const key = plan.name.trim().toLowerCase();
+    if (!key || key === 'test') continue;
+    const existing = uniquePlans.get(key);
+    const planPrice = Number(plan.prices[0]?.amount ?? plan.priceMonthly ?? 0);
+    const existingPrice = Number(existing?.prices[0]?.amount ?? existing?.priceMonthly ?? 0);
+    const planCompleteness = plan.features.length + (planPrice > 0 ? 1 : 0);
+    const existingCompleteness = (existing?.features.length || 0) + (existingPrice > 0 ? 1 : 0);
+    if (!existing || planCompleteness > existingCompleteness) uniquePlans.set(key, plan);
   }
   return Array.from(uniquePlans.values());
 };
