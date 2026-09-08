@@ -10,19 +10,32 @@ const normalizeCatalog = (payload) => {
   if ((!plans || plans.length === 0) && payload?.subscriptionModels?.[0]?.plans) {
     plans = payload.subscriptionModels[0].plans;
   }
-  return (plans || []).map((plan) => ({
-    id: plan.id || plan.planId || plan.code,
-    code: plan.code || '',
-    name: plan.name || plan.title || plan.displayName || plan.code || 'Plan',
-    description: plan.publicDescription || plan.description || '',
-    badge: plan.badge || null,
-    recommended: Boolean(plan.recommended || plan.isRecommended),
-    features: plan.features || [],
-    limits: plan.limits || {},
-    perks: plan.perks || [],
-    pricingMatrix: plan.pricingMatrix || {},
-    prices: plan.prices || plan.priceOptions || plan.durationPricing || []
-  }));
+  return (plans || []).map((plan) => {
+    // Build entitlements map from either flat object or features array
+    let entitlements = plan.entitlements || null;
+    if (!entitlements && Array.isArray(plan.features) && plan.features.length > 0 && plan.features[0]?.code) {
+      entitlements = {};
+      plan.features.forEach(f => { entitlements[f.code] = Boolean(f.isEnabled); });
+    }
+
+    return {
+      id: plan.id || plan.planId || plan.code,
+      code: plan.code || '',
+      name: plan.name || plan.title || plan.displayName || plan.code || 'Plan',
+      description: plan.publicDescription || plan.description || '',
+      badge: plan.badge || null,
+      recommended: Boolean(plan.recommended || plan.isRecommended),
+      entitlements,
+      features: plan.features || [],
+      limits: plan.limits || {},
+      perks: plan.perks || [],
+      pricingMatrix: plan.pricingMatrix || {},
+      priceMonthly: plan.priceMonthly || 0,
+      priceYearly: plan.priceYearly || 0,
+      currency: plan.currency || 'INR',
+      prices: plan.prices || plan.priceOptions || plan.durationPricing || []
+    };
+  });
 };
 
 /** Fetches the unauthenticated Control Centre catalog without sending credentials. */
