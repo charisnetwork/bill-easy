@@ -117,6 +117,7 @@ import {
 import { toast } from 'sonner';
 import { cn } from '../lib/utils';
 import { industries } from "../lib/industryConfig";
+import { COUNTRIES, countryByCode, regionsForCountry } from '../lib/localization';
 
 // --- Schemas ---
 
@@ -148,7 +149,9 @@ const businessSchema = z.object({
   email: z.string().email("Invalid email address").or(z.literal("")),
   address: z.string().min(5, "Address is required"),
   state: z.string().min(2, "State is required"),
-  pincode: z.string().length(6, "Pincode must be 6 digits"),
+  pincode: z.string().regex(/^[A-Za-z0-9 -]{3,12}$/, "Invalid postal code"),
+  country_code: z.string().length(2).default('IN'),
+  language: z.string().min(2, "Language is required"),
   city: z.string().min(2, "City is required"),
   business_types: z.array(z.string()).default([]),
   industry: z.string().min(1, "Industry type is required"),
@@ -338,10 +341,11 @@ export const SettingsPage = () => {
     resolver: zodResolver(businessSchema),
     defaultValues: {
       name: "", phone: "", email: "", address: "", state: "Karnataka",
-      pincode: "", city: "", business_types: [], industry: "Retail",
+      pincode: "", city: "", country_code: 'IN', language: 'en-IN', business_types: [], industry: "Retail",
       registration_type: "Sole Proprietorship", extra_details: []
     }
   });
+  const selectedCountry = businessForm.watch('country_code') || 'IN';
 
   const { fields, append, remove } = useFieldArray({
     control: businessForm.control,
@@ -431,6 +435,8 @@ export const SettingsPage = () => {
           state: c.state || "Karnataka",
           pincode: c.pincode || "",
           city: c.city || "",
+          country_code: c.country_code || 'IN',
+          language: c.language || countryByCode(c.country_code || 'IN').locale,
           business_types: c.settings?.businessTypes || [],
           industry: c.business_category || "Retail",
           registration_type: c.settings?.ownerType || "Sole Proprietorship",
@@ -1018,14 +1024,19 @@ export const SettingsPage = () => {
                         <FormItem><FormLabel>Address</FormLabel><FormControl><Textarea className="min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>
                       )} />
                       <div className="grid grid-cols-2 gap-4">
+                        <FormField control={businessForm.control} name="country_code" render={({ field }) => (
+                          <FormItem><FormLabel>Country</FormLabel><FormControl><select className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm" value={field.value} onChange={(event) => { const country = countryByCode(event.target.value); field.onChange(country.code); businessForm.setValue('language', country.locale, { shouldDirty: true }); businessForm.setValue('state', '', { shouldDirty: true }); businessForm.setValue('pincode', '', { shouldDirty: true }); }}><>{COUNTRIES.map((country) => <option key={country.code} value={country.code}>{country.name}</option>)}</></select></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField control={businessForm.control} name="language" render={({ field }) => (
+                          <FormItem><FormLabel>Language</FormLabel><FormControl><select className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm" {...field}><option value="en">English</option><option value="en-IN">English (India)</option><option value="ar">Arabic</option><option value="bn">Bengali</option><option value="de">German</option><option value="es">Spanish</option><option value="fr">French</option><option value="hi">Hindi</option><option value="ja">Japanese</option><option value="pt">Portuguese</option><option value="si-LK">Sinhala</option><option value="ta">Tamil</option><option value="ur-PK">Urdu</option><option value="zh">Chinese</option></select></FormControl><FormMessage /></FormItem>
+                        )} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
                         <FormField control={businessForm.control} name="state" render={({ field }) => (
-                          <FormItem><FormLabel>State</FormLabel>
-                            <Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="h-11 w-full justify-between font-normal">{field.value || "Select"}<Search className="w-4 h-4 opacity-50" /></Button></FormControl></PopoverTrigger>
-                              <PopoverContent className="w-full p-0"><Command><CommandInput placeholder="Search..." /><CommandList><CommandEmpty>No results</CommandEmpty><CommandGroup>{states.map(s => <CommandItem key={s} onSelect={() => businessForm.setValue("state", s, { shouldDirty: true })}><Check className={cn("mr-2 h-4 w-4", s === field.value ? "opacity-100" : "opacity-0")} />{s}</CommandItem>)}</CommandGroup></CommandList></Command></PopoverContent></Popover>
-                            <FormMessage /></FormItem>
+                          <FormItem><FormLabel>State / Province</FormLabel><FormControl><select className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm" {...field}><option value="">Select region</option>{regionsForCountry(selectedCountry).map((region) => <option key={region} value={region}>{region}</option>)}</select></FormControl><FormMessage /></FormItem>
                         )} />
                         <FormField control={businessForm.control} name="pincode" render={({ field }) => (
-                          <FormItem><FormLabel>Pincode</FormLabel><FormControl><Input className="h-11" {...field} /></FormControl><FormMessage /></FormItem>
+                          <FormItem><FormLabel>{countryByCode(selectedCountry).postalLabel}</FormLabel><FormControl><Input className="h-11" inputMode={selectedCountry === 'IN' ? 'numeric' : 'text'} {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
                       </div>
                       <FormField control={businessForm.control} name="city" render={({ field }) => (

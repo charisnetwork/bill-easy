@@ -40,6 +40,8 @@ const Company = sequelize.define('Company',{
   city:{ type:DataTypes.STRING },
   state:{ type:DataTypes.STRING },
   pincode:{ type:DataTypes.STRING },
+  country_code:{ type:DataTypes.STRING(2), defaultValue:'IN' },
+  language:{ type:DataTypes.STRING, defaultValue:'en-IN' },
   phone:{ type:DataTypes.STRING },
   email:{ type:DataTypes.STRING },
   logo:{ type:DataTypes.STRING },

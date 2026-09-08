@@ -9,8 +9,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Building2, Mail, Lock, User, Phone, Eye, EyeOff, MapPin, Hash, Loader2, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { getErrorMessage, IS_NATIVE } from '../config/api';
+import { utilityAPI } from '../services/api';
 import { cn } from '../lib/utils';
 import { ScrollArea } from '../components/ui/scroll-area';
+import { COUNTRIES, countryByCode, regionsForCountry } from '../lib/localization';
 
 export const RegisterPage = () => {
   const navigate = useNavigate();
@@ -24,8 +26,29 @@ export const RegisterPage = () => {
     phone: '',
     password: '',
     gstNumber: '',
-    address: ''
+    address: '',
+    countryCode: 'IN',
+    language: 'en-IN',
+    state: '',
+    city: '',
+    pincode: ''
   });
+
+  const selectCountry = (countryCode) => {
+    const country = countryByCode(countryCode);
+    setFormData((current) => ({ ...current, countryCode, language: country.locale, state: '', city: '', pincode: '' }));
+  };
+
+  const lookupIndiaPincode = async () => {
+    if (formData.countryCode !== 'IN' || !/^\d{6}$/.test(formData.pincode)) return;
+    try {
+      const { data } = await utilityAPI.getPincode(formData.pincode);
+      const postOffice = data?.[0]?.PostOffice?.[0];
+      if (postOffice) setFormData((current) => ({ ...current, city: postOffice.District || current.city, state: postOffice.State || current.state }));
+    } catch {
+      toast.error('Could not look up this PIN code. You can enter the address manually.');
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -167,7 +190,7 @@ export const RegisterPage = () => {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="phone" className="text-sm font-semibold text-slate-700">Phone</Label>
+                        <Label htmlFor="phone" className="text-sm font-semibold text-slate-700">Phone <span className="text-red-500">*</span></Label>
                         <InputGroup
                           id="phone"
                           type="tel"
@@ -175,6 +198,7 @@ export const RegisterPage = () => {
                           value={formData.phone}
                           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                           leftIcon={<Phone className="w-4 h-4" />}
+                          required
                           className="h-11 border-slate-200 focus-within:border-emerald-600 focus-within:ring-emerald-100"
                           data-testid="register-phone-input"
                         />
@@ -232,6 +256,33 @@ export const RegisterPage = () => {
                           className="h-11 border-slate-200 focus-within:border-emerald-600 focus-within:ring-emerald-100"
                           data-testid="register-address-input"
                         />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="countryCode" className="text-sm font-semibold text-slate-700">Country <span className="text-red-500">*</span></Label>
+                        <select id="countryCode" value={formData.countryCode} onChange={(e) => selectCountry(e.target.value)} className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm" required>
+                          {COUNTRIES.map((country) => <option key={country.code} value={country.code}>{country.name}</option>)}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="language" className="text-sm font-semibold text-slate-700">Language</Label>
+                        <select id="language" value={formData.language} onChange={(e) => setFormData({ ...formData, language: e.target.value })} className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
+                          <option value="en">English</option><option value="en-IN">English (India)</option><option value="ar">Arabic</option><option value="bn">Bengali</option><option value="de">German</option><option value="es">Spanish</option><option value="fr">French</option><option value="hi">Hindi</option><option value="ja">Japanese</option><option value="pt">Portuguese</option><option value="si-LK">Sinhala</option><option value="ta">Tamil</option><option value="ur-PK">Urdu</option><option value="zh">Chinese</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="state" className="text-sm font-semibold text-slate-700">State / Province</Label>
+                        <select id="state" value={formData.state} onChange={(e) => setFormData({ ...formData, state: e.target.value })} className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
+                          <option value="">Select region</option>{regionsForCountry(formData.countryCode).map((region) => <option key={region} value={region}>{region}</option>)}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="pincode" className="text-sm font-semibold text-slate-700">{countryByCode(formData.countryCode).postalLabel}</Label>
+                        <Input id="pincode" value={formData.pincode} onChange={(e) => setFormData({ ...formData, pincode: e.target.value.replace(/[^A-Za-z0-9 -]/g, '') })} onBlur={lookupIndiaPincode} inputMode={formData.countryCode === 'IN' ? 'numeric' : 'text'} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="city" className="text-sm font-semibold text-slate-700">City</Label>
+                        <Input id="city" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} />
                       </div>
                     </div>
 

@@ -1,5 +1,8 @@
 const { Company, User, Subscription, Plan, UserCompany, Godown } = require("../models");
 const bcrypt = require("bcryptjs");
+const { Country } = require('country-state-city');
+
+const currencyForCountry = (code) => Country.getCountryByCode(code)?.currency || null;
 
 
 /* =========================================================
@@ -45,6 +48,8 @@ const updateCompany = async (req, res) => {
       city,
       state,
       pincode,
+      country_code,
+      language,
       phone,
       email,
       tagline,
@@ -70,6 +75,12 @@ const updateCompany = async (req, res) => {
       ...(settings || {})
     };
 
+    const normalizedCountry = country_code ? String(country_code).toUpperCase() : company.country_code || 'IN';
+    const countryCurrency = currencyForCountry(normalizedCountry);
+    if (!countryCurrency) {
+      return res.status(400).json({ error: 'Unsupported country.' });
+    }
+
     await company.update({
       name,
       gst_number,
@@ -77,6 +88,9 @@ const updateCompany = async (req, res) => {
       city,
       state,
       pincode,
+      country_code: normalizedCountry,
+      language,
+      currency: countryCurrency,
       phone,
       email,
       tagline,

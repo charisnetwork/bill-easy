@@ -11,12 +11,19 @@ const handleValidationErrors = (req, res, next) => {
 const registerValidation = [
   body('companyName').trim().notEmpty().isString().withMessage('Company name is required'),
   body('email').isEmail().withMessage('Valid email is required'),
-  body('mobileNumber').matches(/^\+?[1-9]\d{9,14}$/).withMessage('Valid mobile number is required'),
+  body().custom((_, { req }) => {
+    const mobile = String(req.body.phone ?? req.body.mobileNumber ?? '').trim();
+    if (!/^\+?[1-9]\d{9,14}$/.test(mobile)) throw new Error('Valid mobile number is required');
+    req.body.phone = mobile;
+    return true;
+  }),
   body('password')
     .isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
     .matches(/[A-Z]/).withMessage('Password must contain at least one uppercase letter')
     .matches(/[\W_]/).withMessage('Password must contain at least one special character'),
   body('name').trim().notEmpty().withMessage('Name is required'),
+  body('countryCode').optional().matches(/^[A-Za-z]{2}$/).withMessage('Country code must be ISO alpha-2'),
+  body('pincode').optional({ checkFalsy: true }).isString().matches(/^[A-Za-z0-9 -]{3,12}$/).withMessage('Invalid postal code'),
   handleValidationErrors
 ];
 

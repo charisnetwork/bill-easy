@@ -6,6 +6,12 @@ const { incrementBruteForce, clearBruteForce } = require('../middleware/rateLimi
 const { logSecurityEvent, EVENT_TYPES, SEVERITY } = require('../services/auditService');
 const { Op } = require('sequelize');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/mailer');
+const { Country } = require('country-state-city');
+
+const countryDefaults = (code) => {
+  const country = Country.getCountryByCode(code);
+  return country ? { currency: country.currency || 'USD', language: code === 'IN' ? 'en-IN' : 'en' } : null;
+};
 
 // Cookie configuration
 const REFRESH_COOKIE_NAME = 'refreshToken';
@@ -23,17 +29,21 @@ const REFRESH_COOKIE_OPTIONS = {
 ================================ */
 const register = async (req, res) => {
   try {
-    const { companyName, email, password, name, mobileNumber, gstNumber, address } = req.body;
+    const { companyName, email, password, name, mobileNumber, phone, gstNumber, address, city, state, pincode, countryCode, language } = req.body;
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    const normalizedMobile = String(mobileNumber ?? phone ?? '').trim() || null;
+
+    if (!companyName || !name || !normalizedEmail || !password) {
+      return res.status(400).json({ error: 'Company name, name, email and password are required.' });
+    }
+    const country = String(countryCode || 'IN').toUpperCase();
+    const localeDefaults = countryDefaults(country);
+    if (!localeDefaults) return res.status(400).json({ error: 'Unsupported registration country.' });
 
     // Check existing email or mobile number
-    const existingUser = await User.findOne({ 
-      where: { 
-        [Op.or]: [
-          { email },
-          { mobile_number: mobileNumber }
-        ]
-      } 
-    });
+    const duplicateConditions = [{ email: normalizedEmail }];
+    if (normalizedMobile) duplicateConditions.push({ mobile_number: normalizedMobile });
+    const existingUser = await User.findOne({ where: { [Op.or]: duplicateConditions } });
     if (existingUser) {
       return res.status(400).json({ error: 'You are already registered with us. Please choose the forgot password or username option to retrieve your username, email, or mobile number.' });
     }
@@ -44,7 +54,14 @@ const register = async (req, res) => {
       gst_number: gstNumber,
       gst_registered: !!gstNumber,
       address: address,
-      email: email
+      email: normalizedEmail,
+      phone: normalizedMobile,
+      city: city || null,
+      state: state || null,
+      pincode: pincode || null,
+      country_code: country,
+      currency: localeDefaults.currency,
+      language: language || localeDefaults.language
     });
 
     // Hash password
@@ -54,10 +71,10 @@ const register = async (req, res) => {
     const verificationToken = crypto.randomBytes(20).toString('hex');
     const user = await User.create({
       company_id: company.id,
-      email,
+      email: normalizedEmail,
       password: hashedPassword,
       name,
-      mobile_number: mobileNumber,
+      mobile_number: normalizedMobile,
       role: 'owner',
       token_version: 1,
       verification_token: verificationToken
