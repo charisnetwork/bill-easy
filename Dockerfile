@@ -6,8 +6,9 @@ WORKDIR /app
 # Cache bust: 2026-05-12T23:00:00Z
 # Force rebuild without frontend to speed up and save memory on Railway
 
-# Install build dependencies
-RUN apk add --no-cache python3 make g++
+# Install build dependencies + Python PDF extractor
+RUN apk add --no-cache python3 py3-pip make g++ \
+    && pip3 install --no-cache-dir --break-system-packages pdfplumber
 
 # Copy root package files
 COPY package.json package-lock.json ./
