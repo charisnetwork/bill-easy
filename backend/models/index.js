@@ -100,7 +100,8 @@ const User = sequelize.define('User',{
   token_version:{ type:DataTypes.INTEGER, defaultValue:1 },  // For mass logout
   reset_password_token: { type: DataTypes.STRING, allowNull: true },
   reset_password_expire: { type: DataTypes.DATE, allowNull: true },
-  verification_token: { type: DataTypes.STRING, allowNull: true }
+  verification_token: { type: DataTypes.STRING, allowNull: true },
+  verification_token_expires: { type: DataTypes.DATE, allowNull: true }
 }, { tableName: 'users' });
 
 const Coupon = sequelize.define('Coupon', {
@@ -490,6 +491,36 @@ const AIUsage = sequelize.define('AIUsage', {
   indexes: [{ unique: true, fields: ['user_id', 'date'] }]
 });
 
+const RecurringSubscription = sequelize.define('RecurringSubscription', {
+  id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+  company_id: { type: DataTypes.UUID, allowNull: false },
+  customer_id: { type: DataTypes.UUID, allowNull: false },
+  godown_id: { type: DataTypes.UUID },
+  profile_name: { type: DataTypes.STRING, allowNull: false },
+  frequency: { type: DataTypes.ENUM('weekly', 'monthly', 'quarterly', 'annually'), defaultValue: 'monthly' },
+  billing_interval: { type: DataTypes.INTEGER, defaultValue: 1 },
+  start_date: { type: DataTypes.DATEONLY, defaultValue: DataTypes.NOW },
+  end_date: { type: DataTypes.DATEONLY, allowNull: true },
+  next_issue_date: { type: DataTypes.DATEONLY, allowNull: false },
+  last_issued_date: { type: DataTypes.DATEONLY, allowNull: true },
+  status: { type: DataTypes.ENUM('active', 'paused', 'cancelled', 'completed'), defaultValue: 'active' },
+  auto_send_email: { type: DataTypes.BOOLEAN, defaultValue: true },
+  auto_send_whatsapp: { type: DataTypes.BOOLEAN, defaultValue: false },
+  notes: { type: DataTypes.TEXT },
+  terms: { type: DataTypes.TEXT }
+}, { tableName: 'recurring_subscriptions' });
+
+const RecurringSubscriptionItem = sequelize.define('RecurringSubscriptionItem', {
+  id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+  recurring_subscription_id: { type: DataTypes.UUID, allowNull: false },
+  product_id: { type: DataTypes.UUID, allowNull: false },
+  quantity: { type: DataTypes.DECIMAL(12,2), allowNull: false },
+  unit_price: { type: DataTypes.DECIMAL(12,2), allowNull: false },
+  discount: { type: DataTypes.DECIMAL(12,2), defaultValue: 0 },
+  tax_rate: { type: DataTypes.DECIMAL(5,2), defaultValue: 0 },
+  description: { type: DataTypes.TEXT }
+}, { tableName: 'recurring_subscription_items' });
+
 /* =========================================
    RELATIONSHIPS
 ========================================= */
@@ -729,6 +760,18 @@ const RefreshToken = sequelize.define('RefreshToken', {
 User.hasMany(RefreshToken, { foreignKey: 'user_id' });
 RefreshToken.belongsTo(User, { foreignKey: 'user_id' });
 
+Company.hasMany(RecurringSubscription, { foreignKey: 'company_id' });
+RecurringSubscription.belongsTo(Company, { foreignKey: 'company_id' });
+
+Customer.hasMany(RecurringSubscription, { foreignKey: 'customer_id' });
+RecurringSubscription.belongsTo(Customer, { foreignKey: 'customer_id' });
+
+RecurringSubscription.hasMany(RecurringSubscriptionItem, { foreignKey: 'recurring_subscription_id', as: 'items', onDelete: 'CASCADE' });
+RecurringSubscriptionItem.belongsTo(RecurringSubscription, { foreignKey: 'recurring_subscription_id' });
+
+Product.hasMany(RecurringSubscriptionItem, { foreignKey: 'product_id' });
+RecurringSubscriptionItem.belongsTo(Product, { foreignKey: 'product_id' });
+
 /* =========================================
    EXPORT
 ========================================= */
@@ -772,5 +815,8 @@ module.exports = {
   Coupon,
   GstCache,
   TaxSetting,
-  AIUsage
+  AIUsage,
+  RecurringSubscription,
+  RecurringSubscriptionItem
 };
+

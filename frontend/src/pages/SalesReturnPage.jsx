@@ -138,9 +138,14 @@ export const SalesReturnPage = () => {
     return formData.items.reduce((acc, item) => acc + (item.total || 0), 0);
   };
 
-  const downloadCN = (id) => {
-    const token = localStorage.getItem('token');
-    window.open(`${API_BASE_URL}/credit-notes/${id}/pdf?token=${token}`, "_blank");
+  const downloadCN = async (id) => {
+    try {
+      const response = await creditNoteAPI.downloadPdf(id);
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to download PDF"));
+    }
   };
 
   const handleSubmit = async (e) => {

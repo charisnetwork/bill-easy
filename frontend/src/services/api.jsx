@@ -33,7 +33,7 @@ api.interceptors.request.use((config) => {
   
   return config;
 }, (error) => {
-  console.error('[API Request Error]', error);
+  console.error('[API Request Error]', error?.response?.status, error?.message);
   return Promise.reject(error);
 });
 
@@ -209,6 +209,7 @@ export const expenseAPI = {
 export const reportAPI = {
   client: api,
   getDashboard: () => api.get('/reports/dashboard'),
+  getCashFlowTaxSnapshot: (params) => api.get('/reports/cashflow-tax-snapshot', { params }),
   getSales: (params) => api.get('/reports/sales', { params }),
   getPurchases: (params) => api.get('/reports/purchases', { params }),
   getExpenses: (params) => api.get('/reports/expenses', { params }),
@@ -220,6 +221,18 @@ export const reportAPI = {
   sendToCA: (data) => api.post('/reports/send-to-ca', data),
   downloadGSTR1: (params) => api.get('/reports/gstr-1/download', { params, responseType: 'blob' })
 };
+
+// Recurring Subscriptions API
+export const recurringAPI = {
+  getAll: (params) => api.get('/recurring', { params }),
+  get: (id) => api.get(`/recurring/${id}`),
+  create: (data) => api.post('/recurring', data),
+  update: (id, data) => api.put(`/recurring/${id}`, data),
+  toggleStatus: (id, status) => api.patch(`/recurring/${id}/status`, { status }),
+  triggerNow: (id) => api.post(`/recurring/${id}/trigger`),
+  delete: (id) => api.delete(`/recurring/${id}`)
+};
+
 
 // Subscription APIs
 export const subscriptionAPI = {

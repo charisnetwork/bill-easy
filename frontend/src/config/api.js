@@ -8,10 +8,20 @@ let envBackendUrl =
   import.meta.env?.REACT_APP_BACKEND_URL ||
   'https://bill-easy-production.up.railway.app';
 
+// Local development fallback for localhost browser testing
+if (import.meta.env?.DEV && typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+  if (import.meta.env?.VITE_BACKEND_URL?.includes('localhost')) {
+    envBackendUrl = import.meta.env.VITE_BACKEND_URL;
+  } else {
+    envBackendUrl = 'http://localhost:8001';
+  }
+}
+
 // Sanitize: Remove trailing slash
 if (envBackendUrl && envBackendUrl.endsWith('/')) {
   envBackendUrl = envBackendUrl.slice(0, -1);
 }
+
 
 // Ensure URL has protocol
 if (envBackendUrl && !envBackendUrl.startsWith('http')) {

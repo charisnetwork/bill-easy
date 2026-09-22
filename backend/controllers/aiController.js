@@ -362,7 +362,7 @@ const processPDFExtract = async (req, res) => {
 
   } catch (error) {
     // PDF processing error logged
-    res.status(500).json({ error: "Failed to process PDF", details: error.message });
+    res.status(500).json({ error: process.env.NODE_ENV === 'production' ? "Failed to process PDF" : "Failed to process PDF: " + error.message });
   }
 };
 

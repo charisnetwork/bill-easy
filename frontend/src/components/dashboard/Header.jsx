@@ -166,9 +166,9 @@ export const Header = ({ setSidebarOpen, setCmdkOpen }) => {
               <span className="font-medium">Account Settings</span>
             </DropdownMenuItem>
 
-            {user?.email === 'pachu.mgd@gmail.com' && (
+            {user?.is_platform_admin && (
               <DropdownMenuItem 
-                onClick={() => window.open(import.meta.env.VITE_ADMIN_PORTAL_URL || 'https://admin.charisbilleasy.store/admin-portal/', '_blank')}
+                onClick={() => window.open(import.meta.env.VITE_ADMIN_PORTAL_URL || 'https://admin.charisbilleasy.store/admin-portal/', '_blank', 'noopener,noreferrer')}
                 className="rounded-xl py-2 px-3 cursor-pointer text-indigo-600 focus:text-indigo-700 focus:bg-indigo-50"
               >
                 <Shield className="w-4 h-4 mr-3" />

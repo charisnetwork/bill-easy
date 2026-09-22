@@ -71,12 +71,16 @@ const ALLOWED_ORIGINS = [
   'ionic://localhost'           // Ionic compatibility
 ];
 
-// Add FRONTEND_URL from env (comma-separated for multiple origins)
+// Add FRONTEND_URL or ALLOWED_ORIGINS from env (comma-separated for multiple origins)
 if (process.env.FRONTEND_URL) {
   const envOrigins = process.env.FRONTEND_URL.split(',').map(o => o.trim());
   ALLOWED_ORIGINS.push(...envOrigins);
-  // CORS: FRONTEND_URL origins added
 }
+if (process.env.ALLOWED_ORIGINS) {
+  const envOrigins = process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim());
+  ALLOWED_ORIGINS.push(...envOrigins);
+}
+
 
 // Helper to check if origin matches allowed patterns
 const isOriginAllowed = (origin) => {
@@ -85,15 +89,6 @@ const isOriginAllowed = (origin) => {
 
   // Exact match against our curated whitelist
   if (ALLOWED_ORIGINS.includes(origin)) return true;
-
-  // Allow Vercel preview deployments (xxx.vercel.app)
-  if (origin.endsWith('.vercel.app')) return true;
-
-  // Allow Railway app domains (our own backend-to-backend calls)
-  if (origin.includes('.up.railway.app')) return true;
-
-  // Allow Cloudflare Pages domains
-  if (origin.includes('.pages.dev')) return true;
 
   // Deny everything else
   return false;
@@ -187,6 +182,7 @@ app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/eway-bills', ewayBillRoutes);
 app.use('/api/credit-notes', creditNoteRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/recurring', require('./routes/recurring'));
 app.use('/api/enquiries', enquiryRoutes);
 app.use('/api/staff', require('./routes/staff'));
 app.use("/api/utilities", require("./routes/utilities"));
@@ -205,7 +201,10 @@ app.use('/control', controlRoutes);
 const jwt = require('jsonwebtoken');
 const ADMIN_EMAIL = 'pachu.mgd@gmail.com';
 const ADMIN_SECRET_PIN = process.env.ADMIN_SECRET_PIN || process.env.ADMIN_SECRET;
-const ADMIN_JWT_SECRET = process.env.JWT_SECRET || process.env.ADMIN_SECRET || 'admin-fallback-secret';
+const ADMIN_JWT_SECRET = process.env.JWT_SECRET || process.env.ADMIN_SECRET;
+if (!ADMIN_JWT_SECRET) {
+  console.warn('WARNING: JWT_SECRET or ADMIN_SECRET must be set');
+}
 
 // Build a single admin router with auth + data routes
 const adminRouter = express.Router();
@@ -842,6 +841,10 @@ const startServer = async () => {
     serverReady = true;
     console.log(`✅ DB bootstrap complete — server is fully ready on port ${PORT}`);
     console.log('Charis is now powered by Gemini Flash');
+
+    // Start recurring invoice scheduler
+    const { startScheduler } = require('./services/recurringInvoiceScheduler');
+    startScheduler();
   } catch (error) {
     console.error('Server startup error (server still accepting requests):', error);
     // Mark as ready anyway — individual route handlers will surface DB errors naturally

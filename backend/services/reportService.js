@@ -481,6 +481,127 @@ class ReportService {
       tcsReceivable: 0
     };
   }
+
+  static async getCashFlowTaxSnapshot(companyId, startDate, endDate) {
+    const start = startDate ? new Date(startDate) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const end = endDate ? new Date(endDate) : new Date();
+
+    const realizedRevenueSum = await Invoice.sum('paid_amount', {
+      where: {
+        company_id: companyId,
+        invoice_date: { [Op.between]: [start, end] },
+        status: { [Op.ne]: 'cancelled' }
+      }
+    }) || 0;
+
+    const unpaidInvoices = await Invoice.findAll({
+      where: {
+        company_id: companyId,
+        payment_status: { [Op.in]: ['unpaid', 'partial'] },
+        status: { [Op.ne]: 'cancelled' }
+      },
+      attributes: ['id', 'invoice_number', 'invoice_date', 'due_date', 'total_amount', 'paid_amount']
+    });
+
+    const now = new Date();
+    let current = 0;
+    let thirtyToSixty = 0;
+    let sixtyToNinety = 0;
+    let overNinety = 0;
+    let totalOutstanding = 0;
+
+    unpaidInvoices.forEach(inv => {
+      const balance = Number(inv.total_amount || 0) - Number(inv.paid_amount || 0);
+      if (balance <= 0) return;
+
+      totalOutstanding += balance;
+      const refDate = new Date(inv.due_date || inv.invoice_date);
+      const diffDays = Math.floor((now - refDate) / (1000 * 60 * 60 * 24));
+
+      if (diffDays <= 30) current += balance;
+      else if (diffDays <= 60) thirtyToSixty += balance;
+      else if (diffDays <= 90) sixtyToNinety += balance;
+      else overNinety += balance;
+    });
+
+    const outputGST = await Invoice.sum('tax_amount', {
+      where: {
+        company_id: companyId,
+        invoice_date: { [Op.between]: [start, end] },
+        status: { [Op.ne]: 'cancelled' }
+      }
+    }) || 0;
+
+    const inputGSTPurchases = await Purchase.sum('tax_amount', {
+      where: {
+        company_id: companyId,
+        bill_date: { [Op.between]: [start, end] },
+        status: { [Op.ne]: 'cancelled' }
+      }
+    }) || 0;
+
+    const netGSTPayable = Number(outputGST) - Number(inputGSTPurchases);
+
+    const cashFlowTrend = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const monthStart = new Date(d.getFullYear(), d.getMonth(), 1);
+      const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
+
+      const cashIn = await Invoice.sum('paid_amount', {
+        where: {
+          company_id: companyId,
+          invoice_date: { [Op.between]: [monthStart, monthEnd] },
+          status: { [Op.ne]: 'cancelled' }
+        }
+      }) || 0;
+
+      const purchasePaid = await Purchase.sum('paid_amount', {
+        where: {
+          company_id: companyId,
+          bill_date: { [Op.between]: [monthStart, monthEnd] },
+          status: { [Op.ne]: 'cancelled' }
+        }
+      }) || 0;
+
+      const expensePaid = await Expense.sum('amount', {
+        where: {
+          company_id: companyId,
+          date: { [Op.between]: [monthStart, monthEnd] }
+        }
+      }) || 0;
+
+      const cashOut = Number(purchasePaid) + Number(expensePaid);
+      const monthLabel = monthStart.toLocaleString('default', { month: 'short', year: 'numeric' });
+
+      cashFlowTrend.push({
+        month: monthLabel,
+        cashIn: Number(cashIn),
+        cashOut: Number(cashOut),
+        netFlow: Number(cashIn) - Number(cashOut)
+      });
+    }
+
+    return {
+      realizedRevenue: Number(realizedRevenueSum),
+      receivablesAging: {
+        current: Number(current),
+        thirtyToSixty: Number(thirtyToSixty),
+        sixtyToNinety: Number(sixtyToNinety),
+        overNinety: Number(overNinety),
+        totalOutstanding: Number(totalOutstanding)
+      },
+      taxSnapshot: {
+        outputGST: Number(outputGST),
+        inputITC: Number(inputGSTPurchases),
+        netGSTPayable: netGSTPayable > 0 ? Number(netGSTPayable) : 0,
+        itcCreditBalance: netGSTPayable < 0 ? Math.abs(Number(netGSTPayable)) : 0
+      },
+      cashFlowTrend
+    };
+  }
 }
+
 
 module.exports = ReportService;

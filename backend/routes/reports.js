@@ -20,7 +20,8 @@ const {
   getGSTR3b,
   getTDSTCS,
   sendToCA,
-  downloadGSTR1
+  downloadGSTR1,
+  getCashFlowTaxSnapshot
 } = require('../controllers/reportController');
 const { authenticateToken } = require('../middleware/auth');
 const companyContext = require('../middleware/companyContext');
@@ -30,6 +31,8 @@ router.use(authenticateToken);
 router.use(companyContext);
 
 router.get('/dashboard', getDashboard); // Dashboard has its own logic
+router.get('/cashflow-tax-snapshot', getCashFlowTaxSnapshot);
+
 
 // --- FREE TIER REPORTS ---
 router.get('/sales', checkReportAccess('FREE'), getSalesReport);

@@ -56,8 +56,13 @@ const StockTransferPage    = lazy(() => import('./pages/StockTransferPage'));
 const SubscriptionPage     = lazy(() => import('./pages/SubscriptionPage'));
 const SettingsPage         = lazy(() => import('./pages/SettingsPage'));
 const AddBusinessPage      = lazy(() => import('./pages/AddBusinessPage'));
+
 const WattVisionPage       = lazy(() => import('./pages/dashboards/WattVisionPage'));
+const RecurringSubscriptionsPage = lazy(() => import('./pages/RecurringSubscriptionsPage'));
+const CreateRecurringSubscriptionPage = lazy(() => import('./pages/CreateRecurringSubscriptionPage'));
+const CashFlowTaxDashboard = lazy(() => import('./pages/CashFlowTaxDashboard'));
 const CharisAssistant      = lazy(() => import('./components/CharisAssistant'));
+
 
 // ─────────────────────────────────────────────────────────────
 // Loading fallback shown while a chunk is being fetched
@@ -160,6 +165,10 @@ function AppRoutes() {
       <Route path="/settings"      element={<ProtectedRoute><DashboardLayout><SettingsPage /></DashboardLayout></ProtectedRoute>} />
       <Route path="/settings/business/new" element={<ProtectedRoute><DashboardLayout><AddBusinessPage /></DashboardLayout></ProtectedRoute>} />
       <Route path="/wattvision"    element={<ProtectedRoute><DashboardLayout><WattVisionPage /></DashboardLayout></ProtectedRoute>} />
+      <Route path="/recurring"     element={<ProtectedRoute><DashboardLayout><RecurringSubscriptionsPage /></DashboardLayout></ProtectedRoute>} />
+      <Route path="/recurring/new" element={<ProtectedRoute><DashboardLayout><CreateRecurringSubscriptionPage /></DashboardLayout></ProtectedRoute>} />
+      <Route path="/recurring/:id/edit" element={<ProtectedRoute><DashboardLayout><CreateRecurringSubscriptionPage /></DashboardLayout></ProtectedRoute>} />
+      <Route path="/cashflow-tax-snapshot" element={<ProtectedRoute><DashboardLayout><CashFlowTaxDashboard /></DashboardLayout></ProtectedRoute>} />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />

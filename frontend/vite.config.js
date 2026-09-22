@@ -21,7 +21,7 @@ export default defineConfig({
 
   server: {
     host: true,   // Allow LAN access for mobile testing
-    port: 3000,
+    port: 6001,
     proxy: {
       '/api': {
         target: 'http://localhost:8001',
@@ -29,6 +29,7 @@ export default defineConfig({
       }
     }
   },
+
 
   envPrefix: ['VITE_', 'REACT_APP_'],
 

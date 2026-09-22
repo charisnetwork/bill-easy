@@ -61,7 +61,7 @@ export const RegisterPage = () => {
     } catch (error) {
       const message = getErrorMessage(error, 'Registration failed');
       toast.error(message);
-      console.error('Registration error:', error);
+      console.error('Registration error:', error?.response?.status, error?.message);
     } finally {
       setLoading(false);
     }

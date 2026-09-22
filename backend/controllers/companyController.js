@@ -561,7 +561,7 @@ const addCompany = async (req, res) => {
 
   } catch (error) {
     // Error logged
-    res.status(500).json({ error: 'Failed to create business: ' + error.message });
+    res.status(500).json({ error: process.env.NODE_ENV === 'production' ? 'Failed to create business' : 'Failed to create business: ' + error.message });
   }
 };
 
@@ -619,7 +619,7 @@ const updateInvoiceCustomization = async (req, res) => {
 
   } catch (error) {
     // Error logged
-    res.status(500).json({ error: 'Update failed', message: error.message });
+    res.status(500).json({ error: process.env.NODE_ENV === 'production' ? 'Update failed' : 'Update failed: ' + error.message });
   }
 };
 

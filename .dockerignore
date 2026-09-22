@@ -19,3 +19,12 @@ output_project/
 *.zip
 devai.py
 node_modules_bad/
+
+# Security: exclude secrets and sensitive files
+.env
+.env.*
+*.pem
+*.key
+*.log
+*.swp
+kimilog.txt

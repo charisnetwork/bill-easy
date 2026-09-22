@@ -313,9 +313,14 @@ export const InvoicesPage = () => {
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 text-indigo-600 hover:bg-indigo-50"
-                                onClick={() => {
-                                  const token = localStorage.getItem('token');
-                                  window.open(`${API_BASE_URL}/invoices/${invoice.id}/pdf?token=${token}`, "_blank");
+                                onClick={async () => {
+                                  try {
+                                    const response = await invoiceAPI.downloadPdf(invoice.id);
+                                    const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+                                    window.open(url, '_blank', 'noopener,noreferrer');
+                                  } catch (error) {
+                                    toast.error(getErrorMessage(error, "Failed to download PDF"));
+                                  }
                                 }}
                               >
                                 <Download className="w-4 h-4" />

@@ -77,7 +77,8 @@ const register = async (req, res) => {
       mobile_number: normalizedMobile,
       role: 'owner',
       token_version: 1,
-      verification_token: verificationToken
+      verification_token: verificationToken,
+      verification_token_expires: new Date(Date.now() + 24 * 60 * 60 * 1000)
     });
 
     const baseUrl = process.env.FRONTEND_URL && !process.env.FRONTEND_URL.includes(',') ? process.env.FRONTEND_URL : (isProduction ? 'https://charisbilleasy.store' : 'http://localhost:3000');
@@ -714,6 +715,7 @@ const resendVerification = async (req, res) => {
     // Generate new token
     const verificationToken = crypto.randomBytes(20).toString('hex');
     user.verification_token = verificationToken;
+    user.verification_token_expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
     await user.save();
 
     const baseUrl = process.env.FRONTEND_URL && !process.env.FRONTEND_URL.includes(',') ? process.env.FRONTEND_URL : (isProduction ? 'https://charisbilleasy.store' : 'http://localhost:3000');
@@ -739,8 +741,12 @@ const verifyEmail = async (req, res) => {
     if (!user) {
       return res.status(400).json({ error: 'Invalid or expired verification token' });
     }
+    if (user.verification_token_expires && user.verification_token_expires < new Date()) {
+      return res.status(400).json({ error: 'Verification token has expired' });
+    }
     user.email_verified = true;
     user.verification_token = null;
+    user.verification_token_expires = null;
     await user.save();
     res.json({ message: 'Email verified successfully' });
   } catch (error) {
@@ -803,7 +809,12 @@ const resetPassword = async (req, res) => {
     user.reset_password_token = null;
     user.reset_password_expire = null;
     user.email_verified = true;
+    user.token_version = (user.token_version || 0) + 1;
     await user.save();
+
+    if (tokenService && tokenService.revokeAllUserTokens) {
+      await tokenService.revokeAllUserTokens(user.id);
+    }
 
     res.json({ message: 'Password reset successful. You can now login.' });
   } catch (error) {

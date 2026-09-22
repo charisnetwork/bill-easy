@@ -72,7 +72,7 @@ const generateEWayBill = async (req, res) => {
     });
   } catch (error) {
     console.error('E-Way bill error:', error);
-    res.status(500).json({ error: 'Failed to generate E-Way bill: ' + error.message });
+    res.status(500).json({ error: process.env.NODE_ENV === 'production' ? 'Failed to generate E-Way bill' : 'Failed to generate E-Way bill: ' + error.message });
   }
 };
 

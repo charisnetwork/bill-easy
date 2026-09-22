@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const companyController = require('../controllers/companyController');
 const godownController = require('../controllers/godownController');
-const { authenticateToken, checkFeatureAccess } = require('../middleware/auth');
+const { authenticateToken, checkFeatureAccess, requireRole } = require('../middleware/auth');
 const companyContext = require('../middleware/companyContext');
 const { uploadLogo, uploadSignature, uploadQRCode } = require('../services/uploadService');
 
@@ -23,9 +23,9 @@ router.post('/upload-qr', uploadQRCode.single('qr_code'), companyController.uplo
 
 // User Management
 router.get('/users', companyController.getUsers);
-router.post('/users', companyController.addUser);
-router.put('/users/:id', companyController.updateUser);
-router.delete('/users/:id', companyController.deleteUser);
+router.post('/users', requireRole('owner', 'admin'), companyController.addUser);
+router.put('/users/:id', requireRole('owner', 'admin'), companyController.updateUser);
+router.delete('/users/:id', requireRole('owner', 'admin'), companyController.deleteUser);
 
 // Godowns
 router.get('/godowns', godownController.getGodowns);

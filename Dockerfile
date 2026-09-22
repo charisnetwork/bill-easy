@@ -27,4 +27,7 @@ COPY . .
 
 EXPOSE 3000
 
+# Security: run as non-root user
+USER node
+
 CMD ["node", "railway-monorepo.js"]

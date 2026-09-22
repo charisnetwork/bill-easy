@@ -20,7 +20,7 @@ export const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: localStorage.getItem('remembered_email') || '',
-    password: localStorage.getItem('remembered_password') || '',
+    password: '',
     rememberMe: !!localStorage.getItem('remembered_email')
   });
 
@@ -34,10 +34,8 @@ export const LoginPage = () => {
       // Save credentials if Remember Me is checked
       if (formData.rememberMe) {
         localStorage.setItem('remembered_email', formData.email);
-        localStorage.setItem('remembered_password', formData.password); // Note: In production, consider a token instead
       } else {
         localStorage.removeItem('remembered_email');
-        localStorage.removeItem('remembered_password');
       }
 
       toast.success('Welcome back!');

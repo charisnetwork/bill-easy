@@ -333,6 +333,17 @@ const downloadGSTR1 = async (req, res) => {
   }
 };
 
+const getCashFlowTaxSnapshot = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const snapshot = await ReportService.getCashFlowTaxSnapshot(req.companyId, startDate, endDate);
+    res.json(snapshot);
+  } catch (error) {
+    console.error('Get Cash Flow Tax Snapshot error:', error);
+    res.status(500).json({ error: 'Failed to get cash flow and tax snapshot' });
+  }
+};
+
 module.exports = {
   getDashboard,
   getSalesReport,
@@ -353,5 +364,7 @@ module.exports = {
   getGSTR3b,
   getTDSTCS,
   sendToCA,
-  downloadGSTR1
+  downloadGSTR1,
+  getCashFlowTaxSnapshot
 };
+

@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard, Users, Package, FileText, ShoppingCart,
   Wallet, BarChart3, Settings, Truck, ChevronDown, 
-  Building2, Plus, ArrowLeftRight
+  Building2, Plus, ArrowLeftRight, Repeat, TrendingUp
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,7 +16,7 @@ export const Sidebar = ({ open, setOpen }) => {
 
   const [expandedSections, setExpandedSections] = useState({
     inventory: location.pathname.startsWith('/stock-transfer') || location.pathname.startsWith('/products'),
-    sales: location.pathname.startsWith('/invoices') || location.pathname.startsWith('/quotations') || location.pathname.startsWith('/sales-return'),
+    sales: location.pathname.startsWith('/invoices') || location.pathname.startsWith('/quotations') || location.pathname.startsWith('/sales-return') || location.pathname.startsWith('/recurring'),
     purchases: location.pathname.startsWith('/purchase')
   });
 
@@ -29,6 +29,7 @@ export const Sidebar = ({ open, setOpen }) => {
       title: 'Overview',
       items: [
         { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+        { path: '/cashflow-tax-snapshot', icon: TrendingUp, label: 'Cash Flow & Tax' },
       ]
     },
     {
@@ -40,11 +41,13 @@ export const Sidebar = ({ open, setOpen }) => {
           key: 'sales',
           subItems: [
             { path: '/invoices', label: 'Invoices' },
+            { path: '/recurring', label: 'Recurring Subscriptions' },
             { path: '/quotations', label: 'Estimates' },
             { path: '/payments-in', label: 'Payment In' },
             { path: '/sales-return', label: 'Sales Return' },
           ]
         },
+
         {
           label: 'Purchases',
           icon: ShoppingCart,

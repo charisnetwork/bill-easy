@@ -20,6 +20,7 @@ const fileFilter = (req, file, cb) => {
 
 exports.uploadImportFile = multer({
   storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = [
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
@@ -36,20 +37,24 @@ exports.uploadImportFile = multer({
 
 exports.uploadLogo = multer({
   storage: gcsStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter
 });
 
 exports.uploadSignature = multer({
   storage: gcsStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter
 });
 
 exports.uploadQRCode = multer({
   storage: gcsStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter
 });
 
 exports.uploadPurchaseFile = multer({
   storage: gcsStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter
 });

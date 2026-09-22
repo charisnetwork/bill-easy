@@ -142,7 +142,7 @@ const createQuotation = async (req, res) => {
   } catch (error) {
     if (transaction) await transaction.rollback();
     // Error logged
-    res.status(500).json({ error: "Failed to create quotation: " + error.message });
+    res.status(500).json({ error: process.env.NODE_ENV === 'production' ? "Failed to create quotation" : "Failed to create quotation: " + error.message });
   }
 };
 
@@ -231,7 +231,7 @@ const updateQuotation = async (req, res) => {
   } catch (error) {
     if (transaction) await transaction.rollback();
     // Error logged
-    res.status(500).json({ error: "Failed to update quotation: " + error.message });
+    res.status(500).json({ error: process.env.NODE_ENV === 'production' ? "Failed to update quotation" : "Failed to update quotation: " + error.message });
   }
 };
 

@@ -80,14 +80,14 @@ const PurchaseOrderPreview = () => {
     } else {
       // Fallback to WhatsApp for desktop/unsupported browsers
       const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
-      window.open(whatsappUrl, '_blank');
+      window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
     }
   };
 
   const handleWhatsApp = () => {
     const shareMessage = `Hello, please find the Purchase Order ${po.po_number} from ${company.name} attached.`;
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
-    window.open(whatsappUrl, '_blank');
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 
   if (loading) return <div className="flex items-center justify-center h-screen"><div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div></div>;

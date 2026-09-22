@@ -734,7 +734,7 @@ const parsePurchasePDF = async (req, res) => {
     });
   } catch (error) {
     // PDF parsing error logged
-    res.status(500).json({ error: 'Failed to parse PDF: ' + error.message });
+    res.status(500).json({ error: process.env.NODE_ENV === 'production' ? 'Failed to parse PDF' : 'Failed to parse PDF: ' + error.message });
   } finally {
     if (tempFilePath && fs.existsSync(tempFilePath)) {
       try { fs.unlinkSync(tempFilePath); } catch (e) {}

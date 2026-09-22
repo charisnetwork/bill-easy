@@ -113,10 +113,9 @@ const InvoicePreview = () => {
   };
 
   const shareWhatsapp = () => {
-    const token = getAccessToken();
-    const message = `Invoice ${invoice.invoice_number} from ${company.name}\n\nAmount: ₹${invoice.total_amount}\n\nView/Download: ${API_BASE_URL}/api/invoices/${id}/pdf?token=${token}`;
+    const message = `Invoice #${invoice.invoice_number} for ₹${invoice.total_amount} from ${company.name}`;
     const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    window.open(url, "_blank");
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   const handleRecordPayment = async (e) => {

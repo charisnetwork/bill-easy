@@ -25,7 +25,7 @@ router.get('/', getProducts);
 router.get('/:id', getProduct);
 router.get('/:id/movements', getStockMovements);
 router.post('/', checkSubscriptionQuota('products'), productValidation, createProduct);
-router.post('/import', uploadImportFile.single('file'), importProducts);
+router.post('/import', checkSubscriptionQuota('products'), uploadImportFile.single('file'), importProducts);
 router.post('/bulk-delete', bulkDeleteProducts);
 router.put('/:id', productValidation, updateProduct);
 router.delete('/:id', deleteProduct);

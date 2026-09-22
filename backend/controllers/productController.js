@@ -694,7 +694,7 @@ const importProducts = async (req, res) => {
   } catch (error) {
     if (transaction) await transaction.rollback();
     // Error logged
-    res.status(500).json({ error: 'Failed to import products: ' + error.message });
+    res.status(500).json({ error: process.env.NODE_ENV === 'production' ? 'Failed to import products' : 'Failed to import products: ' + error.message });
   }
 };
 

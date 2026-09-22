@@ -298,7 +298,7 @@ const createInvoice = async (req, res) => {
     }
     console.error("Create invoice error:", error);
     res.status(500).json({
-      error: "Failed to create invoice: " + error.message
+      error: process.env.NODE_ENV === 'production' ? "Failed to create invoice" : "Failed to create invoice: " + error.message
     });
   }
 };
@@ -402,7 +402,7 @@ const generateEWayBill = async (req, res) => {
     if (!invoice) return res.status(404).json({ error: "Invoice not found" });
     res.json({ message: "E-Way Bill generation placeholder" });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: process.env.NODE_ENV === 'production' ? 'Internal server error' : error.message });
   }
 };
 
@@ -658,7 +658,7 @@ const updateInvoice = async (req, res) => {
   } catch (error) {
     if (transaction) await transaction.rollback();
     console.error("Update invoice error:", error);
-    res.status(500).json({ error: "Failed to update invoice: " + error.message });
+    res.status(500).json({ error: process.env.NODE_ENV === 'production' ? "Failed to update invoice" : "Failed to update invoice: " + error.message });
   }
 };
 

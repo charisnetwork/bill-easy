@@ -19,18 +19,20 @@ const sequelize = process.env.DATABASE_URL
         timestamps: true
       },
       quoteIdentifiers: true,
-      dialectOptions: {
+      dialectOptions: (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('localhost') && !process.env.DATABASE_URL.includes('127.0.0.1')) ? {
         ssl: {
           require: true,
           rejectUnauthorized: false
         }
-      }
+      } : {}
     })
+
   : new Sequelize(
-      process.env.DB_NAME,
-      process.env.DB_USER,
-      process.env.DB_PASS,
+      process.env.DB_NAME || 'billeasy',
+      process.env.DB_USER || 'postgres',
+      process.env.DB_PASS || '',
       {
+
         host: process.env.DB_HOST || 'localhost',
         port: process.env.DB_PORT || 5432,
         dialect: 'postgres',
