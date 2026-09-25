@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, checkFeatureAccess } = require('../middleware/auth');
 const companyContext = require('../middleware/companyContext');
 const {
   getRecurringSubscriptions,
@@ -14,6 +14,7 @@ const {
 
 router.use(authenticateToken);
 router.use(companyContext);
+router.use(checkFeatureAccess('recurring_invoices'));
 
 router.get('/', getRecurringSubscriptions);
 router.get('/:id', getRecurringSubscriptionById);

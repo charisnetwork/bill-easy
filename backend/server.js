@@ -323,22 +323,94 @@ app.get('/api-info', (req, res) => {
    CHARIS CONTROL CENTRE SDK & WEBHOOKS
 ========================================= */
 
+// Validate Control Centre credentials on startup
+const ccEnvVars = {
+  CONTROL_CENTER_API_KEY: process.env.CONTROL_CENTER_API_KEY,
+  CONTROL_CENTER_APPLICATION_ID: process.env.CONTROL_CENTER_APPLICATION_ID,
+  CONTROL_CENTER_PUBLIC_KEY: process.env.CONTROL_CENTER_PUBLIC_KEY,
+  CONTROL_CENTER_WEBHOOK_SECRET: process.env.CONTROL_CENTER_WEBHOOK_SECRET
+};
+const missingCC = Object.entries(ccEnvVars).filter(([, v]) => !v).map(([k]) => k);
+
+if (missingCC.length > 0) {
+  console.warn(`[CharisSDK] ⚠️  Missing env vars: ${missingCC.join(', ')}`);
+  console.warn('[CharisSDK] ⚠️  Subscription enforcement will use LOCAL plan data only.');
+}
+
 try {
-  CharisSDK.init({
-    productId: 'billeasy',
-    applicationId: process.env.CONTROL_CENTER_APPLICATION_ID,
-    apiKey: process.env.CONTROL_CENTER_API_KEY,
-    gatewayUrl: process.env.CONTROL_CENTER_URL || 'https://chariscontrol-production.up.railway.app',
-    publicKey: process.env.CONTROL_CENTER_PUBLIC_KEY,
-    webhookSecret: process.env.CONTROL_CENTER_WEBHOOK_SECRET
-  });
-  
-  if (CharisSDK.entitlements) {
-    app.post('/api/webhooks/charis', CharisSDK.entitlements.webhookReceiver());
-    console.log('[CharisSDK] Webhook receiver mounted at /api/webhooks/charis');
+  if (missingCC.length === 0) {
+    CharisSDK.init({
+      productId: 'billeasy',
+      applicationId: process.env.CONTROL_CENTER_APPLICATION_ID,
+      apiKey: process.env.CONTROL_CENTER_API_KEY,
+      gatewayUrl: process.env.CONTROL_CENTER_URL || 'https://chariscontrol-production.up.railway.app',
+      publicKey: process.env.CONTROL_CENTER_PUBLIC_KEY,
+      webhookSecret: process.env.CONTROL_CENTER_WEBHOOK_SECRET
+    });
+
+    if (CharisSDK.entitlements) {
+      // Charis entitlement webhook (subscription changes, plan updates)
+      app.post('/api/webhooks/charis', express.raw({ type: 'application/json' }), CharisSDK.entitlements.webhookReceiver());
+      console.log('[CharisSDK] ✅ Webhook receiver mounted at /api/webhooks/charis');
+    }
+
+    console.log('[CharisSDK] ✅ Initialized — entitlements enforced via Control Centre');
+  } else {
+    console.log('[CharisSDK] ℹ️  Skipped initialization — using local subscription enforcement');
   }
 } catch (err) {
-  console.error('[CharisSDK] Failed to initialize:', err.message);
+  console.error('[CharisSDK] ❌ Failed to initialize:', err.message);
+  console.warn('[CharisSDK] ⚠️  Falling back to local subscription enforcement');
+}
+
+// Razorpay payment webhook (server-to-server payment confirmations)
+const razorpayWebhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+if (razorpayWebhookSecret) {
+  const crypto = require('crypto');
+  app.post('/api/webhooks/razorpay', express.raw({ type: 'application/json' }), async (req, res) => {
+    try {
+      const signature = req.headers['x-razorpay-signature'];
+      if (!signature) return res.status(400).json({ error: 'Missing signature' });
+      
+      const body = Buffer.isBuffer(req.body) ? req.body : Buffer.from(JSON.stringify(req.body));
+      const expected = crypto.createHmac('sha256', razorpayWebhookSecret).update(body).digest('hex');
+      
+      if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
+        return res.status(401).json({ error: 'Invalid webhook signature' });
+      }
+      
+      const event = JSON.parse(body.toString('utf8'));
+      const { Subscription: SubModel, Plan: PlanModel } = require('./models');
+      
+      if (event.event === 'payment.captured') {
+        const notes = event.payload?.payment?.entity?.notes;
+        if (notes?.company_id) {
+          await SubModel.update(
+            { payment_status: 'paid', status: 'active' },
+            { where: { company_id: notes.company_id } }
+          );
+          console.log(`[Razorpay Webhook] ✅ Payment captured for company ${notes.company_id}`);
+        }
+      } else if (event.event === 'payment.failed') {
+        const notes = event.payload?.payment?.entity?.notes;
+        if (notes?.company_id) {
+          await SubModel.update(
+            { payment_status: 'failed' },
+            { where: { company_id: notes.company_id } }
+          );
+          console.warn(`[Razorpay Webhook] ❌ Payment failed for company ${notes.company_id}`);
+        }
+      }
+      
+      return res.status(200).json({ status: 'ok' });
+    } catch (err) {
+      console.error('[Razorpay Webhook] Error:', err.message);
+      return res.status(400).json({ error: 'Webhook processing failed' });
+    }
+  });
+  console.log('[Razorpay] ✅ Payment webhook mounted at /api/webhooks/razorpay');
+} else {
+  console.warn('[Razorpay] ⚠️  RAZORPAY_WEBHOOK_SECRET not set — payment webhooks disabled');
 }
 
 /* =========================================

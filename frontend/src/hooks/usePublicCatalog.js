@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 
+const CACHE_KEY = 'billeasy_public_catalog';
+const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes
+
 const catalogBaseUrl = () => {
   const configured = import.meta.env?.VITE_PUBLIC_CONTROL_CENTER_URL || '';
   return configured ? configured.replace(/\/$/, '') : 'https://chariscontrol-production.up.railway.app';
@@ -64,11 +67,49 @@ const normalizeCatalog = (payload) => {
   });
 };
 
+/**
+ * Try to load catalog from sessionStorage cache.
+ * Returns null if expired or unavailable.
+ */
+function loadCachedCatalog() {
+  try {
+    const raw = sessionStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const { catalog, timestamp } = JSON.parse(raw);
+    if (Date.now() - timestamp > CACHE_TTL_MS) {
+      sessionStorage.removeItem(CACHE_KEY);
+      return null;
+    }
+    return catalog;
+  } catch {
+    return null;
+  }
+}
+
+function saveCatalogToCache(catalog) {
+  try {
+    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ catalog, timestamp: Date.now() }));
+  } catch {
+    // sessionStorage full or unavailable — ignore
+  }
+}
+
 /** Fetches the unauthenticated Control Centre catalog without sending credentials. */
 export function usePublicCatalog(applicationSlug = 'billeasy') {
-  const [state, setState] = useState({ loading: true, catalog: null, unavailable: false });
+  const [state, setState] = useState(() => {
+    const cached = loadCachedCatalog();
+    if (cached) return { loading: false, catalog: cached, unavailable: false };
+    return { loading: true, catalog: null, unavailable: false };
+  });
 
   useEffect(() => {
+    // If we already have cached data, skip fetch
+    const cached = loadCachedCatalog();
+    if (cached) {
+      setState({ loading: false, catalog: cached, unavailable: false });
+      return undefined;
+    }
+
     const baseUrl = catalogBaseUrl();
     if (!baseUrl) {
       setState({ loading: false, catalog: null, unavailable: true });
@@ -76,16 +117,37 @@ export function usePublicCatalog(applicationSlug = 'billeasy') {
     }
 
     const controller = new AbortController();
-    fetch(`${baseUrl}/api/public/catalog/${encodeURIComponent(applicationSlug)}`, { signal: controller.signal })
-      .then(async (response) => {
-        if (!response.ok) throw new Error('Public catalog is unavailable');
-        return normalizeCatalog(await response.json());
-      })
-      .then((catalog) => setState({ loading: false, catalog, unavailable: false }))
-      .catch((error) => {
-        if (error.name !== 'AbortError') setState({ loading: false, catalog: null, unavailable: true });
-      });
+    const MAX_RETRIES = 2;
+    let attempt = 0;
 
+    const fetchCatalog = () => {
+      attempt++;
+      fetch(`${baseUrl}/api/public/catalog/${encodeURIComponent(applicationSlug)}`, { 
+        signal: controller.signal,
+        headers: { 'Accept': 'application/json' }
+      })
+        .then(async (response) => {
+          if (!response.ok) throw new Error(`Catalog HTTP ${response.status}`);
+          return normalizeCatalog(await response.json());
+        })
+        .then((catalog) => {
+          saveCatalogToCache(catalog);
+          setState({ loading: false, catalog, unavailable: false });
+        })
+        .catch((error) => {
+          if (error.name === 'AbortError') return;
+          if (attempt < MAX_RETRIES) {
+            // Exponential backoff: 1s, 2s
+            const delay = Math.pow(2, attempt - 1) * 1000;
+            setTimeout(fetchCatalog, delay);
+          } else {
+            // All retries exhausted — mark as unavailable, use local plans
+            setState({ loading: false, catalog: null, unavailable: true });
+          }
+        });
+    };
+
+    fetchCatalog();
     return () => controller.abort();
   }, [applicationSlug]);
 
