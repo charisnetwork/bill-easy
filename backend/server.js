@@ -562,6 +562,12 @@ const seedPlans = async () => {
 
 const PORT = process.env.PORT || 8001;
 
+// Startup secret validation — fail fast if critical secrets are missing
+if (!process.env.JWT_SECRET && !process.env.JWT_ACCESS_SECRET) {
+  console.error('❌ FATAL: JWT_SECRET or JWT_ACCESS_SECRET must be set. Exiting.');
+  process.exit(1);
+}
+
 process.on('uncaughtException', (err) => {
   console.error('UNCAUGHT EXCEPTION:', err);
 });
@@ -573,10 +579,42 @@ process.on('unhandledRejection', (reason, promise) => {
 // ✅ START LISTENING IMMEDIATELY so Railway/load-balancer health checks pass
 // and users are never hit with 504 during cold start.
 // All DB bootstrap work runs in the background after the server is already up.
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server listening on port ${PORT} — running DB bootstrap in background...`);
   startKeepAlive();
 });
+
+/* =========================================
+   GRACEFUL SHUTDOWN
+   Cleanly close HTTP server, DB pool, and
+   background tasks on SIGTERM/SIGINT.
+========================================= */
+
+const gracefulShutdown = async (signal) => {
+  console.log(`\n📴 Received ${signal} — shutting down gracefully...`);
+  
+  // Stop accepting new connections
+  server.close(async () => {
+    try {
+      // Close database connection pool
+      await sequelize.close();
+      console.log('✅ Database connections closed.');
+    } catch (err) {
+      console.error('⚠️  Error closing database:', err.message);
+    }
+    console.log('👋 Process exiting.');
+    process.exit(0);
+  });
+
+  // Force exit after 15 seconds if graceful shutdown stalls
+  setTimeout(() => {
+    console.error('⚠️  Graceful shutdown timed out after 15s — forcing exit.');
+    process.exit(1);
+  }, 15000).unref();
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 /* =========================================
    KEEP-ALIVE SELF-PING
