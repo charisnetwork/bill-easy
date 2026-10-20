@@ -59,3 +59,10 @@ test('monthly invoice quota resets at midnight India time on the 1st', () => {
   assert.equal(startOfMonthIst(new Date('2026-10-31T18:29:59Z')).toISOString(), '2026-09-30T18:30:00.000Z');
   assert.equal(startOfMonthIst(new Date('2026-10-31T18:30:00Z')).toISOString(), '2026-10-31T18:30:00.000Z');
 });
+
+test('plain HTTP to OS only for an explicitly allowed private service name', () => {
+  const base = { NODE_ENV: 'production', CHARIS_SUBSCRIPTION_MODE: 'enforce', CHARIS_OS_APP_ID: appId, CHARIS_OS_APP_KEY: 'key' };
+  assert.throws(() => charisOsConfig({ ...base, CHARIS_OS_URL: 'http://os-api:8000' }));
+  assert.equal(charisOsConfig({ ...base, CHARIS_OS_URL: 'http://os-api:8000', CHARIS_OS_INTERNAL_HTTP: 'true' }).origin, 'http://os-api:8000');
+  assert.throws(() => charisOsConfig({ ...base, CHARIS_OS_URL: 'http://os.example.com', CHARIS_OS_INTERNAL_HTTP: 'true' }));
+});

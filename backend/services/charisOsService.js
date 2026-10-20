@@ -32,8 +32,10 @@ function charisOsConfig(source = process.env) {
   if (!url || !appId || !key) throw new Error('CHARIS_OS_URL, CHARIS_OS_APP_ID and CHARIS_OS_APP_KEY are required when enforcing');
   const parsed = new URL(url);
   const loopback = ['localhost', '127.0.0.1'].includes(parsed.hostname);
+  // Plain HTTP only for local tests, or (opt-in) a private Docker service name such as http://os-api:8000.
+  const internalHttp = source.CHARIS_OS_INTERNAL_HTTP === 'true' && /^[a-z0-9-]+$/.test(parsed.hostname);
   if (parsed.username || parsed.password || parsed.search || parsed.hash || parsed.pathname !== '/'
-    || (parsed.protocol !== 'https:' && !(source.NODE_ENV !== 'production' && parsed.protocol === 'http:' && loopback))) {
+    || (parsed.protocol !== 'https:' && !(parsed.protocol === 'http:' && (internalHttp || (source.NODE_ENV !== 'production' && loopback))))) {
     throw new Error('CHARIS_OS_URL must be an HTTPS origin');
   }
   if (!/^[a-f0-9-]{36}$/i.test(appId)) throw new Error('CHARIS_OS_APP_ID must be a UUID');

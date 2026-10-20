@@ -555,11 +555,10 @@ const parsePurchasePDF = async (req, res) => {
 
     // Try Python Extraction First (More robust for tables)
     try {
-      const tempDir = path.join(__dirname, '../uploads/temp');
-      if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
-      
-      tempFilePath = path.join(tempDir, `purchase_${Date.now()}.pdf`);
-      fs.writeFileSync(tempFilePath, dataBuffer);
+      // Private, per-request temp dir outside any served folder; removed below.
+      const tempDir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'billeasy-purchase-'));
+      tempFilePath = path.join(tempDir, 'bill.pdf');
+      fs.writeFileSync(tempFilePath, dataBuffer, { mode: 0o600 });
 
       const pythonScript = path.join(__dirname, '../scripts/parse_purchase_pdf.py');
       
@@ -593,6 +592,9 @@ const parsePurchasePDF = async (req, res) => {
       // PDF extraction successful
     } catch (pyError) {
       // PDF extraction fallback
+    } finally {
+      // Supplier bills are never kept on disk.
+      if (tempFilePath) fs.rmSync(path.dirname(tempFilePath), { recursive: true, force: true });
     }
 
     let finalItems = [];

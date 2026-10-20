@@ -5,6 +5,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const http = require('http');
+const path = require('path');
 
 const { rateLimit } = require('express-rate-limit');
 const { CharisSDK } = require('@charis/sdk');
@@ -292,7 +293,15 @@ app.use('/api/admin', adminRouter);     // Standard: frontend calls /api/admin/a
 app.use('/admin/api', adminRouter);     // Gateway: frontend calls /admin/api/auth/login
 app.use('/admin', adminRouter);         // Fallback: if Railway strips /api prefix
 
-app.use("/uploads", express.static("uploads"));
+// Only company assets (logo, signature, QR) are web-reachable, by unguessable name.
+// Everything else under UPLOAD_ROOT (e.g. temp files) is never served.
+const { PUBLIC_DIR, UPLOAD_ROOT, storageConfig } = require('./utils/fileStore');
+storageConfig();
+app.use(`/uploads/${PUBLIC_DIR}`, (req, res, next) => {
+  res.set('X-Content-Type-Options', 'nosniff');
+  res.set('Content-Security-Policy', "default-src 'none'");
+  next();
+}, express.static(path.join(UPLOAD_ROOT, PUBLIC_DIR), { index: false, dotfiles: 'deny', fallthrough: false, redirect: false }));
 
 /* =========================================
    ROOT ENDPOINT

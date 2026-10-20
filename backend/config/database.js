@@ -19,7 +19,9 @@ const sequelize = process.env.DATABASE_URL
         timestamps: true
       },
       quoteIdentifiers: true,
-      dialectOptions: (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('localhost') && !process.env.DATABASE_URL.includes('127.0.0.1')) ? {
+      // DATABASE_SSL=disable for a database on a private network (self-hosted Docker);
+      // unset keeps the hosted default: SSL for any non-local host.
+      dialectOptions: process.env.DATABASE_SSL !== 'disable' && (process.env.DATABASE_SSL === 'require' || (!process.env.DATABASE_URL.includes('localhost') && !process.env.DATABASE_URL.includes('127.0.0.1'))) ? {
         ssl: {
           require: true,
           rejectUnauthorized: false

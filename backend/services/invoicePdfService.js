@@ -348,7 +348,7 @@ const generateInvoicePdf = async (invoice, company) => {
   const templateId = company.settings?.template_id || company.settings?.invoice_template || 'modern';
   const textSizeStr = company.invoice_text_size || '10pt';
   const baseSize = parseInt(textSizeStr) || 10;
-  const uploadsPath = path.join(__dirname, '../uploads');
+  const uploadsPath = require('../utils/fileStore').UPLOAD_ROOT;
 
   const doc = new PDFDocument({ margin: 40, size: 'A4' });
   let buffers = [];

@@ -166,97 +166,34 @@ const updateSettings = async (req, res) => {
 };
 
 
-const { uploadToGCS } = require("../utils/gcs");
-const path = require("path");
+const { removeCompanyAsset, saveCompanyAsset } = require("../utils/fileStore");
 
 /* =========================================================
-   UPLOAD COMPANY LOGO
+   UPLOAD COMPANY LOGO / SIGNATURE / QR CODE
+   Stored on this server (utils/fileStore.js) under a random name; the old file is removed.
 ========================================================= */
 
-const uploadLogo = async (req, res) => {
+const companyAssetUpload = (kind, field, label) => async (req, res) => {
   try {
     const companyId = req.companyId;
     if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-
-    const ext = path.extname(req.file.originalname);
-    const destination = `company/logos/${companyId}_logo_${Date.now()}${ext}`;
-    
-    const publicUrl = await uploadToGCS(req.file.buffer, destination, req.file.mimetype);
-
-    await Company.update(
-      { logo: publicUrl },
-      { where: { id: companyId } }
-    );
-
-    res.json({
-      success: true,
-      logo: publicUrl
-    });
+    const company = await Company.findByPk(companyId, { attributes: ["id", field] });
+    if (!company) return res.status(404).json({ error: "Company not found" });
+    const stored = await saveCompanyAsset(req.file.buffer, kind, req.file.mimetype);
+    const previous = company[field];
+    await Company.update({ [field]: stored }, { where: { id: companyId } });
+    if (previous && previous !== stored) await removeCompanyAsset(previous).catch(() => {});
+    res.json({ success: true, [field]: stored });
   } catch (err) {
-
-    res.status(500).json({ error: "Logo upload failed: " + err.message });
+    if (err.status === 400) return res.status(400).json({ error: err.message });
+    console.error(`${label} upload failed`, err.message);
+    res.status(500).json({ error: `${label} upload failed` });
   }
 };
 
-
-/* =========================================================
-   UPLOAD COMPANY SIGNATURE
-========================================================= */
-
-const uploadSignature = async (req, res) => {
-  try {
-    const companyId = req.companyId;
-    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-
-    const ext = path.extname(req.file.originalname);
-    const destination = `company/signatures/${companyId}_signature_${Date.now()}${ext}`;
-    
-    const publicUrl = await uploadToGCS(req.file.buffer, destination, req.file.mimetype);
-
-    await Company.update(
-      { signature: publicUrl },
-      { where: { id: companyId } }
-    );
-
-    res.json({
-      success: true,
-      signature: publicUrl
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Signature upload failed: " + err.message });
-  }
-};
-
-
-/* =========================================================
-   UPLOAD COMPANY QR CODE
-========================================================= */
-
-const uploadQRCode = async (req, res) => {
-  try {
-    const companyId = req.companyId;
-    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-
-    const ext = path.extname(req.file.originalname);
-    const destination = `company/qrcodes/${companyId}_qrcode_${Date.now()}${ext}`;
-    
-    const publicUrl = await uploadToGCS(req.file.buffer, destination, req.file.mimetype);
-
-    await Company.update(
-      { qr_code: publicUrl },
-      { where: { id: companyId } }
-    );
-
-    res.json({
-      success: true,
-      qr_code: publicUrl
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "QR Code upload failed: " + err.message });
-  }
-};
+const uploadLogo = companyAssetUpload("logo", "logo", "Logo");
+const uploadSignature = companyAssetUpload("signature", "signature", "Signature");
+const uploadQRCode = companyAssetUpload("qrcode", "qr_code", "QR Code");
 
 
 /* =========================================================
