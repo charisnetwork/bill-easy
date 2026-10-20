@@ -215,6 +215,8 @@ export const CharisOsSubscription = ({ current: initialCurrent }) => {
           const isCurrent = current?.plan_id === plan.id && status === 'active';
           const planQuote = quote?.plan_id === plan.id ? quote : null;
           const payable = plan.price === 0 || catalog.checkout_enabled;
+          // OS only activates a free plan when no plan is currently active.
+          const freeLocked = plan.price === 0 && status === 'active' && !isCurrent;
           return (
             <Card key={plan.id} className={`bg-white border-t-4 ${plan.recommended ? 'border-t-emerald-500 shadow-lg' : 'border-t-slate-300'}`}>
               <CardContent className="p-6 flex flex-col h-full">
@@ -247,8 +249,8 @@ export const CharisOsSubscription = ({ current: initialCurrent }) => {
                   {plan.price > 0 && couponCode.trim() && (
                     <Button variant="outline" className="w-full" disabled={busyPlan === plan.id} onClick={() => applyCoupon(plan)}>Apply code</Button>
                   )}
-                  <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" disabled={isCurrent || !payable || Boolean(busyPlan) || Boolean(pending)} onClick={() => choose(plan)}>
-                    {busyPlan === plan.id ? <Loader2 className="w-4 h-4 animate-spin" /> : isCurrent ? 'Current plan' : plan.price === 0 ? 'Use free plan' : 'Choose plan'}
+                  <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" disabled={isCurrent || freeLocked || !payable || Boolean(busyPlan) || Boolean(pending)} onClick={() => choose(plan)}>
+                    {busyPlan === plan.id ? <Loader2 className="w-4 h-4 animate-spin" /> : isCurrent ? 'Current plan' : freeLocked ? 'Available after your plan ends' : plan.price === 0 ? 'Use free plan' : 'Choose plan'}
                   </Button>
                 </div>
               </CardContent>

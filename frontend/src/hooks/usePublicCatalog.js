@@ -95,7 +95,8 @@ function saveCatalogToCache(catalog) {
 }
 
 /** Fetches the unauthenticated Control Centre catalog without sending credentials. */
-export function usePublicCatalog(applicationSlug = 'billeasy') {
+/** Legacy Control Centre catalog. Pass enabled=false when plans come from Charis OS. */
+export function usePublicCatalog(applicationSlug = 'billeasy', enabled = true) {
   const [state, setState] = useState(() => {
     const cached = loadCachedCatalog();
     if (cached) return { loading: false, catalog: cached, unavailable: false };
@@ -103,6 +104,7 @@ export function usePublicCatalog(applicationSlug = 'billeasy') {
   });
 
   useEffect(() => {
+    if (!enabled) return undefined;
     // If we already have cached data, skip fetch
     const cached = loadCachedCatalog();
     if (cached) {
@@ -149,7 +151,7 @@ export function usePublicCatalog(applicationSlug = 'billeasy') {
 
     fetchCatalog();
     return () => controller.abort();
-  }, [applicationSlug]);
+  }, [applicationSlug, enabled]);
 
   return state;
 }

@@ -11,6 +11,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { setAuthHandlers } from '../services/api';
+import { BACKEND_URL } from '../config/api';
 
 const AuthContext = createContext(null);
 
@@ -18,13 +19,8 @@ const AuthContext = createContext(null);
 let accessToken = null;
 let refreshPromise = null;
 
-// Backend URL - same logic as config/api.js but inlined to avoid circular imports
-const RAILWAY_BACKEND_URL = 'https://bill-easy-production.up.railway.app';
-const API_BASE_URL = (() => {
-  const envUrl = import.meta.env?.VITE_BACKEND_URL;
-  if (envUrl && !envUrl.includes('localhost')) return envUrl;
-  return RAILWAY_BACKEND_URL;
-})();
+// Same backend as every other API call (config/api.js): local dev never reaches production.
+const API_BASE_URL = BACKEND_URL;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);

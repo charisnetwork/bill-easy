@@ -124,7 +124,8 @@ export const SubscriptionPage = () => {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [duration, setDuration] = useState(12); // Default 1 Year
   const [osManaged, setOsManaged] = useState(null);
-  const { catalog, loading: catalogLoading, unavailable: catalogUnavailable } = usePublicCatalog();
+  // Only the legacy local mode reads the old Control Centre catalog.
+  const { catalog, loading: catalogLoading, unavailable: catalogUnavailable } = usePublicCatalog('billeasy', osManaged === false);
 
   const fetchData = async () => {
     try {
@@ -133,6 +134,7 @@ export const SubscriptionPage = () => {
         setOsManaged(current.data);
         return;
       }
+      setOsManaged(false);
       const plansRes = await subscriptionAPI.getPlans();
       const fetched = plansRes.data || [];
       setPlans(fetched);
