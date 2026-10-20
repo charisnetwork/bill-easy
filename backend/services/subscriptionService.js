@@ -1,6 +1,9 @@
 const { PlanFeature, Subscription, Plan, Company } = require('../models');
+const charisOs = require('./charisOsService');
 
 const checkSubscriptionFeature = async (companyId, featureKey) => {
+  // Charis OS mode: deny-by-default OS entitlements; outages surface as 503, never as "allowed".
+  if (charisOs.enabled()) return charisOs.featureAllowed(await charisOs.getSnapshot(companyId), featureKey);
   try {
     const subscription = await Subscription.findOne({
       where: { company_id: companyId, status: ['active', 'trial'] },

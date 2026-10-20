@@ -331,14 +331,17 @@ const ccEnvVars = {
   CONTROL_CENTER_WEBHOOK_SECRET: process.env.CONTROL_CENTER_WEBHOOK_SECRET
 };
 const missingCC = Object.entries(ccEnvVars).filter(([, v]) => !v).map(([k]) => k);
-
-if (missingCC.length > 0) {
+// Charis OS mode (CHARIS_SUBSCRIPTION_MODE=enforce) replaces the legacy Control Centre SDK.
+const charisOsManaged = require('./services/charisOsService').enabled();
+if (charisOsManaged) {
+  console.log('[CharisOS] ✅ Plans, coupons and payments are managed by Charis OS');
+} else if (missingCC.length > 0) {
   console.warn(`[CharisSDK] ⚠️  Missing env vars: ${missingCC.join(', ')}`);
   console.warn('[CharisSDK] ⚠️  Subscription enforcement will use LOCAL plan data only.');
 }
 
 try {
-  if (missingCC.length === 0) {
+  if (!charisOsManaged && missingCC.length === 0) {
     CharisSDK.init({
       productId: 'billeasy',
       applicationId: process.env.CONTROL_CENTER_APPLICATION_ID,
@@ -355,7 +358,7 @@ try {
     }
 
     console.log('[CharisSDK] ✅ Initialized — entitlements enforced via Control Centre');
-  } else {
+  } else if (!charisOsManaged) {
     console.log('[CharisSDK] ℹ️  Skipped initialization — using local subscription enforcement');
   }
 } catch (err) {
@@ -364,7 +367,8 @@ try {
 }
 
 // Razorpay payment webhook (server-to-server payment confirmations)
-const razorpayWebhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+// In Charis OS mode, OS receives the shared Razorpay account's webhooks and verifies payments.
+const razorpayWebhookSecret = charisOsManaged ? null : process.env.RAZORPAY_WEBHOOK_SECRET;
 if (razorpayWebhookSecret) {
   const crypto = require('crypto');
   app.post('/api/webhooks/razorpay', express.raw({ type: 'application/json' }), async (req, res) => {
@@ -409,7 +413,7 @@ if (razorpayWebhookSecret) {
     }
   });
   console.log('[Razorpay] ✅ Payment webhook mounted at /api/webhooks/razorpay');
-} else {
+} else if (!charisOsManaged) {
   console.warn('[Razorpay] ⚠️  RAZORPAY_WEBHOOK_SECRET not set — payment webhooks disabled');
 }
 

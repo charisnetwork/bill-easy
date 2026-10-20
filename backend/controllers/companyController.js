@@ -1,6 +1,7 @@
 const { Company, User, Subscription, Plan, UserCompany, Godown } = require("../models");
 const bcrypt = require("bcryptjs");
 const { Country } = require('country-state-city');
+const charisOs = require("../services/charisOsService");
 
 const currencyForCountry = (code) => Country.getCountryByCode(code)?.currency || null;
 
@@ -479,6 +480,20 @@ const addCompany = async (req, res) => {
     const companyIds = userCompanies.map(uc => uc.company_id);
     const currentCount = companyIds.length;
 
+    // Charis OS mode: the owner's plan in OS sets the business limit.
+    if (charisOs.enabled()) {
+      let limit;
+      try {
+        limit = await charisOs.businessLimit(req.companyId);
+      } catch (error) {
+        if (error instanceof charisOs.CharisOsError) return res.status(error.status).json({ error: error.message, code: error.code, needsUpgrade: error.status === 403 });
+        throw error;
+      }
+      if (currentCount >= limit) {
+        return res.status(403).json({ error: `Company creation limit reached. Your plan allows a maximum of ${limit} companies.`, currentCount, maxLimit: limit, needsUpgrade: true });
+      }
+    }
+
     // 2. Identify the highest business limit among all active subscriptions
     const subscriptions = await Subscription.findAll({
       where: { company_id: companyIds, status: ['active', 'trial'] },
@@ -504,7 +519,7 @@ const addCompany = async (req, res) => {
     // Add company request processed
 
     // 3. Validation: Block if limit reached
-    if (currentCount >= maxBusinesses) {
+    if (!charisOs.enabled() && currentCount >= maxBusinesses) {
       const planName = currentHighestPlan === 'Free Account' ? 'Free' : currentHighestPlan;
       return res.status(403).json({ 
         error: `Company creation limit reached. Your ${currentHighestPlan} plan allows a maximum of ${maxBusinesses} companies.`,

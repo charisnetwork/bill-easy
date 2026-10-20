@@ -39,6 +39,11 @@ export const AuthProvider = ({ children }) => {
 
   // Helper to check plan features
   const hasFeature = useCallback((featureName) => {
+    // Charis OS mode: features come from the OS plan, not hard-coded plan names.
+    if (subscription?.managed_by === 'charis_os') {
+      const osCodes = { staff_payroll: 'staff_attendance_payroll', activity_tracker: 'user_activity_tracker', multi_business_ui: 'businesses' };
+      return subscription.features?.[osCodes[featureName] || featureName] === true;
+    }
     const plan = subscription?.plan || subscription?.Plan;
     if (!plan) return false;
     

@@ -7,6 +7,7 @@ import { Badge } from '../components/ui/badge';
 import { CheckCircle2, XCircle, Crown, Zap, Rocket, MonitorSmartphone, Users2, Building2, Loader2, Lock, Check, X, Tag } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePublicCatalog } from '../hooks/usePublicCatalog';
+import { CharisOsSubscription } from './CharisOsSubscription';
 
 const formatCurrency = (amount) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount || 0);
 
@@ -122,10 +123,16 @@ export const SubscriptionPage = () => {
   const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [duration, setDuration] = useState(12); // Default 1 Year
+  const [osManaged, setOsManaged] = useState(null);
   const { catalog, loading: catalogLoading, unavailable: catalogUnavailable } = usePublicCatalog();
 
   const fetchData = async () => {
     try {
+      const current = await subscriptionAPI.getCurrent();
+      if (current.data?.managed_by === 'charis_os') {
+        setOsManaged(current.data);
+        return;
+      }
       const plansRes = await subscriptionAPI.getPlans();
       const fetched = plansRes.data || [];
       setPlans(fetched);
@@ -235,6 +242,7 @@ export const SubscriptionPage = () => {
   };
 
   if (loading) return <div className="flex justify-center p-20"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div></div>;
+  if (osManaged) return <CharisOsSubscription current={osManaged} />;
 
   // Merge backend plans with catalog metadata
   const displayPlans = (catalog && catalog.length > 0) ? catalog : plans;

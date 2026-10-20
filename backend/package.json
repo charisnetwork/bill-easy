@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "test": "node --test tests/",
+    "charis-os:sync": "node scripts/syncCompaniesToCharisOs.js"
   },
   "dependencies": {
     "@charis/sdk": "file:./sdk",

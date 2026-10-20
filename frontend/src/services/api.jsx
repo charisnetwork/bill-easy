@@ -242,7 +242,13 @@ export const subscriptionAPI = {
   upgrade: (data) => api.post('/subscription/upgrade', data),
   cancel: () => api.post('/subscription/cancel'),
   processPayment: (data) => api.post('/subscription/payment', data),
-  validateCoupon: (data) => api.post('/subscription/validate-coupon', data)
+  validateCoupon: (data) => api.post('/subscription/validate-coupon', data),
+  // Charis OS mode (backend CHARIS_SUBSCRIPTION_MODE=enforce)
+  sync: () => api.post('/subscription/sync'),
+  getCheckout: () => api.get('/subscription/checkout'),
+  quote: (data) => api.post('/subscription/checkout/quote', data),
+  createOrder: (data) => api.post('/subscription/checkout/orders', data),
+  verifyPayment: (data) => api.post('/subscription/checkout/verify', data)
 };
 
 // E-Way Bill APIs

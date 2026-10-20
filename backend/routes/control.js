@@ -66,7 +66,7 @@ router.get('/health', async (_req, res, next) => {
 router.get('/customers', async (req, res, next) => {
   try {
     const { limit, offset } = page(req.query);
-    const result = await Company.findAndCountAll({ attributes: ['id', 'name', 'email', 'phone'], include: customerInclude, order: [['createdAt', 'DESC']], limit, offset, distinct: true });
+    const result = await Company.findAndCountAll({ attributes: ['id', 'name', 'email', 'phone', 'createdAt'], include: customerInclude, order: [['createdAt', 'DESC']], limit, offset, distinct: true });
     return res.json({ data: result.rows.map(customer), page: { limit, offset, total: result.count } });
   } catch (error) { return next(error); }
 });

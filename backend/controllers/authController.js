@@ -7,6 +7,7 @@ const { logSecurityEvent, EVENT_TYPES, SEVERITY } = require('../services/auditSe
 const { Op } = require('sequelize');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/mailer');
 const { Country } = require('country-state-city');
+const charisOs = require('../services/charisOsService');
 
 const countryDefaults = (code) => {
   const country = Country.getCountryByCode(code);
@@ -133,6 +134,14 @@ const register = async (req, res) => {
       }
     });
 
+    // Charis OS mode: register the business with OS and start the OS free plan, if offered.
+    // An OS outage never blocks signup; login retries onboarding.
+    let subscriptionSyncPending = false;
+    if (charisOs.enabled()) {
+      try { await charisOs.claimFreePlan(company.id, user.id); }
+      catch { subscriptionSyncPending = true; }
+    }
+
     // Generate session ID
     const sessionId = crypto.randomUUID();
     const fingerprint = tokenService.generateDeviceFingerprint(req);
@@ -152,6 +161,7 @@ const register = async (req, res) => {
     res.cookie(REFRESH_COOKIE_NAME, refreshToken, REFRESH_COOKIE_OPTIONS);
 
     res.status(201).json({
+      subscriptionSyncPending,
       message: 'Registration successful',
       accessToken,  // Short-lived, stored in memory
       expiresIn: 900,  // 15 minutes in seconds
@@ -241,9 +251,14 @@ const login = async (req, res) => {
         if (limit > maxBusinesses) maxBusinesses = limit;
       });
     }
+    if (charisOs.enabled() && companyIds.length > 0) {
+      try { maxBusinesses = await charisOs.businessLimit(companyIds[0]); }
+      catch { /* OS unavailable: keep the conservative local value for display only. */ }
+    }
 
     // Update last login
     await user.update({ last_login: new Date() });
+    if (companyIds.length) charisOs.onboardInBackground(companyIds[0], user.id); // Owned businesses share one OS customer.
 
     // Trigger CharisSDK fetch for entitlements in the background
     try {
@@ -294,7 +309,9 @@ const login = async (req, res) => {
         currency: user.Company.currency
       } : null,
       companies,
-      subscription: (user.Company && user.Company.Subscription)
+      subscription: charisOs.enabled() && user.Company
+        ? await charisOs.sessionSummary(user.Company.id)
+        : (user.Company && user.Company.Subscription)
         ? {
             plan: user.Company.Subscription.Plan,
             status: user.Company.Subscription.status,
@@ -483,6 +500,10 @@ const getProfile = async (req, res) => {
         if (limit > maxBusinesses) maxBusinesses = limit;
       });
     }
+    if (charisOs.enabled() && companyIds.length > 0) {
+      try { maxBusinesses = await charisOs.businessLimit(companyIds[0]); }
+      catch { /* OS unavailable: keep the conservative local value for display only. */ }
+    }
 
     res.json({
       user: {
@@ -520,7 +541,9 @@ const getProfile = async (req, res) => {
         settings: user.Company.settings
       } : null,
       companies,
-      subscription: (user.Company && user.Company.Subscription)
+      subscription: charisOs.enabled() && user.Company
+        ? await charisOs.sessionSummary(user.Company.id)
+        : (user.Company && user.Company.Subscription)
         ? {
             plan: user.Company.Subscription.Plan,
             status: user.Company.Subscription.status,
