@@ -235,14 +235,17 @@ adminRouter.post('/auth/login', adminAuthLimiter, (req, res) => {
     return res.status(500).json({ error: 'Server config error: ADMIN_SECRET_PIN not set.' });
   }
 
-  if (password !== ADMIN_SECRET_PIN) {
+  const crypto = require('crypto');
+  const digest = (value) => crypto.createHash('sha256').update(String(value)).digest();
+  if (!crypto.timingSafeEqual(digest(password), digest(ADMIN_SECRET_PIN))) {
     return res.status(401).json({ error: 'Wrong password.' });
   }
 
   const token = jwt.sign(
     { email: ADMIN_EMAIL, role: 'superadmin', iat: Math.floor(Date.now() / 1000) },
     ADMIN_JWT_SECRET,
-    { expiresIn: '24h' }
+    // Own issuer/audience: a customer token signed with the same secret can never pass as admin.
+    { expiresIn: '24h', issuer: 'bill-easy-admin', audience: 'bill-easy-admin' }
   );
 
   res.json({
@@ -259,7 +262,7 @@ const adminAuth = (req, res, next) => {
   const token = authHeader && authHeader.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'No token provided.' });
   try {
-    req.user = jwt.verify(token, ADMIN_JWT_SECRET);
+    req.user = jwt.verify(token, ADMIN_JWT_SECRET, { issuer: 'bill-easy-admin', audience: 'bill-easy-admin' });
     if (req.user.email !== ADMIN_EMAIL) throw new Error('Not admin');
     next();
   } catch (err) {
