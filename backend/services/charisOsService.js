@@ -26,10 +26,17 @@ function charisOsConfig(source = process.env) {
   const mode = (source.CHARIS_SUBSCRIPTION_MODE || 'off').trim();
   if (!['off', 'enforce'].includes(mode)) throw new Error('CHARIS_SUBSCRIPTION_MODE must be off or enforce');
   if (mode === 'off') return null;
+  const connection = osConnection(source);
+  if (!connection) throw new Error('CHARIS_OS_URL, CHARIS_OS_APP_ID and CHARIS_OS_APP_KEY are required when enforcing');
+  return connection;
+}
+
+/** The OS connection when all three CHARIS_OS_* values are set (any mode); null otherwise. */
+function osConnection(source = process.env) {
   const url = source.CHARIS_OS_URL?.trim();
   const appId = source.CHARIS_OS_APP_ID?.trim();
   const key = source.CHARIS_OS_APP_KEY?.trim();
-  if (!url || !appId || !key) throw new Error('CHARIS_OS_URL, CHARIS_OS_APP_ID and CHARIS_OS_APP_KEY are required when enforcing');
+  if (!url || !appId || !key) return null;
   const parsed = new URL(url);
   const loopback = ['localhost', '127.0.0.1'].includes(parsed.hostname);
   // Plain HTTP only for local tests, or (opt-in) a private Docker service name such as http://os-api:8000.
@@ -240,6 +247,44 @@ async function claimFreePlan(companyId, actorId) {
   return getSnapshot(companyId);
 }
 
+/**
+ * Features this backend actually enforces (checkFeatureAccess, checkSubscriptionQuota,
+ * reportAccess, add-business). Published to OS so admins tick from this list.
+ */
+const BILLEASY_FEATURES = [
+  { code: 'invoices', name: 'Invoices per month', group: 'Billing', kind: 'limit', unit: 'invoices', reset_periods: ['monthly'], description: 'GST invoices created each month, per business' },
+  { code: 'products', name: 'Products', group: 'Inventory', kind: 'limit', unit: 'products', reset_periods: ['total'], description: 'Items in the product catalogue, per business' },
+  { code: 'multi_godowns', name: 'Multiple godowns', group: 'Inventory', description: 'Stock in several warehouses with transfers' },
+  { code: 'eway_bills', name: 'E-way bills', group: 'GST & compliance', description: 'Generate and track e-way bills' },
+  { code: 'advanced_reports', name: 'Profit & loss and GST reports', group: 'Reports', description: 'P&L statement, GSTR summaries' },
+  { code: 'enterprise_reports', name: 'Enterprise reports', group: 'Reports', description: 'Enterprise-tier analytics' },
+  { code: 'recurring_invoices', name: 'Recurring invoices', group: 'Billing', description: 'Automatic repeat billing for subscriptions' },
+  { code: 'bulk_download_print_invoices', name: 'Bulk download & print', group: 'Billing', description: 'Download or print many invoices at once' },
+  { code: 'staff_attendance_payroll', name: 'Staff attendance & payroll', group: 'Team', description: 'Attendance, salary and payroll' },
+  { code: 'businesses', name: 'Businesses', group: 'Team', kind: 'limit', unit: 'businesses', reset_periods: ['total'], description: 'Businesses one owner can manage' },
+  { code: 'ai_assistant', name: 'Charis AI assistant', group: 'AI tools', description: 'Ask questions about your sales, stock and dues' },
+];
+
+/** Publish the catalog to OS in the background; retried, never blocks startup. */
+async function publishFeatureCatalog(attempt = 1) {
+  const config = osConnection();
+  if (!config) return;
+  try {
+    const response = await fetch(`${config.origin}/api/v1/integrations/apps/${config.appId}/feature-catalog`, {
+      method: 'PUT',
+      headers: { 'X-Charis-App-Key': config.key, 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ contract_version: 1, features: BILLEASY_FEATURES }),
+      signal: AbortSignal.timeout(10000),
+      redirect: 'error',
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    console.log(`[CharisOS] Feature catalog published: ${JSON.stringify(await response.json())}`);
+  } catch (error) {
+    console.warn(`[CharisOS] Feature catalog publish failed (attempt ${attempt}): ${error.message}`);
+    if (attempt < 6) setTimeout(() => publishFeatureCatalog(attempt + 1), Math.min(300000, 5000 * 2 ** attempt)).unref();
+  }
+}
+
 /** Background onboarding: never fails the user's request. */
 function onboardInBackground(companyId, actorId) {
   if (!enabled()) return;
@@ -250,6 +295,7 @@ function onboardInBackground(companyId, actorId) {
 
 module.exports = {
   CharisOsError,
+  BILLEASY_FEATURES,
   billingTenantId,
   businessLimit,
   charisOsConfig,
@@ -262,6 +308,8 @@ module.exports = {
   getSnapshot,
   limitFor,
   onboardInBackground,
+  osConnection,
+  publishFeatureCatalog,
   parseSnapshot,
   sessionSummary,
   startOfMonthIst,

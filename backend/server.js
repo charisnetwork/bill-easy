@@ -596,6 +596,7 @@ process.on('unhandledRejection', (reason, promise) => {
 // and users are never hit with 504 during cold start.
 // All DB bootstrap work runs in the background after the server is already up.
 const server = app.listen(PORT, '0.0.0.0', () => {
+  require('./services/charisOsService').publishFeatureCatalog();
   console.log(`🚀 Server listening on port ${PORT} — running DB bootstrap in background...`);
   startKeepAlive();
 });

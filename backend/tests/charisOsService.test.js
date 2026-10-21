@@ -66,3 +66,14 @@ test('plain HTTP to OS only for an explicitly allowed private service name', () 
   assert.equal(charisOsConfig({ ...base, CHARIS_OS_URL: 'http://os-api:8000', CHARIS_OS_INTERNAL_HTTP: 'true' }).origin, 'http://os-api:8000');
   assert.throws(() => charisOsConfig({ ...base, CHARIS_OS_URL: 'http://os.example.com', CHARIS_OS_INTERNAL_HTTP: 'true' }));
 });
+
+test('every enforced feature code is published to Charis OS', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const { BILLEASY_FEATURES } = require('../services/charisOsService');
+  const published = new Set(BILLEASY_FEATURES.map((f) => f.code));
+  assert.equal(published.size, BILLEASY_FEATURES.length);
+  const src = ['routes', 'middleware', 'controllers'].flatMap((dir) => fs.readdirSync(path.join(__dirname, '..', dir)).map((f) => fs.readFileSync(path.join(__dirname, '..', dir, f), 'utf8'))).join('\n');
+  const used = new Set([...src.matchAll(/checkFeatureAccess\('([a-z_]+)'\)/g)].map((m) => m[1]));
+  for (const code of [...used, 'invoices', 'products', 'businesses', 'advanced_reports', 'enterprise_reports']) assert.ok(published.has(code), `${code} is enforced but not published`);
+});

@@ -35,16 +35,21 @@ const planView = (plan) => ({
   name: plan.name,
   description: plan.description || '',
   price: Number(plan.price),
+  compare_at_price: plan.compare_at_price ? Number(plan.compare_at_price) : null,
   currency: plan.currency,
   duration_value: plan.duration_value,
   duration_unit: plan.duration_unit,
   recommended: plan.recommended === true,
+  tagline: plan.tagline || null,
+  badge: plan.badge || null,
+  // Monthly/yearly versions of one tier share a pricing group and render as one card.
+  pricing_group: plan.pricing_group || plan.id,
   features: plan.entitlements,
 });
 
 const getPlans = handle(async () => {
   const catalog = await charisOs.getCatalog();
-  return { managed_by: MANAGED, checkout_enabled: catalog.checkout_enabled === true, plans: catalog.plans.map(planView) };
+  return { managed_by: MANAGED, checkout_enabled: catalog.checkout_enabled === true, plans: catalog.plans.map(planView), features: catalog.features || [] };
 });
 
 const getCurrentSubscription = handle(async (req) => {
