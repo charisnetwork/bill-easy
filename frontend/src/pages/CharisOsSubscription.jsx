@@ -14,9 +14,17 @@ const money = (amount, currency = 'INR') =>
 const PERIODS = { month: 'Monthly', year: 'Yearly' };
 const RESET = { total: '', monthly: '/month', daily: '/day', yearly: '/year', billing_cycle: '/term' };
 const ACCENTS = ['text-orange-600', 'text-indigo-700', 'text-emerald-600', 'text-sky-700'];
+// A card stands for a tier; drop the period word when monthly/yearly share one card.
+const tierName = (plan, grouped) => (grouped ? plan.name.replace(/\s+(monthly|yearly|annual|annually)$/i, '') : plan.name);
+// Per-month equivalents of yearly prices are shown rounded; the yearly total is exact.
+const perMonth = (amount) => Math.round(amount / 12);
 
 const featureLine = (f) => {
-  if (f.limit_type === 'limited') return { strong: Number(f.limit_value).toLocaleString('en-IN'), text: `${f.name}${RESET[f.reset_period] ? ` ${RESET[f.reset_period]}` : ''}` };
+  const period = RESET[f.reset_period] && !/month|year|day/i.test(f.name) ? ` ${RESET[f.reset_period].replace('/', 'per ')}` : '';
+  // "1 Business", not "1 Businesses".
+  const singular = (word) => (/esses$/.test(word) ? word.replace(/esses$/, 'ess') : word.replace(/([^s])s$/, '$1'));
+  const name = Number(f.limit_value) === 1 ? singular(f.name) : f.name;
+  if (f.limit_type === 'limited') return { strong: Number(f.limit_value).toLocaleString('en-IN'), text: `${name}${period}` };
   if (f.limit_type === 'unlimited' && ['invoices', 'products', 'businesses'].includes(f.feature_code)) return { strong: 'Unlimited', text: f.name };
   return { strong: null, text: f.name };
 };
@@ -26,7 +34,7 @@ function useCards(plans, period) {
   return useMemo(() => {
     const groups = new Map();
     for (const plan of plans) groups.set(plan.pricing_group, [...(groups.get(plan.pricing_group) || []), plan]);
-    return [...groups.values()].map((variants) => variants.find((p) => p.duration_unit === period && p.duration_value === 1) || variants[0]);
+    return [...groups.values()].map((variants) => ({ ...(variants.find((p) => p.duration_unit === period && p.duration_value === 1) || variants[0]), grouped: variants.length > 1 }));
   }, [plans, period]);
 }
 
@@ -52,8 +60,8 @@ const PriceBlock = ({ plan, quote }) => {
   return (
     <div>
       <p className="flex items-baseline gap-2 flex-wrap">
-        {was ? <span className="text-2xl font-bold text-slate-400 line-through">{money(yearly ? was / 12 : was, plan.currency)}</span> : null}
-        <span className="text-4xl font-extrabold text-slate-900">{money(yearly ? final / 12 : final, plan.currency)}</span>
+        {was ? <span className="text-2xl font-bold text-slate-400 line-through">{money(yearly ? perMonth(was) : was, plan.currency)}</span> : null}
+        <span className="text-4xl font-extrabold text-slate-900">{money(yearly ? perMonth(final) : final, plan.currency)}</span>
         <span className="text-slate-500">/{yearly ? 'month' : plan.duration_value === 1 ? plan.duration_unit : `${plan.duration_value} ${plan.duration_unit}s`}</span>
       </p>
       {yearly && <p className="mt-1 text-sm text-slate-600">Pay {was ? <span className="line-through text-slate-400">{money(was, plan.currency)}</span> : null} {money(final, plan.currency)}/year. Billed annually</p>}
@@ -209,7 +217,7 @@ export const CharisOsSubscription = ({ current: initialCurrent }) => {
             <div key={plan.pricing_group} className={`relative flex flex-col rounded-2xl bg-white p-7 ${highlight ? 'border-2 border-indigo-400 shadow-xl' : 'border border-slate-200 shadow-sm'}`}>
               {(plan.badge || plan.recommended) && <span className="absolute -top-3 right-6 rounded-full bg-orange-600 px-3 py-1 text-xs font-bold text-white">{plan.badge || 'Recommended'}</span>}
               <Crown className={`w-5 h-5 ${ACCENTS[index % ACCENTS.length]}`} />
-              <h3 className={`mt-1 text-2xl font-extrabold ${ACCENTS[index % ACCENTS.length]}`}>{plan.name}</h3>
+              <h3 className={`mt-1 text-2xl font-extrabold ${ACCENTS[index % ACCENTS.length]}`}>{tierName(plan, plan.grouped)}</h3>
               <p className="mt-1 min-h-[1.5rem] text-sm font-medium text-indigo-700">{plan.tagline || plan.description}</p>
               <div className="mt-5 min-h-[5.5rem]"><PriceBlock plan={plan} quote={planQuote} /></div>
               <button disabled={isCurrent || freeLocked || (plan.price > 0 && !catalog.checkout_enabled) || Boolean(busyPlan) || Boolean(pending)} onClick={() => choose(plan)}
@@ -237,7 +245,7 @@ export const CharisOsSubscription = ({ current: initialCurrent }) => {
         <button onClick={() => setShowCompare((v) => !v)} className="mx-auto flex items-center gap-2 text-indigo-700 font-semibold">Compare all features <ChevronDown className={`w-4 h-4 transition ${showCompare ? 'rotate-180' : ''}`} /></button>
         {showCompare && <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
           <table className="w-full text-sm">
-            <thead><tr className="bg-slate-50"><th className="p-4 text-left font-semibold text-slate-700">Features</th>{cards.map((p) => <th key={p.id} className="p-4 text-center font-bold text-slate-800">{p.name}</th>)}</tr></thead>
+            <thead><tr className="bg-slate-50"><th className="p-4 text-left font-semibold text-slate-700">Features</th>{cards.map((p) => <th key={p.id} className="p-4 text-center font-bold text-slate-800">{tierName(p, p.grouped)}</th>)}</tr></thead>
             <tbody>{groups.map(([group, features]) => (
               <React.Fragment key={group}>
                 <tr><td colSpan={cards.length + 1} className="bg-indigo-50/60 px-4 py-2 text-xs font-bold uppercase tracking-wider text-indigo-800">{group}</td></tr>
