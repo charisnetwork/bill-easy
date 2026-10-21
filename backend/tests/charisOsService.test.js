@@ -77,3 +77,11 @@ test('every enforced feature code is published to Charis OS', () => {
   const used = new Set([...src.matchAll(/checkFeatureAccess\('([a-z_]+)'\)/g)].map((m) => m[1]));
   for (const code of [...used, 'invoices', 'products', 'businesses', 'advanced_reports', 'enterprise_reports']) assert.ok(published.has(code), `${code} is enforced but not published`);
 });
+
+test('operator restriction is read strictly; older OS responses and disabled mode mean not restricted', async () => {
+  assert.equal(parseSnapshot(snapshot(), appId, 'company-a').restricted, false);
+  assert.equal(parseSnapshot(snapshot({ restricted: 'yes' }), appId, 'company-a').restricted, false);
+  assert.equal(parseSnapshot(snapshot({ status: 'suspended', restricted: true }), appId, 'company-a').restricted, true);
+  const { isRestricted } = require('../services/charisOsService');
+  assert.equal(await isRestricted('company-a'), false); // CHARIS_SUBSCRIPTION_MODE is off in tests
+});

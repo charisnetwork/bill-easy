@@ -97,7 +97,8 @@ function parseSnapshot(data, appId, tenantId) {
     if (e.enabled && !['limited', 'unlimited'].includes(e.limit_type)) throw invalid();
     if (e.enabled && e.limit_type === 'limited' && (!Number.isSafeInteger(e.limit_value) || e.limit_value < 0)) throw invalid();
   }
-  const snapshot = { ...data };
+  // OS before user restrictions did not send this flag; anything but true means not restricted.
+  const snapshot = { ...data, restricted: data.restricted === true };
   if (snapshot.status === 'active' && snapshot.ends_at && Date.parse(snapshot.ends_at) <= Date.now()) snapshot.status = 'expired';
   return snapshot;
 }
@@ -192,14 +193,38 @@ async function sessionSummary(companyId) {
   }
 }
 
+/** Read-only profile shown in Charis OS > Users: the billing business and its owner. */
+async function tenantProfile(tenantId) {
+  const { Company, RefreshToken, User, UserCompany } = require('../models');
+  const company = await Company.findByPk(tenantId, { attributes: ['id', 'name', 'email', 'phone', 'city', 'state', 'owner_id', 'createdAt'] });
+  if (!company) throw new CharisOsError(404, 'COMPANY_NOT_FOUND', 'Company is unavailable');
+  const ownerId = company.owner_id || (await UserCompany.findOne({ where: { company_id: tenantId, role: 'owner' }, attributes: ['user_id'] }))?.user_id;
+  const owner = ownerId ? await User.findByPk(ownerId, { attributes: ['id', 'name', 'email', 'mobile_number', 'last_login'] }) : null;
+  const members = await UserCompany.findAll({ where: { company_id: tenantId }, attributes: ['user_id'] });
+  const memberIds = [...new Set(members.map(m => m.user_id).concat(owner ? [owner.id] : []))];
+  // Sessions rotate their refresh token while in use, so the newest one marks the last activity.
+  const [lastLogin, lastSession] = memberIds.length
+    ? await Promise.all([User.max('last_login', { where: { id: memberIds } }), RefreshToken.max('created_at', { where: { user_id: memberIds } })])
+    : [null, null];
+  const lastActive = [lastLogin, lastSession].filter(Boolean).map(d => new Date(d)).sort((a, b) => b - a)[0] || null;
+  const location = [company.city, company.state].filter(Boolean).join(', ');
+  return {
+    name: company.name,
+    email: company.email || owner?.email || null,
+    mobile_number: (company.phone || owner?.mobile_number || '').slice(0, 32) || null,
+    owner: owner ? { user_id: owner.id, name: String(owner.name).slice(0, 160) } : null,
+    location: location.slice(0, 200) || null,
+    team_size: memberIds.length,
+    joined_at: company.createdAt ? new Date(company.createdAt).toISOString() : null,
+    last_active_at: lastActive ? new Date(lastActive).toISOString() : null,
+  };
+}
+
 async function syncCompany(companyId) {
   const config = charisOsConfig();
   if (!config) return { synced: false };
   const tenantId = await billingTenantId(companyId);
-  const { Company } = require('../models');
-  const company = await Company.findByPk(tenantId, { attributes: ['id', 'name', 'email', 'phone'] });
-  if (!company) throw new CharisOsError(404, 'COMPANY_NOT_FOUND', 'Company is unavailable');
-  const data = await osRequest(`tenants/${encodeURIComponent(tenantId)}`, { method: 'PUT', body: { name: company.name, email: company.email || null, mobile_number: company.phone || null } });
+  const data = await osRequest(`tenants/${encodeURIComponent(tenantId)}`, { method: 'PUT', body: await tenantProfile(tenantId) });
   if (data.contract_version !== 1 || data.application_id !== config.appId || data.tenant_id !== tenantId || data.synced !== true) {
     throw new CharisOsError(503, 'SUBSCRIPTION_UNAVAILABLE', 'Company sync could not be verified');
   }
@@ -293,6 +318,24 @@ function onboardInBackground(companyId, actorId) {
   });
 }
 
+const profileSyncedAt = new Map();
+/** Keeps the OS Users page current (last active, team size) at most once an hour per business. */
+function refreshProfile(companyId) {
+  if (!companyId || !enabled()) return;
+  if (Date.now() - (profileSyncedAt.get(companyId) || 0) < 60 * 60 * 1000) return;
+  if (profileSyncedAt.size >= 5000) profileSyncedAt.clear();
+  profileSyncedAt.set(companyId, Date.now());
+  syncCompany(companyId).catch(() => profileSyncedAt.delete(companyId));
+}
+
+const RESTRICTED_MESSAGE = 'This account has been restricted. Please contact support.';
+/** True when a Charis OS operator has blocked this customer. OS outages do not lock customers out. */
+async function isRestricted(companyId) {
+  if (!companyId || !enabled()) return false;
+  try { return (await getSnapshot(companyId)).restricted === true; }
+  catch { return false; }
+}
+
 module.exports = {
   CharisOsError,
   BILLEASY_FEATURES,
@@ -306,11 +349,14 @@ module.exports = {
   featureAllowed,
   getCatalog,
   getSnapshot,
+  isRestricted,
   limitFor,
   onboardInBackground,
   osConnection,
   publishFeatureCatalog,
   parseSnapshot,
+  refreshProfile,
+  RESTRICTED_MESSAGE,
   sessionSummary,
   startOfMonthIst,
   syncCompany,

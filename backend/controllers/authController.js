@@ -225,6 +225,10 @@ const login = async (req, res) => {
     // Successful login - clear brute force counter
     clearBruteForce(email);
 
+    if (await charisOs.isRestricted(user.company_id)) {
+      return res.status(403).json({ error: charisOs.RESTRICTED_MESSAGE, code: 'ACCOUNT_RESTRICTED' });
+    }
+
     // Fetch all companies this user has access to
     const userCompanies = await UserCompany.findAll({
       where: { user_id: user.id },

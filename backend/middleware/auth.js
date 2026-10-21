@@ -119,7 +119,13 @@ const authenticateToken = async (req, res, next) => {
     }
     */
 
-    // 6. Attach user context to request
+    // 6. Charis OS operator restriction blocks the whole account.
+    if (await charisOs.isRestricted(decoded.tid)) {
+      return res.status(403).json({ error: charisOs.RESTRICTED_MESSAGE, code: 'ACCOUNT_RESTRICTED' });
+    }
+    charisOs.refreshProfile(decoded.tid);
+
+    // 7. Attach user context to request
     req.user = user;
     req.companyId = decoded.tid;  // Tenant ID from token
     req.userRole = decoded.role;  // Role from token
