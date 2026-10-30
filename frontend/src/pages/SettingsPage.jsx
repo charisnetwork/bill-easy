@@ -1,25 +1,19 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api, { companyAPI, authAPI, utilityAPI } from '../services/api';
-import { getAssetUrl, BACKEND_URL, getErrorMessage } from '../config/api';
+import { getAssetUrl, getErrorMessage } from '../config/api';
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
+
 import {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from "../components/ui/accordion";
-import {
-  Card,
-  CardContent,
+  Card
 } from '../components/ui/card';
 import {
   Table,
@@ -77,34 +71,23 @@ import {
   Plus,
   Trash2,
   Save,
-  KeyRound,
   Mail,
   Phone,
-  UserCog,
   ShieldCheck,
   Settings,
   Settings2,
   Warehouse,
-  MapPin,
-  RefreshCcw,
-  Pencil,
-  ChevronRight,
   ChevronDown,
   FileText,
   CreditCard,
   Lock,
-  Palette,
-  Printer,
   Upload,
   Image as ImageIcon,
   Briefcase,
   Search,
   Loader2,
-  X,
   Check,
-  CheckCircle2,
   Banknote,
-  Layout,
   QrCode,
   Type,
   Bell,
@@ -117,6 +100,7 @@ import {
 import { toast } from 'sonner';
 import { cn } from '../lib/utils';
 import { industries } from "../lib/industryConfig";
+import { InvoiceDesignSettings } from "../components/settings/InvoiceDesignSettings";
 import { COUNTRIES, countryByCode, regionsForCountry } from '../lib/localization';
 
 // --- Schemas ---
@@ -289,6 +273,7 @@ export const SettingsPage = () => {
   // Data States
   const [users, setUsers] = useState([]);
   const [godowns, setGodowns] = useState([]);
+  const [fullCompany, setFullCompany] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
   const [signaturePreview, setSignaturePreview] = useState(null);
   const [qrPreview, setQrPreview] = useState(null);
@@ -357,25 +342,6 @@ export const SettingsPage = () => {
     }
   });
 
-  const invoiceCustomForm = useForm({
-    defaultValues: {
-      template_id: 'stylish',
-      theme_color: '#4F46E5',
-      show_party_balance: false,
-      enable_free_quantity: false,
-      show_item_description: true,
-      show_alternate_unit: true,
-      show_phone_number: true,
-      show_time: false,
-      price_history: false,
-      auto_apply_luxury: true,
-      show_po_number: false,
-      show_eway_bill: false,
-      show_vehicle_number: false,
-      invoice_industry_type: '',
-    }
-  });
-
   // --- Fetch Logic ---
 
   useEffect(() => {
@@ -392,24 +358,7 @@ export const SettingsPage = () => {
         setGodowns(godownsRes.data);
 
         const c = companyRes.data;
-
-        // Reset Invoice Customization Form
-        invoiceCustomForm.reset({
-          template_id: c.settings?.template_id || 'stylish',
-          theme_color: c.settings?.theme_color || '#4F46E5',
-          show_party_balance: c.settings?.show_party_balance || false,
-          enable_free_quantity: c.settings?.enable_free_quantity || false,
-          show_item_description: c.settings?.show_item_description ?? true,
-          show_alternate_unit: c.settings?.show_alternate_unit ?? true,
-          show_phone_number: c.settings?.show_phone_number ?? true,
-          show_po_number: c.settings?.show_po_number || false,
-          show_eway_bill: c.settings?.show_eway_bill || false,
-          show_vehicle_number: c.settings?.show_vehicle_number || false,
-          invoice_industry_type: c.settings?.invoice_industry_type || c.business_category || '',
-          show_time: c.settings?.show_time || false,
-          price_history: c.settings?.price_history || false,
-          auto_apply_luxury: c.settings?.auto_apply_luxury ?? true,
-        });
+        setFullCompany(c);
 
         businessForm.reset({
           name: c.name || "",
@@ -442,7 +391,6 @@ export const SettingsPage = () => {
           branch_name: c.branch_name || "",
           terms_conditions: c.terms_conditions || ""
         });
-
 
         if (c.logo) setLogoPreview(getAssetUrl(c.logo));
         if (c.signature) setSignaturePreview(getAssetUrl(c.signature));
@@ -545,19 +493,6 @@ export const SettingsPage = () => {
       refreshProfile();
     } catch {
       toast.error("Failed to save bank details");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleInvoiceCustomSubmit = async (values) => {
-    setSubmitting(true);
-    try {
-      await api.patch('/company/settings', { settings: values });
-      toast.success("Invoice customization saved");
-      refreshProfile();
-    } catch (error) {
-      toast.error("Failed to save customization");
     } finally {
       setSubmitting(false);
     }
@@ -704,8 +639,7 @@ export const SettingsPage = () => {
   const navItems = [
     { id: 'account-profile', label: 'Account', icon: User },
     { id: 'business-details', label: 'Manage Business', icon: Building2 },
-    { id: 'invoice-customization', label: 'Invoice Settings', icon: FileText },
-    { id: 'invoice-print', label: 'Print Settings', icon: Printer },
+    { id: 'invoice-customization', label: 'Invoice Design', icon: FileText },
     { id: 'team', label: 'Manage Users', icon: Users },
     { id: 'business-tax', label: 'Tax & GST', icon: Settings2 },
     { id: 'business-godowns', label: 'Godowns', icon: Warehouse },
@@ -723,8 +657,7 @@ export const SettingsPage = () => {
     'business-details': { title: 'Business Settings', subtitle: 'Edit Your Company Settings And Information' },
     'business-tax': { title: 'Tax & GST Settings', subtitle: 'Manage your tax configuration' },
     'business-godowns': { title: 'Godown Management', subtitle: 'Manage your inventory locations' },
-    'invoice-customization': { title: 'Invoice Settings', subtitle: 'Customize your invoice appearance' },
-    'invoice-print': { title: 'Print Settings', subtitle: 'Configure printers and paper sizes' },
+    'invoice-customization': { title: 'Invoice Design', subtitle: 'Template, colours, columns and paper size' },
     'payments': { title: 'Payment & Bank Settings', subtitle: 'Manage banking and payment details' },
     'team': { title: 'Manage Users', subtitle: 'Add and manage team members' },
     'reminders': { title: 'Reminders', subtitle: 'Set up automated reminders' },
@@ -741,16 +674,14 @@ export const SettingsPage = () => {
     if (activeSection === 'business-details') return businessForm;
     if (activeSection === 'business-tax') return taxForm;
     if (activeSection === 'payments') return bankForm;
-    if (activeSection === 'invoice-customization') return invoiceCustomForm;
     return null;
-  }, [activeSection, profileForm, passwordForm, businessForm, taxForm, bankForm, invoiceCustomForm]);
+  }, [activeSection, profileForm, passwordForm, businessForm, taxForm, bankForm]);
   const handleGlobalSubmit = () => {
     if (activeSection === 'account-profile') profileForm.handleSubmit(handleProfileSubmit)();
     else if (activeSection === 'account-security') passwordForm.handleSubmit(handlePasswordSubmit)();
     else if (activeSection === 'business-details') businessForm.handleSubmit(handleBusinessSubmit)();
     else if (activeSection === 'business-tax') taxForm.handleSubmit(handleTaxSubmit)();
     else if (activeSection === 'payments') bankForm.handleSubmit(handleBankSubmit)();
-    else if (activeSection === 'invoice-customization') invoiceCustomForm.handleSubmit(handleInvoiceCustomSubmit)();
   };
 
   if (loading) return (
@@ -1157,367 +1088,9 @@ export const SettingsPage = () => {
               </div>
             )}
 
-            {activeSection === 'invoice-customization' && (() => {
-              const ALL_TEMPLATES = [
-                { id: 'luxury', name: 'Luxury', color: '#8B5CF6' },
-                { id: 'stylish', name: 'Stylish', color: '#4F46E5' },
-                { id: 'adv-gst', name: 'Advanced GST', color: '#0369A1' },
-                { id: 'adv-gst-tally', name: 'GST (Tally)', color: '#0F766E' },
-                { id: 'billbook', name: 'Billbook', color: '#1D4ED8' },
-                { id: 'billbook-a5', name: 'Billbook (A5)', color: '#1E40AF' },
-                { id: 'modern', name: 'Modern', color: '#0F172A' },
-                { id: 'simple', name: 'Simple', color: '#64748B' },
-                { id: 'custom', name: 'Custom', color: '#E11D48', enterprise: true },
-              ];
-              // Plan locks are applied by the invoice design settings (Charis OS feature codes).
-              const isTemplateLocked = () => false;
-              const selectedTmpl = ALL_TEMPLATES.find(t => t.id === invoiceCustomForm.watch('template_id')) || ALL_TEMPLATES[1];
-              const activeColor = invoiceCustomForm.watch('theme_color') || selectedTmpl.color;
-              return (
-              <Form {...invoiceCustomForm}>
-                <form onSubmit={invoiceCustomForm.handleSubmit(handleInvoiceCustomSubmit)} className="h-[calc(100vh-140px)] flex flex-col md:flex-row -m-6 overflow-hidden bg-slate-50">
-                  {/* Left Pane - Live Preview */}
-                  <div className="flex-1 p-8 overflow-y-auto flex flex-col">
-                    <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-xl font-bold text-slate-800">Invoice Settings</h3>
-                      <Button variant="outline" size="sm" type="button" onClick={() => invoiceCustomForm.reset()} className="bg-white">Revert to Original</Button>
-                    </div>
-                    <div className="flex-1 bg-white border border-slate-200 shadow-sm rounded-lg relative flex flex-col min-h-[550px] overflow-hidden">
-                      {/* === TEMPLATE PREVIEWS === */}
-                      {(() => {
-                        const tid = invoiceCustomForm.watch('template_id') || 'stylish';
-                        const w = (f) => invoiceCustomForm.watch(f);
-                        const biz = company?.name || 'Your Business';
-                        const addr = company?.address || 'Business address';
-                        const ph = company?.phone || '';
-                        const gstin = taxForm.getValues('gst_number') || '';
-                        const pan = taxForm.getValues('pan_number') || '';
-                        const stateVal = company?.state || '';
-                        const pin = company?.pincode || '';
-                        const unit = w('show_alternate_unit') ? 'BOX' : 'PCS';
-
-                        const MetaRow = ({bg}) => (
-                          <div className="flex gap-4 text-xs p-3 rounded mb-3" style={{backgroundColor: bg || '#f8fafc'}}>
-                            <div><span className="text-slate-500 block">Invoice No.</span><span className="font-bold">AABBCCDD/202</span></div>
-                            <div><span className="text-slate-500 block">Date</span><span className="font-bold">17/01/2023</span></div>
-                            <div><span className="text-slate-500 block">Due Date</span><span className="font-bold">16/02/2023</span></div>
-                            {w('show_vehicle_number') && <div><span className="text-slate-500 block">Vehicle</span><span className="font-bold">12312321</span></div>}
-                            {w('show_po_number') && <div><span className="text-slate-500 block">PO No.</span><span className="font-bold">PO-4521</span></div>}
-                            {w('show_eway_bill') && <div><span className="text-slate-500 block">E-way</span><span className="font-bold">EWB-789</span></div>}
-                          </div>
-                        );
-                        const BillTo = () => (
-                          <div className="mb-3">
-                            <p className="text-slate-500 text-xs font-bold tracking-widest mb-1">BILL TO</p>
-                            <p className="font-bold text-slate-900 text-sm">Sample Party</p>
-                            <p className="text-slate-600 text-xs mt-0.5">1234123, Bengaluru</p>
-                            {w('show_phone_number') && <p className="text-slate-600 text-xs">Ph: 9876543210</p>}
-                          </div>
-                        );
-                        const ItemRows = ({borderStyle}) => (
-                          <>
-                            <div className={cn("w-full py-2.5 flex text-sm text-slate-800 px-2", borderStyle || "border-b border-slate-100")}>
-                              <div className="flex-1">PUMA BLUE T-SHIRT{w('show_item_description') && <p className="text-xs text-slate-400 mt-0.5">Size XL, Cotton</p>}</div>
-                              <div className="w-14 text-right">2 {unit}</div><div className="w-20 text-right">900</div><div className="w-20 text-right font-semibold">1,800</div>
-                            </div>
-                            <div className={cn("w-full py-2.5 flex text-sm text-slate-800 px-2", borderStyle || "border-b border-slate-100")}>
-                              <div className="flex-1">Pane-G 200g{w('show_item_description') && <p className="text-xs text-slate-400 mt-0.5">HSN: 40911209</p>}</div>
-                              <div className="w-14 text-right">1 {unit}</div><div className="w-20 text-right">342.86</div><div className="w-20 text-right font-semibold">342.86</div>
-                            </div>
-                            {w('show_party_balance') && <div className="w-full py-2 flex justify-end text-sm border-b border-slate-100"><div className="w-40 text-right text-slate-500">Prev Balance:</div><div className="w-20 text-right font-semibold text-rose-600">₹ 4,500</div></div>}
-                          </>
-                        );
-
-                        /* ── LUXURY ── */
-                        if (tid === 'luxury') return (
-                          <div className="flex flex-col flex-1">
-                            <div className="p-6 text-white" style={{background:'linear-gradient(135deg,#7C3AED,#4F46E5)'}}>
-                              <div className="flex justify-between items-start">
-                                <div><h2 className="text-2xl font-bold tracking-tight">{biz}</h2><p className="text-purple-200 text-xs mt-1">{addr}{stateVal && `, ${stateVal}`}</p>{ph && <p className="text-purple-200 text-xs">📞 {ph}</p>}</div>
-                                <div className="text-right"><span className="text-sm font-bold border border-white/40 px-3 py-1 rounded">TAX INVOICE</span><p className="text-[9px] text-purple-200 mt-2">ORIGINAL FOR RECIPIENT</p></div>
-                              </div>
-                            </div>
-                            <div className="p-6 flex-1 flex flex-col">
-                              <MetaRow bg="#F5F3FF" />
-                              <BillTo />
-                              <div className="flex-1">
-                                <div className="w-full py-2 flex text-xs font-bold text-purple-700 border-y-2 border-purple-200 bg-purple-50 px-2"><div className="flex-1">ITEM</div><div className="w-14 text-right">QTY</div><div className="w-20 text-right">RATE</div><div className="w-20 text-right">AMOUNT</div></div>
-                                <ItemRows />
-                              </div>
-                            </div>
-                          </div>
-                        );
-
-                        /* ── MODERN ── */
-                        if (tid === 'modern') return (
-                          <div className="flex flex-col flex-1">
-                            <div className="p-6 bg-slate-900 text-white">
-                              <div className="flex justify-between items-start">
-                                <div><h2 className="text-2xl font-bold">{biz}</h2><p className="text-slate-400 text-xs mt-1">{gstin && `GSTIN: ${gstin}`} {pan && `| PAN: ${pan}`}</p><p className="text-slate-400 text-xs">{addr}</p></div>
-                                <div className="text-right"><span className="text-xs font-bold bg-white text-slate-900 px-3 py-1.5 rounded">TAX INVOICE</span></div>
-                              </div>
-                            </div>
-                            <div className="p-6 flex-1 flex flex-col">
-                              <MetaRow bg="#F1F5F9" />
-                              <BillTo />
-                              <div className="flex-1">
-                                <div className="w-full py-2 flex text-xs font-bold text-white bg-slate-800 rounded-t px-2"><div className="flex-1">DESCRIPTION</div><div className="w-14 text-right">QTY</div><div className="w-20 text-right">RATE</div><div className="w-20 text-right">AMOUNT</div></div>
-                                <ItemRows borderStyle="border-b border-slate-200" />
-                              </div>
-                            </div>
-                          </div>
-                        );
-
-                        /* ── ADVANCED GST ── */
-                        if (tid === 'adv-gst') return (
-                          <div className="flex flex-col flex-1 p-6">
-                            <div className="flex justify-between items-start mb-4 pb-4 border-b-2 border-sky-600">
-                              <div><h2 className="text-xl font-bold text-sky-800">{biz}</h2><p className="text-xs text-slate-500 mt-1">{gstin && `GSTIN: ${gstin}`}</p><p className="text-xs text-slate-500">{addr}</p></div>
-                              <div className="text-right"><span className="text-xs font-bold border-2 border-sky-600 text-sky-700 px-3 py-1 rounded">TAX INVOICE</span><p className="text-[9px] text-slate-400 mt-1">ORIGINAL</p></div>
-                            </div>
-                            <MetaRow bg="#F0F9FF" />
-                            <BillTo />
-                            <div className="flex-1">
-                              <div className="w-full py-2 flex text-xs font-bold text-sky-800 border border-sky-200 bg-sky-50 px-2"><div className="flex-1">ITEM</div><div className="w-10 text-right">HSN</div><div className="w-10 text-right">QTY</div><div className="w-16 text-right">RATE</div><div className="w-12 text-right">CGST</div><div className="w-12 text-right">SGST</div><div className="w-16 text-right">TOTAL</div></div>
-                              <div className="w-full py-2 flex text-xs text-slate-700 border-x border-b border-sky-100 px-2"><div className="flex-1">PUMA T-SHIRT</div><div className="w-10 text-right">6109</div><div className="w-10 text-right">2</div><div className="w-16 text-right">900</div><div className="w-12 text-right text-sky-600">81</div><div className="w-12 text-right text-sky-600">81</div><div className="w-16 text-right font-bold">1,962</div></div>
-                              <div className="w-full py-2 flex text-xs text-slate-700 border-x border-b border-sky-100 px-2"><div className="flex-1">Pane-G 200g</div><div className="w-10 text-right">4091</div><div className="w-10 text-right">1</div><div className="w-16 text-right">342.86</div><div className="w-12 text-right text-sky-600">30.86</div><div className="w-12 text-right text-sky-600">30.86</div><div className="w-16 text-right font-bold">404.58</div></div>
-                            </div>
-                          </div>
-                        );
-
-                        /* ── GST TALLY ── */
-                        if (tid === 'adv-gst-tally') return (
-                          <div className="flex flex-col flex-1 p-5 font-mono text-xs">
-                            <div className="border-2 border-teal-700 p-3 mb-3">
-                              <div className="flex justify-between"><div><p className="font-bold text-sm">{biz}</p><p className="text-slate-600">{addr}</p><p className="text-slate-600">GSTIN: {gstin}</p></div><div className="text-right font-bold text-teal-700">TAX INVOICE</div></div>
-                            </div>
-                            <div className="border border-teal-600 mb-3">
-                              <div className="grid grid-cols-4 border-b border-teal-600 divide-x divide-teal-600 text-[10px]">
-                                <div className="p-1.5"><span className="text-slate-500">Inv No</span><br/><span className="font-bold">AABBCCDD/202</span></div>
-                                <div className="p-1.5"><span className="text-slate-500">Date</span><br/><span className="font-bold">17/01/2023</span></div>
-                                <div className="p-1.5"><span className="text-slate-500">Due</span><br/><span className="font-bold">16/02/2023</span></div>
-                                <div className="p-1.5"><span className="text-slate-500">Place</span><br/><span className="font-bold">{stateVal || 'N/A'}</span></div>
-                              </div>
-                              <div className="p-2"><p className="text-slate-500">Bill To:</p><p className="font-bold">Sample Party</p><p>1234123, Bengaluru</p></div>
-                            </div>
-                            <div className="flex-1 border border-teal-600">
-                              <div className="flex font-bold bg-teal-50 border-b border-teal-600 divide-x divide-teal-600"><div className="flex-1 p-1.5">Particulars</div><div className="w-10 p-1.5 text-right">Qty</div><div className="w-14 p-1.5 text-right">Rate</div><div className="w-14 p-1.5 text-right">Amt</div></div>
-                              <div className="flex border-b border-teal-200 divide-x divide-teal-200"><div className="flex-1 p-1.5">PUMA T-SHIRT</div><div className="w-10 p-1.5 text-right">2</div><div className="w-14 p-1.5 text-right">900</div><div className="w-14 p-1.5 text-right">1,800</div></div>
-                              <div className="flex border-b border-teal-200 divide-x divide-teal-200"><div className="flex-1 p-1.5">Pane-G 200g</div><div className="w-10 p-1.5 text-right">1</div><div className="w-14 p-1.5 text-right">342.86</div><div className="w-14 p-1.5 text-right">342.86</div></div>
-                            </div>
-                          </div>
-                        );
-
-                        /* ── BILLBOOK ── */
-                        if (tid === 'billbook' || tid === 'billbook-a5') return (
-                          <div className={cn("flex flex-col flex-1 p-5", tid === 'billbook-a5' && "text-xs")}>
-                            <div className="border-b-2 border-blue-800 pb-3 mb-3 flex justify-between items-start">
-                              <div><h2 className={cn("font-bold text-blue-900", tid === 'billbook-a5' ? "text-base" : "text-lg")}>{biz}</h2><p className="text-xs text-slate-500">{addr}</p>{ph && <p className="text-xs text-slate-500">Ph: {ph}</p>}</div>
-                              <div className="border-2 border-blue-800 px-3 py-1 text-xs font-bold text-blue-900">INVOICE</div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3 mb-3 text-xs">
-                              <div className="border border-slate-300 rounded p-2"><span className="text-slate-500">Invoice #:</span> <span className="font-bold">AABBCCDD/202</span><br/><span className="text-slate-500">Date:</span> <span className="font-bold">17/01/2023</span></div>
-                              <div className="border border-slate-300 rounded p-2"><span className="text-slate-500">Bill To:</span><br/><span className="font-bold">Sample Party</span><br/>1234123, Bengaluru</div>
-                            </div>
-                            <div className="flex-1">
-                              <table className="w-full border border-blue-200 text-xs"><thead><tr className="bg-blue-50 text-blue-900"><th className="border border-blue-200 p-1.5 text-left">Item</th><th className="border border-blue-200 p-1.5 w-12">Qty</th><th className="border border-blue-200 p-1.5 w-16 text-right">Rate</th><th className="border border-blue-200 p-1.5 w-16 text-right">Amount</th></tr></thead>
-                              <tbody><tr><td className="border border-blue-100 p-1.5">PUMA T-SHIRT</td><td className="border border-blue-100 p-1.5 text-center">2 {unit}</td><td className="border border-blue-100 p-1.5 text-right">900</td><td className="border border-blue-100 p-1.5 text-right font-bold">1,800</td></tr>
-                              <tr><td className="border border-blue-100 p-1.5">Pane-G 200g</td><td className="border border-blue-100 p-1.5 text-center">1</td><td className="border border-blue-100 p-1.5 text-right">342.86</td><td className="border border-blue-100 p-1.5 text-right font-bold">342.86</td></tr></tbody></table>
-                            </div>
-                          </div>
-                        );
-
-                        /* ── SIMPLE ── */
-                        if (tid === 'simple') return (
-                          <div className="flex flex-col flex-1 p-8">
-                            <div className="mb-6"><h2 className="text-lg font-medium text-slate-700">{biz}</h2><p className="text-xs text-slate-400 mt-1">{addr} | {ph}</p></div>
-                            <div className="flex justify-between text-xs text-slate-500 mb-4 pb-2 border-b"><span>Invoice AABBCCDD/202</span><span>17/01/2023</span></div>
-                            <div className="mb-4 text-xs"><p className="text-slate-400">Bill To</p><p className="font-medium text-slate-700">Sample Party</p><p className="text-slate-400">1234123, Bengaluru</p></div>
-                            <div className="flex-1">
-                              <div className="w-full py-2 flex text-xs text-slate-500 border-b border-slate-200 px-1"><div className="flex-1">Item</div><div className="w-12 text-right">Qty</div><div className="w-16 text-right">Rate</div><div className="w-16 text-right">Amount</div></div>
-                              <div className="w-full py-2 flex text-sm text-slate-700 border-b border-slate-100 px-1"><div className="flex-1">PUMA T-SHIRT</div><div className="w-12 text-right">2</div><div className="w-16 text-right">900</div><div className="w-16 text-right">1,800</div></div>
-                              <div className="w-full py-2 flex text-sm text-slate-700 border-b border-slate-100 px-1"><div className="flex-1">Pane-G 200g</div><div className="w-12 text-right">1</div><div className="w-16 text-right">342.86</div><div className="w-16 text-right">342.86</div></div>
-                            </div>
-                          </div>
-                        );
-
-                        /* ── STYLISH (default) + CUSTOM ── */
-                        return (
-                          <div className="flex flex-col flex-1">
-                            <div className="h-2 w-full" style={{backgroundColor: activeColor}}></div>
-                            <div className="p-6 flex flex-col flex-1">
-                              <div className="flex justify-between items-start mb-4 border-b pb-3">
-                                <div><h2 className="text-xl font-bold" style={{color: activeColor}}>{biz}</h2>{pan && <p className="text-xs text-slate-500 mt-1">PAN: {pan} &nbsp; GSTIN: {gstin}</p>}{ph && <p className="text-xs text-slate-500">📞 {ph}</p>}<p className="text-xs text-slate-500">📍 {addr}{stateVal && `, ${stateVal}`}{pin && ` - ${pin}`}</p></div>
-                                <div className="text-right"><span className="text-xs font-bold px-3 py-1.5 rounded text-white" style={{backgroundColor: activeColor}}>TAX INVOICE</span><p className="text-[9px] text-slate-400 mt-2">ORIGINAL FOR RECIPIENT</p></div>
-                              </div>
-                              <MetaRow bg={activeColor + '10'} />
-                              <BillTo />
-                              <div className="flex-1">
-                                <div className="w-full py-2 flex text-xs font-bold text-white px-2" style={{backgroundColor: activeColor}}><div className="flex-1">ITEM NAME</div><div className="w-14 text-right">QTY</div><div className="w-20 text-right">PRICE</div><div className="w-20 text-right">AMOUNT</div></div>
-                                <ItemRows />
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                    <div className="mt-4">
-                        <div className="border border-slate-200 rounded-xl p-4 bg-white shadow-sm space-y-3">
-                          <div className="flex gap-2 text-xs flex-wrap">
-                            <span className="font-semibold text-orange-500 flex items-center gap-1">✨ Try using</span>
-                            {['Easy to Read', 'Brand Touch', 'Highlight Key Info'].map(t => (
-                              <button key={t} type="button" className="px-3 py-1 bg-slate-50 border border-slate-200 rounded-full hover:bg-slate-100">{t}</button>
-                            ))}
-                          </div>
-                          <div className="relative">
-                            <input type="text" placeholder="Write anything to style your invoice..." className="w-full pl-3 pr-12 py-3 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 ring-indigo-500/20" />
-                            <button type="button" className="absolute right-2 top-2 w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center hover:bg-slate-300">
-                              <ArrowLeft className="w-4 h-4 text-slate-600 rotate-90" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  {/* Right Pane - Settings Sidebar */}
-                  <div className="w-96 bg-white border-l border-slate-200 flex flex-col h-full shrink-0">
-                    <div className="p-4 border-b border-slate-200 shrink-0">
-                      <Button type="submit" disabled={submitting} className="w-full bg-[#4F46E5] hover:bg-[#4338CA] text-white">
-                        {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
-                      </Button>
-                    </div>
-                    <div className="flex-1 overflow-y-auto">
-                      {/* Themes Grid with Plan Gating */}
-                      <div className="p-5 border-b border-slate-200 space-y-4">
-                        <h4 className="font-bold text-slate-800 flex items-center gap-2">
-                          <div className="w-4 h-4 rounded-full border-[3px] border-indigo-600" /> Themes
-                        </h4>
-                        <div className="grid grid-cols-3 gap-3">
-                          {ALL_TEMPLATES.map(t => {
-                            const locked = isTemplateLocked(t.id);
-                            return (
-                              <button
-                                key={t.id}
-                                type="button"
-                                disabled={locked}
-                                onClick={() => { if (!locked) { invoiceCustomForm.setValue('template_id', t.id, { shouldDirty: true }); invoiceCustomForm.setValue('theme_color', t.color, { shouldDirty: true }); }}}
-                                className={cn("flex flex-col items-center gap-1.5 group relative", locked && "opacity-50 cursor-not-allowed")}
-                              >
-                                <div className={cn(
-                                  "w-full aspect-[1/1.4] border-2 rounded-lg bg-slate-50 transition-all p-1",
-                                  invoiceCustomForm.watch('template_id') === t.id ? "border-indigo-600 ring-2 ring-indigo-100" : "border-slate-200 group-hover:border-slate-300"
-                                )}>
-                                  <div className="w-full h-full bg-white border shadow-sm rounded-sm p-1 space-y-1">
-                                    <div className="h-1.5 rounded-sm w-full" style={{ backgroundColor: t.color }}></div>
-                                    <div className="h-1 bg-slate-200 w-1/2"></div>
-                                    <div className="h-2 bg-slate-100 w-full"></div>
-                                    <div className="h-4 bg-slate-50 w-full border border-slate-100"></div>
-                                  </div>
-                                </div>
-                                <span className="text-[10px] text-slate-600 font-medium">{t.name}</span>
-                                {locked && <Lock className="w-3 h-3 text-slate-400 absolute top-1 right-1" />}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                      {/* Theme Styling */}
-                      <div className="p-5 border-b border-slate-200 bg-slate-50/50 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-bold text-slate-800 flex items-center gap-2"><Palette className="w-4 h-4 text-indigo-600" /> Theme Styling</h4>
-                          <Badge className="bg-red-500 text-[9px] px-1.5 py-0 h-4">New</Badge>
-                        </div>
-                        <FormField control={invoiceCustomForm.control} name="theme_color" render={({ field }) => (
-                          <FormItem>
-                            <div className="flex gap-3">
-                              {['#1D70B8', '#4F46E5', '#E66E26', '#16A34A', '#DC2626', '#000000'].map(c => (
-                                <button key={c} type="button" onClick={() => field.onChange(c)}
-                                  className={cn("w-6 h-6 rounded-full border-[3px] transition-transform", field.value === c ? "border-slate-300 scale-110 shadow-sm" : "border-transparent opacity-80 hover:opacity-100")}
-                                  style={{ backgroundColor: c }} />
-                              ))}
-                            </div>
-                          </FormItem>
-                        )} />
-                      </div>
-                      {/* Checkboxes */}
-                      <div className="p-5 border-b border-slate-200 space-y-3">
-                        {[
-                          { name: 'show_party_balance', label: 'Show party balance in invoice' },
-                          { name: 'enable_free_quantity', label: 'Enable free item quantity' },
-                          { name: 'show_item_description', label: 'Show item description in invoice' },
-                          { name: 'show_alternate_unit', label: 'Show Alternate Unit in Invoice' },
-                          { name: 'show_phone_number', label: 'Show phone number on Invoice' },
-                          { name: 'show_time', label: 'Show time on Invoices', icon: <Info className="w-3.5 h-3.5 text-slate-400" /> },
-                          { name: 'price_history', label: 'Price History', icon: <Info className="w-3.5 h-3.5 text-slate-400" /> },
-                          { name: 'auto_apply_luxury', label: 'Auto-apply luxury theme for sharing' }
-                        ].map((item) => (
-                          <FormField key={item.name} control={invoiceCustomForm.control} name={item.name} render={({ field }) => (
-                            <FormItem className="flex items-center gap-3 space-y-0">
-                              <FormControl>
-                                <input type="checkbox" className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300" checked={field.value} onChange={field.onChange} />
-                              </FormControl>
-                              <FormLabel className="text-sm font-normal text-slate-700 cursor-pointer flex items-center gap-1.5 leading-none">
-                                {item.label} {item.icon && item.icon}
-                              </FormLabel>
-                            </FormItem>
-                          )} />
-                        ))}
-                      </div>
-                      {/* Accordions */}
-                      <div className="px-2 pb-6">
-                        <Accordion type="multiple" defaultValue={['invoice-details']} className="w-full">
-                          <AccordionItem value="invoice-details" className="border-b-0">
-                            <AccordionTrigger className="px-4 py-3 hover:bg-slate-50 rounded-lg font-bold text-slate-800">Invoice Details</AccordionTrigger>
-                            <AccordionContent className="px-4 space-y-4">
-                              <FormField control={invoiceCustomForm.control} name="invoice_industry_type" render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-xs text-slate-500">Industry Type</FormLabel>
-                                  <Select onValueChange={field.onChange} value={field.value}>
-                                    <FormControl><SelectTrigger className="h-10"><SelectValue placeholder="Select industry" /></SelectTrigger></FormControl>
-                                    <SelectContent>
-                                      {industries.map(i => <SelectItem key={i.value} value={i.value}>{i.label}</SelectItem>)}
-                                    </SelectContent>
-                                  </Select>
-                                </FormItem>
-                              )} />
-                              {[
-                                { name: 'show_po_number', label: 'PO Number' },
-                                { name: 'show_eway_bill', label: 'E-way Bill Number' },
-                                { name: 'show_vehicle_number', label: 'Vehicle Number' },
-                              ].map(item => (
-                                <FormField key={item.name} control={invoiceCustomForm.control} name={item.name} render={({ field }) => (
-                                  <FormItem className="flex items-center gap-3 space-y-0">
-                                    <FormControl>
-                                      <input type="checkbox" className="w-4 h-4 rounded text-indigo-600 border-slate-300" checked={field.value} onChange={field.onChange} />
-                                    </FormControl>
-                                    <FormLabel className="text-sm font-normal text-slate-700 cursor-pointer leading-none">{item.label}</FormLabel>
-                                  </FormItem>
-                                )} />
-                              ))}
-                            </AccordionContent>
-                          </AccordionItem>
-                          <AccordionItem value="party-details" className="border-b-0">
-                            <AccordionTrigger className="px-4 py-3 hover:bg-slate-50 rounded-lg font-bold text-slate-800">Party Details</AccordionTrigger>
-                            <AccordionContent className="px-4 text-slate-500">Configure what customer information is displayed on the invoice.</AccordionContent>
-                          </AccordionItem>
-                          <AccordionItem value="item-table" className="border-b-0">
-                            <AccordionTrigger className="px-4 py-3 hover:bg-slate-50 rounded-lg font-bold text-slate-800">Item Table Columns</AccordionTrigger>
-                            <AccordionContent className="px-4 text-slate-500">Toggle HSN, Discount, and Tax columns.</AccordionContent>
-                          </AccordionItem>
-                          <AccordionItem value="misc" className="border-b-0">
-                            <AccordionTrigger className="px-4 py-3 hover:bg-slate-50 rounded-lg font-bold text-slate-800">
-                              <span>Miscellaneous Details</span>
-                              <Badge className="bg-blue-500 hover:bg-blue-600 text-[9px] px-1.5 py-0 ml-2">New</Badge>
-                            </AccordionTrigger>
-                            <AccordionContent className="px-4 text-slate-500">Additional signature and stamp configurations.</AccordionContent>
-                          </AccordionItem>
-                        </Accordion>
-                      </div>
-                    </div>
-                  </div>
-                </form>
-              </Form>
-              );
-            })()}
+            {activeSection === 'invoice-customization' && fullCompany && (
+              <InvoiceDesignSettings company={fullCompany} onSaved={async () => { setFullCompany((await companyAPI.get()).data); refreshProfile(); }} />
+            )}
 
             {activeSection === 'payments' && (
               <Form {...bankForm}>
@@ -1577,60 +1150,6 @@ export const SettingsPage = () => {
                 </form>
               </Form>
             )}
-
-            {['invoice-print'].includes(activeSection) && (
-              <div className="space-y-8">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3"><Printer className="w-6 h-6 text-indigo-600" /><h3 className="text-xl font-bold">Print Settings</h3></div>
-                  <p className="text-sm text-slate-500">Configure thermal and barcode printing options for your business.</p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-4">
-                  {/* Left Sidebar */}
-                  <div className="space-y-6">
-                    <div className="flex border-b border-slate-200">
-                      <button type="button" className="px-4 py-3 text-sm font-bold text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50">Thermal Printer</button>
-                      <button type="button" className="px-4 py-3 text-sm font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-50">Barcode Printer</button>
-                    </div>
-                    <div className="space-y-8 px-2">
-                      <div className="space-y-4">
-                        <Label className="text-xs text-slate-500 font-bold uppercase tracking-wider">Paper Size</Label>
-                        <div className="space-y-3">
-                          <button type="button" className="w-full py-3 border-2 border-indigo-600 rounded-lg text-sm font-bold text-indigo-700 bg-indigo-50 text-left px-4">2 Inch (58mm)</button>
-                          <button type="button" className="w-full py-3 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 text-left px-4">3 Inch (80mm)</button>
-                        </div>
-                      </div>
-                      <div className="space-y-4">
-                        <Label className="text-xs text-slate-500 font-bold uppercase tracking-wider">Business Logo (Monochrome)</Label>
-                        <div className="h-32 border-2 border-dashed rounded-xl flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer" onClick={() => document.getElementById('mono-logo-in').click()}>
-                          <ImageIcon className="w-8 h-8 text-slate-300 mb-2" />
-                          <span className="text-xs text-indigo-600 font-medium">Upload Monochrome Logo</span>
-                        </div>
-                        <input id="mono-logo-in" type="file" className="hidden" accept="image/*" />
-                        <div className="p-3 bg-slate-50 rounded-lg">
-                          <p className="text-[10px] text-slate-500 leading-relaxed">
-                            Upload in Monochrome, *.bmp extension. Max: 210px width x 70px height. <a href="#" className="text-indigo-600 hover:underline">Learn how</a>
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Right Preview */}
-                  <div className="md:col-span-2">
-                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800 mb-6 font-medium">
-                      This is a preview of the Thermal print of your invoice. Some columns might not appear if they don't have the required information.
-                    </div>
-                    <div className="w-full min-h-[500px] bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center">
-                      <div className="text-center text-slate-400 space-y-2">
-                        <Printer className="w-12 h-12 mx-auto opacity-30" />
-                        <p className="text-sm font-medium">Thermal Receipt Preview</p>
-                        <p className="text-xs">Select a paper size to see a live preview</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
 
             {activeSection === 'reminders' && (
               <div className="space-y-8">
@@ -1748,7 +1267,6 @@ export const SettingsPage = () => {
                 )}
               </div>
             )}
-
 
           </div>
         </div>

@@ -114,3 +114,27 @@ test('report downloads', { skip: !dbUrl && 'TEST_DATABASE_URL not set' }, async 
     assert.equal(body.purchase_bills.included, false);
   });
 });
+
+test('invoice design: locked templates and AI design follow the plan', async () => {
+  const { Company } = require('../models');
+  const originalFind = Company.findByPk;
+  let saved = null;
+  Company.findByPk = async () => ({ settings: { template_id: 'modern', currency_note: 'keep me' }, business_category: 'Pharma', update: async (data) => { saved = data; } });
+  try {
+    entitlements = [limit('premium_templates', null)];
+    const patch = (body) => fetch(`${base}/api/company/settings`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(async (r) => ({ status: r.status, body: await r.json() }));
+    const pro = await patch({ settings: { template_id: 'corporate' } });
+    assert.equal(pro.status, 403);
+    assert.equal(pro.body.feature, 'pro_templates');
+    assert.equal((await patch({ settings: { template_id: 'modern', accent: 'blue' } })).status, 400);
+    const ok = await patch({ settings: { template_id: 'bold', theme_color: '#000000' } });
+    assert.equal(ok.status, 200);
+    assert.equal(saved.settings.template_id, 'bold');
+    assert.equal(saved.settings.currency_note, 'keep me');
+    assert.equal(saved.settings.theme_color, undefined);
+
+    const suggest = await call('POST', '/api/company/invoice-design/suggest');
+    assert.equal(suggest.status, 403);
+    assert.equal(suggest.body.feature, 'ai_invoice_design');
+  } finally { Company.findByPk = originalFind; }
+});

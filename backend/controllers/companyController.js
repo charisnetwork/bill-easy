@@ -1,4 +1,5 @@
 const { Company, User, UserCompany, Godown } = require("../models");
+const invoiceDesign = require("../services/invoiceDesign");
 const bcrypt = require("bcryptjs");
 const { Country } = require('country-state-city');
 const charisOs = require("../services/charisOsService");
@@ -71,10 +72,22 @@ const updateCompany = async (req, res) => {
     }
 
     // Merge settings instead of overwriting
-    const newSettings = {
+    let newSettings = {
       ...(company.settings || {}),
       ...(settings || {})
     };
+
+    // Invoice design changes are validated and checked against the Charis OS plan.
+    if (invoiceDesign.isDesignUpdate(settings)) {
+      let features = {};
+      try { features = charisOs.summaryFromSnapshot(await charisOs.getSnapshot(req.companyId)).features; }
+      catch { /* OS unreachable: only free templates can be newly chosen */ }
+      const design = await invoiceDesign.validateInvoiceSettings(
+        Object.fromEntries(invoiceDesign.DESIGN_KEYS.filter((k) => k in settings).map((k) => [k, settings[k]])),
+        { features, current: company.settings || {} });
+      const others = Object.fromEntries(Object.entries(settings).filter(([k]) => !invoiceDesign.DESIGN_KEYS.includes(k)));
+      newSettings = invoiceDesign.mergeIntoCompanySettings({ ...(company.settings || {}), ...others }, design);
+    }
 
     const normalizedCountry = country_code ? String(country_code).toUpperCase() : company.country_code || 'IN';
     const countryCurrency = currencyForCountry(normalizedCountry);
@@ -133,10 +146,22 @@ const updateSettings = async (req, res) => {
       return res.status(404).json({ error: "Company not found" });
     }
 
-    const newSettings = {
+    let newSettings = {
       ...(company.settings || {}),
       ...(settings || {})
     };
+
+    // Invoice design changes are validated and checked against the Charis OS plan.
+    if (invoiceDesign.isDesignUpdate(settings)) {
+      let features = {};
+      try { features = charisOs.summaryFromSnapshot(await charisOs.getSnapshot(req.companyId)).features; }
+      catch { /* OS unreachable: only free templates can be newly chosen */ }
+      const design = await invoiceDesign.validateInvoiceSettings(
+        Object.fromEntries(invoiceDesign.DESIGN_KEYS.filter((k) => k in settings).map((k) => [k, settings[k]])),
+        { features, current: company.settings || {} });
+      const others = Object.fromEntries(Object.entries(settings).filter(([k]) => !invoiceDesign.DESIGN_KEYS.includes(k)));
+      newSettings = invoiceDesign.mergeIntoCompanySettings({ ...(company.settings || {}), ...others }, design);
+    }
 
     const updateData = { settings: newSettings };
     
@@ -160,8 +185,23 @@ const updateSettings = async (req, res) => {
     });
 
   } catch (error) {
-    // Error logged
+    if (error instanceof invoiceDesign.DesignError) {
+      return res.status(error.status).json({ error: error.message, code: error.code, feature: error.feature, upgradeRequired: error.status === 403 || undefined });
+    }
     res.status(500).json({ error: "Failed to update settings" });
+  }
+};
+
+/** Pro: AI suggests a template, colour and columns from the business type and logo colours. */
+const suggestInvoiceDesign = async (req, res) => {
+  try {
+    const company = await Company.findByPk(req.companyId, { attributes: ['business_category', 'settings'] });
+    const features = charisOs.summaryFromSnapshot(await charisOs.getSnapshot(req.companyId)).features;
+    const industry = company?.settings?.invoice_industry_type || company?.business_category;
+    res.json(await invoiceDesign.suggestDesign({ industry, logoColors: req.body?.logo_colors, features }));
+  } catch (error) {
+    if (error instanceof charisOs.CharisOsError) return res.status(error.status).json({ error: error.message, code: error.code });
+    res.status(500).json({ error: 'Could not suggest a design right now' });
   }
 };
 
@@ -519,6 +559,7 @@ const updateInvoiceCustomization = async (req, res) => {
 module.exports = {
 
   getCompany,
+  suggestInvoiceDesign,
   updateCompany,
   updateSettings,
 

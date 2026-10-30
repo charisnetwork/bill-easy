@@ -3,7 +3,7 @@ const router = express.Router();
 const companyController = require('../controllers/companyController');
 const godownController = require('../controllers/godownController');
 const { authenticateToken, requireRole } = require('../middleware/auth');
-const { requireRecordLimit } = require('../services/usageLimits');
+const { requireFeature, requireRecordLimit } = require('../services/usageLimits');
 const companyContext = require('../middleware/companyContext');
 const { uploadLogo, uploadSignature, uploadQRCode } = require('../services/uploadService');
 
@@ -14,6 +14,7 @@ router.use(companyContext);
 router.get('/', companyController.getCompany);
 router.put('/', companyController.updateCompany);
 router.patch('/settings', companyController.updateSettings);
+router.post('/invoice-design/suggest', requireFeature('ai_invoice_design'), companyController.suggestInvoiceDesign);
 router.post('/add-business', companyController.addCompany);
 router.post('/customize-invoice', companyController.updateInvoiceCustomization);
 

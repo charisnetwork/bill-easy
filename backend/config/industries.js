@@ -46,7 +46,7 @@ const INDUSTRIES = {
   
   // Hospitality Group
   'Hotel': { group: INDUSTRY_GROUPS.HOSPITALITY, icon: 'hotel' },
-  'Restaurants': { group: INDUSTRY_GROUPS.HOSPITALITY, icon: 'utensils' },
+  'Restaurants': { group: INDUSTRY_GROUPS.HOSPITALITY, icon: 'utensils', invoice: { template_id: 'thermal', paper: 'thermal', columns: { hsn: false } } },
   
   // Logistics Group
   'Logistics': { group: INDUSTRY_GROUPS.LOGISTICS, icon: 'package' },
@@ -301,7 +301,25 @@ const getIndustryConfig = (industryName) => {
   }
 };
 
-// Get template file name based on industry group
+// Invoice design a new business of this industry starts with (always a free-tier template).
+const GROUP_INVOICE_DEFAULTS = {
+  [INDUSTRY_GROUPS.RETAIL]: { template_id: 'modern', columns: { hsn: true, discount: true } },
+  [INDUSTRY_GROUPS.AUTOMOBILE_SERVICE]: { template_id: 'modern', columns: { hsn: true, description: true } },
+  [INDUSTRY_GROUPS.MANUFACTURING]: { template_id: 'classic-gst', columns: { hsn: true, tax_split: true } },
+  [INDUSTRY_GROUPS.PROFESSIONAL_SERVICES]: { template_id: 'minimal', columns: { hsn: false, description: true } },
+  [INDUSTRY_GROUPS.HEALTHCARE]: { template_id: 'minimal', columns: { hsn: false, description: true } },
+  [INDUSTRY_GROUPS.PHARMA]: { template_id: 'classic-gst', columns: { hsn: true, batch: true, expiry: true } },
+  [INDUSTRY_GROUPS.HOSPITALITY]: { template_id: 'modern', columns: { hsn: false, description: true } },
+  [INDUSTRY_GROUPS.LOGISTICS]: { template_id: 'classic-gst', columns: { hsn: true }, show: { vehicle_number: true, eway_bill: true } },
+  [INDUSTRY_GROUPS.CONSTRUCTION]: { template_id: 'minimal', columns: { description: true } },
+};
+
+/** Starting invoice design for an industry; an industry may override its group (e.g. restaurants print thermal bills). */
+const invoiceDefaultsFor = (industryName) => {
+  const industry = INDUSTRIES[industryName] || INDUSTRIES['General Store'];
+  const base = GROUP_INVOICE_DEFAULTS[industry.group] || GROUP_INVOICE_DEFAULTS[INDUSTRY_GROUPS.RETAIL];
+  return { ...base, ...(industry.invoice || {}) };
+};
 
 // Get all industry names for dropdown
 const getAllIndustries = () => {
@@ -329,5 +347,6 @@ module.exports = {
   INDUSTRIES,
   getIndustryConfig,
   getAllIndustries,
-  getIndustriesByGroup
+  getIndustriesByGroup,
+  invoiceDefaultsFor
 };
