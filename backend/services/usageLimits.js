@@ -91,6 +91,16 @@ async function consumeMonthly(companyId, code, now = new Date()) {
   return { used: rows[0].count, limit };
 }
 
+/** Middleware: takes one monthly unit before the handler runs; the result is req.usageUnit. */
+const consumeMonthlyUnit = (code) => async (req, res, next) => {
+  try {
+    req.usageUnit = await consumeMonthly(req.companyId, code);
+    return next();
+  } catch (error) {
+    return sendGateError(res, next, error, code);
+  }
+};
+
 /** Gives back one unit, e.g. when the AI provider failed after the unit was taken. */
 async function refundMonthly(companyId, code, now = new Date()) {
   const { sequelize } = require('../models');
@@ -100,22 +110,15 @@ async function refundMonthly(companyId, code, now = new Date()) {
     { replacements: { companyId, code, period: periodOf(now) } });
 }
 
-/** Used and limit for every limited feature on the plan, for the plan page. */
+/** This month's use of every limited feature code (records and counters), for the plan page. */
 async function usageSummary(companyId, now = new Date()) {
-  const snapshot = await charisOs.getSnapshot(companyId);
   const { UsageCounter } = require('../models');
   const [records, counters] = await Promise.all([
     charisOs.usageFor(companyId, now),
     UsageCounter.findAll({ where: { company_id: companyId, period: periodOf(now) }, raw: true }),
   ]);
   const counted = Object.fromEntries(counters.map((c) => [c.feature_code, c.count]));
-  const summary = {};
-  for (const code of Object.keys(LABELS)) {
-    let limit;
-    try { limit = charisOs.limitFor(snapshot, code); } catch { continue; } // Not on this plan.
-    summary[code] = { used: records[code] ?? counted[code] ?? 0, limit };
-  }
-  return summary;
+  return Object.fromEntries(Object.keys(LABELS).map((code) => [code, records[code] ?? counted[code] ?? 0]));
 }
 
-module.exports = { QuotaError, periodOf, requireFeature, requireRecordLimit, consumeMonthly, refundMonthly, usageSummary };
+module.exports = { LIMITED_FEATURES: Object.keys(LABELS), QuotaError, periodOf, requireFeature, requireRecordLimit, consumeMonthly, consumeMonthlyUnit, refundMonthly, usageSummary };

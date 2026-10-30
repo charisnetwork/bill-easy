@@ -226,7 +226,7 @@ const BUSINESS_CONFIGS = {
 // --- Main Component ---
 
 export const SettingsPage = () => {
-  const { user, company, refreshProfile, hasFeature } = useAuth();
+  const { user, company, refreshProfile, hasFeature, limitOf } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeSection = searchParams.get('section') || 'business-details';
@@ -1117,8 +1117,8 @@ export const SettingsPage = () => {
             {activeSection === 'business-godowns' && (
               <div className="space-y-8">
                 <div className="flex justify-between items-center">
-                  <div className="space-y-1"><h3 className="text-lg font-bold text-slate-900">Godown Management</h3><p className="text-sm text-slate-500">Manage your inventory locations and warehouses.</p></div>
-                  {hasFeature('multi_godowns') && (
+                  <div className="space-y-1"><h3 className="text-lg font-bold text-slate-900">Godown Management</h3><p className="text-sm text-slate-500">Manage your inventory locations and warehouses. {limitOf('godowns') === null ? 'Your plan allows unlimited godowns.' : `${godowns.length} of ${limitOf('godowns')} godowns used.`}</p></div>
+                  {(limitOf('godowns') === null || godowns.length < limitOf('godowns')) && (
                     <Dialog open={godownDialogOpen} onOpenChange={setGodownDialogOpen}>
                       <DialogTrigger asChild><Button className="bg-emerald-600 hover:bg-emerald-700"><Plus className="w-4 h-4 mr-2" />Add Godown</Button></DialogTrigger>
                       <DialogContent><DialogHeader><DialogTitle>Add New Godown</DialogTitle><DialogDescription>Create a new storage location.</DialogDescription></DialogHeader>
@@ -1132,7 +1132,7 @@ export const SettingsPage = () => {
                 <div className="rounded-xl border border-slate-200 overflow-hidden"><Table><TableHeader className="bg-slate-50"><TableRow><TableHead>Name</TableHead><TableHead>Location</TableHead><TableHead>Type</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader><TableBody>{godowns.map(g => (
                   <TableRow key={g.id}><TableCell className="font-semibold">{g.name}</TableCell><TableCell className="text-xs text-slate-500">{g.address || '-'}</TableCell><TableCell>{g.is_default ? <Badge className="bg-blue-50 text-blue-700">Default</Badge> : <Badge variant="outline">Sub</Badge>}</TableCell><TableCell className="text-right">{!g.is_default && <Button variant="ghost" size="icon" onClick={() => onDeleteGodown(g.id)} className="text-rose-600"><Trash2 className="w-4 h-4" /></Button>}</TableCell></TableRow>
                 ))}</TableBody></Table></div>
-                {!hasFeature('multi_godowns') && <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm font-medium">Upgrade to Enterprise to add multiple godowns.</div>}
+                {limitOf('godowns') !== null && godowns.length >= limitOf('godowns') && <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm font-medium">You have reached your plan's godown limit. <button type="button" onClick={() => navigate('/subscription')} className="underline font-semibold">Upgrade</button> to add more.</div>}
               </div>
             )}
 

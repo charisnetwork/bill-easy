@@ -181,15 +181,22 @@ async function businessLimit(companyId) {
   return limit === null ? 1000 : limit;
 }
 
-/** Session payload for the browser: plan name, status and feature map from OS (never local plans). */
+/** Browser view of a snapshot: switches, limits (null = unlimited, 0 = not included) and plan name. */
+function summaryFromSnapshot(snapshot) {
+  const active = snapshot.status === 'active';
+  const features = Object.fromEntries(snapshot.entitlements.map(e => [e.feature_code, active && e.enabled]));
+  const limits = Object.fromEntries(snapshot.entitlements.map(e => [e.feature_code,
+    !(active && e.enabled) ? 0 : (e.limit_type === 'unlimited' ? null : e.limit_value)]));
+  const plan = { plan_name: snapshot.plan_name || 'No plan' };
+  return { managed_by: 'charis_os', status: snapshot.status, plan, Plan: plan, expiryDate: snapshot.ends_at, features, limits };
+}
+
+/** Session payload for the browser: plan name, status, features and limits from OS (never local plans). */
 async function sessionSummary(companyId) {
   try {
-    const snapshot = await getSnapshot(companyId);
-    const features = Object.fromEntries(snapshot.entitlements.map(e => [e.feature_code, snapshot.status === 'active' && e.enabled]));
-    const plan = { plan_name: snapshot.plan_name || 'No plan' };
-    return { managed_by: 'charis_os', status: snapshot.status, plan, Plan: plan, expiryDate: snapshot.ends_at, features };
+    return summaryFromSnapshot(await getSnapshot(companyId));
   } catch {
-    return { managed_by: 'charis_os', status: 'unavailable', plan: { plan_name: 'Unavailable' }, Plan: { plan_name: 'Unavailable' }, expiryDate: null, features: {} };
+    return { managed_by: 'charis_os', status: 'unavailable', plan: { plan_name: 'Unavailable' }, Plan: { plan_name: 'Unavailable' }, expiryDate: null, features: {}, limits: {} };
   }
 }
 
@@ -368,6 +375,7 @@ module.exports = {
   refreshProfile,
   RESTRICTED_MESSAGE,
   sessionSummary,
+  summaryFromSnapshot,
   startOfMonthIst,
   syncCompany,
   usageFor,

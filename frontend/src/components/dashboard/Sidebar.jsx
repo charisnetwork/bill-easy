@@ -4,13 +4,13 @@ import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard, Users, Package, FileText, ShoppingCart,
   Wallet, BarChart3, Settings, Truck, ChevronDown, 
-  Building2, Plus, ArrowLeftRight, Repeat, TrendingUp
+  Building2, Plus, ArrowLeftRight, Repeat, TrendingUp, Lock
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const Sidebar = ({ open, setOpen }) => {
-  const { user, company, companies, switchCompany, hasFeature } = useAuth();
+  const { user, company, companies, switchCompany, hasFeature, limitOf } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -41,7 +41,7 @@ export const Sidebar = ({ open, setOpen }) => {
           key: 'sales',
           subItems: [
             { path: '/invoices', label: 'Invoices' },
-            { path: '/recurring', label: 'Recurring Subscriptions' },
+            { path: '/recurring', label: 'Recurring Invoices', locked: !hasFeature('recurring_invoices') },
             { path: '/quotations', label: 'Estimates' },
             { path: '/payments-in', label: 'Payment In' },
             { path: '/sales-return', label: 'Sales Return' },
@@ -54,7 +54,7 @@ export const Sidebar = ({ open, setOpen }) => {
           key: 'purchases',
           subItems: [
             { path: '/purchases', label: 'Purchase Entry' },
-            { path: '/purchase/po-list', label: 'PO Order' },
+            { path: '/purchase/po-list', label: 'Purchase Orders', locked: !hasFeature('purchase_orders') },
           ]
         },
         { path: '/expenses', icon: Wallet, label: 'Expenses' },
@@ -71,7 +71,8 @@ export const Sidebar = ({ open, setOpen }) => {
           key: 'inventory',
           subItems: [
             { path: '/products', label: 'All Items' },
-            { path: '/stock-transfer', label: 'Stock Transfer', hidden: !hasFeature('multi_godowns') },
+            // Transfers need a second godown: shown when the plan allows more than one.
+            { path: '/stock-transfer', label: 'Stock Transfer', hidden: limitOf('godowns') !== null && limitOf('godowns') < 2 },
           ]
         },
       ]
@@ -82,8 +83,8 @@ export const Sidebar = ({ open, setOpen }) => {
         { 
           path: '/eway-bills', 
           icon: Truck, 
-          label: hasFeature('eway_bills') ? 'E-Way Bills' : 'E-Way Bills 🔒', 
-          locked: !hasFeature('eway_bills') 
+          label: 'E-Way Bills',
+          locked: !hasFeature('eway_bills')
         },
         { path: '/reports', icon: BarChart3, label: 'Reports' },
         { path: '/settings', icon: Settings, label: 'Settings' },
@@ -176,8 +177,16 @@ export const Sidebar = ({ open, setOpen }) => {
                                     return (
                                       <Link
                                         key={sub.path}
-                                        to={sub.path}
-                                        onClick={() => setOpen(false)}
+                                        to={sub.locked ? '#' : sub.path}
+                                        aria-disabled={sub.locked || undefined}
+                                        onClick={(e) => {
+                                          if (sub.locked) {
+                                            e.preventDefault();
+                                            window.dispatchEvent(new CustomEvent('UPGRADE_REQUIRED', { detail: { message: `${sub.label} is not included in your current plan.` } }));
+                                          } else {
+                                            setOpen(false);
+                                          }
+                                        }}
                                         className={cn(
                                           "block px-3 py-2 rounded-lg text-xs font-medium transition-colors relative",
                                           isSubActive 
@@ -185,7 +194,7 @@ export const Sidebar = ({ open, setOpen }) => {
                                             : "text-slate-500 hover:text-slate-900 hover:bg-slate-50/80"
                                         )}
                                       >
-                                        {sub.label}
+                                        <span className="flex items-center justify-between gap-2">{sub.label}{sub.locked && <Lock className="w-3 h-3 text-slate-400" />}</span>
                                       </Link>
                                     );
                                   })}
@@ -206,7 +215,7 @@ export const Sidebar = ({ open, setOpen }) => {
                         onClick={(e) => {
                           if (item.locked) {
                             e.preventDefault();
-                            window.dispatchEvent(new CustomEvent('UPGRADE_REQUIRED', { detail: { message: `${item.label.replace(' 🔒', '')} requires a higher subscription plan.` } }));
+                            window.dispatchEvent(new CustomEvent('UPGRADE_REQUIRED', { detail: { message: `${item.label} is not included in your current plan.` } }));
                           } else {
                             setOpen(false);
                           }
@@ -224,6 +233,7 @@ export const Sidebar = ({ open, setOpen }) => {
                         )}
                         <item.icon className={cn("w-4 h-4", isActive ? "text-indigo-600" : "text-slate-400 group-hover:text-slate-600")} />
                         {item.label}
+                        {item.locked && <Lock className="w-3 h-3 ml-auto text-slate-400" />}
                       </Link>
                     );
                   })}

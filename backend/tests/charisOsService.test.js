@@ -102,3 +102,17 @@ test('operator restriction is read strictly; older OS responses and an unconfigu
   const { isRestricted } = require('../services/charisOsService');
   assert.equal(await isRestricted('company-a'), false); // OS is not configured in unit tests
 });
+
+test('the session summary carries feature switches and limits for the browser', () => {
+  const { summaryFromSnapshot } = require('../services/charisOsService');
+  const summary = summaryFromSnapshot({ status: 'active', plan_name: 'Premium', ends_at: null, entitlements: [
+    { feature_code: 'godowns', enabled: true, limit_type: 'limited', limit_value: 2 },
+    { feature_code: 'businesses', enabled: true, limit_type: 'unlimited', limit_value: null },
+    { feature_code: 'eway_bills', enabled: false, limit_type: 'unlimited', limit_value: null },
+  ] });
+  assert.deepEqual(summary.features, { godowns: true, businesses: true, eway_bills: false });
+  assert.deepEqual(summary.limits, { godowns: 2, businesses: null, eway_bills: 0 });
+  assert.equal(summary.plan.plan_name, 'Premium');
+  // A suspended plan switches everything off.
+  assert.deepEqual(summaryFromSnapshot({ status: 'suspended', entitlements: [{ feature_code: 'godowns', enabled: true, limit_type: 'limited', limit_value: 2 }] }).limits, { godowns: 0 });
+});

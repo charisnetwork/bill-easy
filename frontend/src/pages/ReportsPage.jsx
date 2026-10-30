@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { reportAPI } from '../services/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../co
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '../components/ui/table';
-import { Share2, Filter, Lock, Search, Download } from 'lucide-react';
+import { Share2, Filter, Lock, Search, Download, Printer } from 'lucide-react';
+import { tablesToCsv, downloadText } from '../lib/reportExport';
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -152,6 +153,22 @@ export const ReportsPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const reportRef = useRef(null);
+
+  // Downloads and prints count against the plan's monthly report downloads; the server decides.
+  const exportReport = async (kind) => {
+    try {
+      await reportAPI.recordExport();
+    } catch (error) {
+      // 403: over the limit, and the upgrade dialog is already showing.
+      if (error.response?.status !== 403) toast.error('Could not start the download. Please try again.');
+      return;
+    }
+    if (kind === 'print') return window.print();
+    const name = `${activeReportDetails?.title || activeReport}_${dateRange.startDate}_to_${dateRange.endDate}.csv`.replace(/[^\w.-]+/g, '_');
+    downloadText(name, tablesToCsv(reportRef.current));
   };
 
   const handleDownloadGSTR1 = async () => {
@@ -483,7 +500,13 @@ export const ReportsPage = () => {
       )}
 
       {/* Report Content */}
-      <div className="mt-6">
+      {activeReport && reportData && !loading && (
+        <div className="mt-6 flex justify-end gap-2 print:hidden">
+          <Button variant="outline" size="sm" className="gap-2" onClick={() => exportReport('csv')}><Download className="w-4 h-4" /> Download</Button>
+          <Button variant="outline" size="sm" className="gap-2" onClick={() => exportReport('print')}><Printer className="w-4 h-4" /> Print</Button>
+        </div>
+      )}
+      <div className="mt-4" ref={reportRef}>
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
@@ -504,7 +527,7 @@ export const ReportsPage = () => {
             <p className="text-slate-600 mb-6">{upgradeMessage}</p>
             <div className="flex gap-4">
               <Button variant="outline" className="flex-1" onClick={() => setShowUpgradeModal(false)}>Cancel</Button>
-              <Button className="flex-1 bg-amber-500 hover:bg-amber-600 text-white" onClick={() => navigate('/settings/subscription')}>
+              <Button className="flex-1 bg-amber-500 hover:bg-amber-600 text-white" onClick={() => navigate('/subscription')}>
                 Upgrade Now
               </Button>
             </div>

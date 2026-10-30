@@ -96,8 +96,10 @@ const usageEntry = (snapshot, code, used) => {
 };
 
 const getUsage = handle(async (req) => {
-  const [snapshot, usage] = await Promise.all([charisOs.getSnapshot(req.companyId), charisOs.usageFor(req.companyId)]);
-  return { managed_by: MANAGED, status: snapshot.status, invoices: usageEntry(snapshot, 'invoices', usage.invoices), products: usageEntry(snapshot, 'products', usage.products) };
+  const { LIMITED_FEATURES, usageSummary } = require('../services/usageLimits');
+  const [snapshot, usage] = await Promise.all([charisOs.getSnapshot(req.companyId), usageSummary(req.companyId)]);
+  const entries = Object.fromEntries(LIMITED_FEATURES.map((code) => [code, usageEntry(snapshot, code, usage[code])]));
+  return { managed_by: MANAGED, status: snapshot.status, ...entries };
 });
 
 const getCheckout = handle(async (req) => ({ managed_by: MANAGED, ...(await charisOs.checkout(req.companyId)) }));

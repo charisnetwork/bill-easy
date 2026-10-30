@@ -3,9 +3,11 @@ const router = express.Router();
 const purchaseOrderController = require('../controllers/purchaseOrderController');
 const { authenticateToken } = require('../middleware/auth');
 const companyContext = require('../middleware/companyContext');
+const { requireFeature } = require('../services/usageLimits');
 
 router.use(authenticateToken);
 router.use(companyContext);
+router.use(requireFeature('purchase_orders'));
 
 router.get('/', purchaseOrderController.getPurchaseOrders);
 router.get('/:id', purchaseOrderController.getPurchaseOrder);

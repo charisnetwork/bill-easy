@@ -35,6 +35,8 @@ export const AuthProvider = ({ children }) => {
 
   // Features come from the Charis OS plan (deny by default), never from plan names.
   const hasFeature = useCallback((code) => subscription?.features?.[code] === true, [subscription]);
+  // Plan limit for a code: a number, null for unlimited, 0 when the plan does not include it.
+  const limitOf = useCallback((code) => (subscription?.limits && code in subscription.limits ? subscription.limits[code] : 0), [subscription]);
 
   // Helper to populate all state from an API response
   const populateState = useCallback((data) => {
@@ -306,6 +308,7 @@ export const AuthProvider = ({ children }) => {
     subscription,
     maxBusinesses,
     hasFeature,
+    limitOf,
     loading,
     isAuthenticated,
     login,

@@ -26,6 +26,10 @@ const {
 const { authenticateToken } = require('../middleware/auth');
 const companyContext = require('../middleware/companyContext');
 const checkReportAccess = require('../middleware/reportAccess');
+const { consumeMonthlyUnit } = require('../services/usageLimits');
+
+// Each report download/print takes one unit of report_exports; viewing on screen is free.
+const countExport = consumeMonthlyUnit('report_exports');
 
 router.use(authenticateToken);
 router.use(companyContext);
@@ -55,10 +59,13 @@ router.get('/bill-profit', checkReportAccess('PREMIUM'), getBillWiseProfit);
 // --- ENTERPRISE TIER REPORTS ---
 router.get('/balance-sheet', checkReportAccess('ENTERPRISE'), getBalanceSheet);
 router.get('/gstr-1', checkReportAccess('ENTERPRISE'), getGSTSales); // GSTR-1 logic
-router.get('/gstr-1/download', checkReportAccess('ENTERPRISE'), downloadGSTR1);
+router.get('/gstr-1/download', checkReportAccess('ENTERPRISE'), countExport, downloadGSTR1);
 router.get('/gstr-2', checkReportAccess('ENTERPRISE'), getGSTPurchase); // GSTR-2 logic
 router.get('/gstr-3b', checkReportAccess('ENTERPRISE'), getGSTR3b);
 router.get('/tds-tcs', checkReportAccess('ENTERPRISE'), getTDSTCS);
 router.post('/send-to-ca', checkReportAccess('ENTERPRISE'), sendToCA);
+
+// The browser builds report PDFs/Excel files; it records each download here first.
+router.post('/exports', countExport, (req, res) => res.json(req.usageUnit));
 
 module.exports = router;

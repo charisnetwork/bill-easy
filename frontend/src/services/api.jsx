@@ -219,7 +219,9 @@ export const reportAPI = {
   getSupplierOutstanding: () => api.get('/reports/supplier-outstanding'),
   getStock: () => api.get('/reports/stock'),
   sendToCA: (data) => api.post('/reports/send-to-ca', data),
-  downloadGSTR1: (params) => api.get('/reports/gstr-1/download', { params, responseType: 'blob' })
+  downloadGSTR1: (params) => api.get('/reports/gstr-1/download', { params, responseType: 'blob' }),
+  // Each download or print from Reports uses one of the plan's monthly report downloads.
+  recordExport: () => api.post('/reports/exports')
 };
 
 // Recurring Subscriptions API
