@@ -102,7 +102,7 @@ async function runTool(companyId, call) {
       return { debtors: await Customer.findAll({ where: { company_id: companyId, outstanding_balance: { [Op.gt]: 0 } }, order: [['outstanding_balance', 'DESC']], limit: 5, attributes: ['name', 'outstanding_balance', 'phone'], raw: true }) };
     case 'get_sales_by_item': {
       const rows = await InvoiceItem.findAll({
-        attributes: ['product_id', [fn('SUM', col('quantity')), 'quantity'], [fn('SUM', col('InvoiceItem.total')), 'sales_value'], [fn('SUM', col('tax_amount')), 'gst']],
+        attributes: ['product_id', [fn('SUM', col('InvoiceItem.quantity')), 'quantity'], [fn('SUM', col('InvoiceItem.total')), 'sales_value'], [fn('SUM', col('InvoiceItem.tax_amount')), 'gst']],
         include: [{ model: Invoice, attributes: [], where: { company_id: companyId, status: { [Op.ne]: 'cancelled' } } }, { model: Product, attributes: ['name'] }],
         group: ['product_id', 'Product.id'], order: [[literal('sales_value'), 'DESC']], limit: 10,
       });
