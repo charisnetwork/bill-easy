@@ -29,7 +29,7 @@ CHARIS_OS_APP_KEY=<Bill Easy app key from Charis OS>
 # AI (Charis assistant)
 AI_PROVIDER=nvidia
 NVIDIA_API_KEY=<NVIDIA API key>
-NVIDIA_MODEL=<Nemotron model id, see backend/.env.example>
+NVIDIA_MODEL=nvidia/nemotron-3.5-lightning-30b-a3b
 NVIDIA_BASE_URL=https://integrate.api.nvidia.com/v1
 
 # Files: local disk (attach a Railway volume and point UPLOAD_ROOT at it) or Google Cloud Storage

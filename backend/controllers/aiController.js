@@ -1,11 +1,9 @@
-const { GoogleGenAI, Type } = require("@google/genai");
-const { Invoice, Product, Company, Expense, AIUsage, Purchase, Supplier, Customer } = require("../models");
-const { Op, sequelize } = require("sequelize");
-
-// Initialize Gemini
-const ai = new GoogleGenAI({
-  apiKey: process.env.GOOGLE_CLOUD_API_KEY || process.env.GEMINI_API_CHAT,
-});
+const { Invoice, Product, Company, Expense, Customer } = require("../models");
+const { Op, col } = require("sequelize");
+const aiProvider = require("../services/aiProvider");
+const aiQuickSearch = require("../services/aiQuickSearch");
+const { consumeMonthly, refundMonthly, QuotaError } = require("../services/usageLimits");
+const charisOs = require("../services/charisOsService");
 
 // STRICT SYSTEM INSTRUCTION FOR CHARIS
 const CHARIS_SYSTEM_INSTRUCTION = `You are Charis, the exclusive AI assistant for Bill Easy - a GST billing and inventory management platform.
@@ -67,209 +65,103 @@ const CHARIS_SYSTEM_INSTRUCTION = `You are Charis, the exclusive AI assistant fo
 
 Always be helpful, concise, and guide users step-by-step for Bill Easy operations.`;
 
-// Define Tools for Gemini
-const charisTools = {
-  functionDeclarations: [
-    {
-      name: "get_low_stock_products",
-      description: "Get a list of products that have low stock (stock quantity is at or below the low stock alert level). Use this when the user asks about lowest stock, running out of items, or items needing reorder.",
-      parameters: { type: Type.OBJECT, properties: {} }
-    },
-    {
-      name: "search_product",
-      description: "Search for a specific product by name to get its details like price, stock, HSN code, and tax rate.",
-      parameters: {
-        type: Type.OBJECT,
-        properties: {
-          product_name: { type: Type.STRING, description: "Name of the product to search for" }
-        },
-        required: ["product_name"]
-      }
-    },
-    {
-      name: "get_financial_summary",
-      description: "Get today's total sales, overall total sales, total expenses, and net profit.",
-      parameters: { type: Type.OBJECT, properties: {} }
-    },
-    {
-      name: "get_recent_invoices",
-      description: "Get a list of the 5 most recent invoices with their totals, customer names, and status.",
-      parameters: { type: Type.OBJECT, properties: {} }
-    },
-    {
-      name: "get_top_debtors",
-      description: "Get a list of the top 5 customers who owe the most money (highest outstanding balance).",
-      parameters: { type: Type.OBJECT, properties: {} }
-    }
-  ]
-};
+const tool = (name, description, properties = {}, required = []) => ({
+  type: 'function',
+  function: { name, description, parameters: { type: 'object', properties, required } },
+});
 
+const CHARIS_TOOLS = [
+  tool('get_low_stock_products', 'Products at or below their low-stock alert level. Use for lowest stock, running out, or reorder questions.'),
+  tool('search_product', 'Find a product by name: price, stock, HSN code and tax rate.', { product_name: { type: 'string', description: 'Product name to search for' } }, ['product_name']),
+  tool('get_financial_summary', "Today's sales, total sales, total expenses and net profit."),
+  tool('get_recent_invoices', 'The 5 most recent invoices with totals, customer names and status.'),
+  tool('get_top_debtors', 'The 5 customers who owe the most (highest outstanding balance).'),
+];
+
+/** Runs one tool call against this business's data only. */
+async function runTool(companyId, call) {
+  switch (call.name) {
+    case 'get_low_stock_products':
+      return { products: await Product.findAll({ where: { company_id: companyId, stock_quantity: { [Op.lte]: col('low_stock_alert') } }, order: [['stock_quantity', 'ASC']], limit: 10, attributes: ['name', 'stock_quantity', 'low_stock_alert'], raw: true }) };
+    case 'search_product':
+      return { products: await Product.findAll({ where: { company_id: companyId, name: { [Op.iLike]: `%${String(call.arguments.product_name || '').replace(/[\\%_]/g, '\\$&')}%` } }, limit: 5, attributes: ['name', 'stock_quantity', 'sale_price', 'hsn_code', 'gst_rate'], raw: true }) };
+    case 'get_financial_summary': {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const [total, today, expenses] = await Promise.all([
+        Invoice.sum('total_amount', { where: { company_id: companyId } }),
+        Invoice.sum('total_amount', { where: { company_id: companyId, invoice_date: { [Op.gte]: todayStart } } }),
+        Expense.sum('amount', { where: { company_id: companyId } }),
+      ]);
+      return { today_sales: Number(today || 0), total_sales: Number(total || 0), total_expenses: Number(expenses || 0), net_profit: Number(total || 0) - Number(expenses || 0) };
+    }
+    case 'get_recent_invoices':
+      return { invoices: await Invoice.findAll({ where: { company_id: companyId }, include: [{ model: Customer, attributes: ['name'] }], order: [['invoice_date', 'DESC']], limit: 5, attributes: ['invoice_number', 'total_amount', 'payment_status', 'invoice_date'] }) };
+    case 'get_top_debtors':
+      return { debtors: await Customer.findAll({ where: { company_id: companyId, outstanding_balance: { [Op.gt]: 0 } }, order: [['outstanding_balance', 'DESC']], limit: 5, attributes: ['name', 'outstanding_balance', 'phone'], raw: true }) };
+    default:
+      return { error: 'Unknown tool' };
+  }
+}
+
+// Whole words only: "HSN code" or a travel agency's question must still reach the assistant.
+const BLOCKED_TOPICS = [
+  'coding', 'programming', 'python', 'javascript', 'java', 'c++',
+  'news', 'weather', 'sports', 'cricket', 'football', 'movie', 'film', 'song',
+  'recipe', 'politics', 'election', 'stock market', 'crypto',
+  'bitcoin', 'game', 'gaming', 'playstation', 'xbox', 'dating', 'relationship'
+];
+const OFF_TOPIC_ANSWER = "🚫 I'm Charis, your Bill Easy business assistant. I cannot help with coding, news, entertainment, or general topics.\n\n✅ I can help you with:\n• Creating invoices, e-way bills, purchase orders\n• Generating sales, GST, and stock reports\n• Managing products and inventory\n• Bill Easy platform features\n\nHow can I assist with your billing or inventory today?";
+
+/**
+ * Charis assistant. Database quick searches and off-topic refusals are free; a question the
+ * AI model answers uses one ai_messages unit, given back if the model fails.
+ */
 const chatWithAssistant = async (req, res) => {
   const companyId = req.companyId;
-  const userId = req.user.id;
-  
+  const question = String(req.body?.question || '').trim().slice(0, 2000);
+  if (!question) return res.status(400).json({ error: 'Please type a question.' });
+
+  const lower = question.toLowerCase();
+  if (BLOCKED_TOPICS.some((topic) => new RegExp(`\\b${topic.replace(/[+]/g, '\\+')}\\b`).test(lower))) return res.json({ answer: OFF_TOPIC_ANSWER, source: 'rules' });
+
+  let unit;
   try {
-    const { question, pdfData, pdfType } = req.body;
+    const quick = await aiQuickSearch.answer(companyId, question);
+    if (quick) return res.json({ answer: quick.reply, source: 'quick_search' });
 
-    if (!question && !pdfData) {
-      return res.status(400).json({ error: "Question or PDF data is required" });
-    }
+    aiProvider.config(); // Not configured: refuse before taking a message.
+    unit = await consumeMonthly(companyId, 'ai_messages');
 
-    if (!process.env.GOOGLE_CLOUD_API_KEY && !process.env.GEMINI_API_CHAT) {
-      return res.status(500).json({ error: "AI service is not configured on the server." });
-    }
-
-    // 1. Access comes from the ai_assistant entitlement (route middleware).
-    const dailyLimit = 50;
-    const today = new Date().toISOString().split('T')[0];
-    const [usage] = await AIUsage.findOrCreate({
-      where: { user_id: userId, date: today },
-      defaults: { company_id: companyId, count: 0 }
-    });
-
-    if (usage.count >= dailyLimit) {
-      return res.status(403).json({ 
-        error: `Daily limit reached. Your Enterprise plan allows ${dailyLimit} AI questions per day.` 
-      });
-    }
-
-    // 2. STRICT Topic Filtering - Block non-Bill Easy topics
-    const lowerQuestion = (question || '').toLowerCase();
-    const blockedTopics = [
-      'code', 'coding', 'programming', 'script', 'python', 'javascript', 'java', 'c++',
-      'news', 'weather', 'sports', 'cricket', 'football', 'movie', 'film', 'song',
-      'recipe', 'cooking', 'travel', 'politics', 'election', 'stock market', 'crypto',
-      'bitcoin', 'game', 'gaming', 'playstation', 'xbox', 'dating', 'relationship'
-    ];
-    
-    if (blockedTopics.some(topic => lowerQuestion.includes(topic))) {
-      return res.json({ 
-        answer: "🚫 I'm Charis, your Bill Easy business assistant. I cannot help with coding, news, entertainment, or general topics.\n\n✅ I can help you with:\n• Creating invoices, e-way bills, purchase orders\n• Generating sales, GST, and stock reports\n• Managing products and inventory\n• Bill Easy platform features\n\nHow can I assist with your billing or inventory today?" 
-      });
-    }
-
-    // 3. Setup Gemini Model with Tools
     const company = await Company.findByPk(companyId, { attributes: ['name'] });
-    const businessName = company?.name || "your business";
-    
-    // We add business name dynamically to the system instruction
-    const systemInstruction = `${CHARIS_SYSTEM_INSTRUCTION}\n\nYou are currently assisting the business named "${businessName}".\nAnswer using the provided tools when the user asks for specific data.`;
-
-    const chat = ai.chats.create({ 
-      model: "gemini-3.5-flash",
-      config: {
-        tools: [charisTools],
-        systemInstruction: systemInstruction,
-        temperature: 1,
-        thinkingConfig: {
-          thinkingLevel: "MEDIUM",
-        },
-        safetySettings: [
-          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'OFF' },
-          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'OFF' },
-          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'OFF' },
-          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'OFF' }
-        ]
+    const messages = [
+      { role: 'system', content: `${CHARIS_SYSTEM_INSTRUCTION}\n\nYou are assisting the business named "${company?.name || 'your business'}". Use the tools when the user asks for their own data. Amounts are in Indian rupees (₹).` },
+      { role: 'user', content: question },
+    ];
+    let result = await aiProvider.chat({ messages, tools: CHARIS_TOOLS });
+    // At most two rounds of tool calls, then the model must answer.
+    for (let round = 0; round < 2 && result.toolCalls.length > 0; round++) {
+      messages.push(result.message);
+      for (const call of result.toolCalls) {
+        let output;
+        try { output = await runTool(companyId, call); }
+        catch (error) { console.error('[AI] tool failed:', call.name, error.message); output = { error: 'Failed to fetch data.' }; }
+        messages.push({ role: 'tool', tool_call_id: call.id, content: JSON.stringify(output) });
       }
-    });
-
-    const result = await chat.sendMessage({ message: question || 'Process the PDF data' });
-    let response = result; // The new SDK sendMessage returns the response object directly
-
-    // 4. Handle Function Calls
-    if (response.functionCalls && response.functionCalls.length > 0) {
-      const call = response.functionCalls[0];
-      let functionResponseData = {};
-
-      try {
-        if (call.name === "get_low_stock_products") {
-          const lowStockProducts = await Product.findAll({
-            where: { company_id: companyId, stock_quantity: { [Op.lte]: sequelize.col('low_stock_alert') } },
-            order: [['stock_quantity', 'ASC']],
-            limit: 10,
-            attributes: ['name', 'stock_quantity', 'low_stock_alert']
-          });
-          functionResponseData = { products: lowStockProducts };
-        } 
-        else if (call.name === "search_product") {
-          const { product_name } = call.args;
-          const products = await Product.findAll({
-            where: { company_id: companyId, name: { [Op.iLike]: `%${product_name}%` } },
-            limit: 5,
-            attributes: ['name', 'stock_quantity', 'sale_price', 'hsn_code', 'gst_rate']
-          });
-          functionResponseData = { products };
-        }
-        else if (call.name === "get_financial_summary") {
-          const todayStart = new Date();
-          todayStart.setHours(0,0,0,0);
-          const [totalSalesData, todaySalesData, totalExpensesData] = await Promise.all([
-            Invoice.sum('total_amount', { where: { company_id: companyId } }),
-            Invoice.sum('total_amount', { where: { company_id: companyId, invoice_date: { [Op.gte]: todayStart } } }),
-            Expense.sum('amount', { where: { company_id: companyId } })
-          ]);
-          functionResponseData = {
-            today_sales: parseFloat(todaySalesData || 0),
-            total_sales: parseFloat(totalSalesData || 0),
-            total_expenses: parseFloat(totalExpensesData || 0),
-            net_profit: parseFloat(totalSalesData || 0) - parseFloat(totalExpensesData || 0)
-          };
-        }
-        else if (call.name === "get_recent_invoices") {
-          const invoices = await Invoice.findAll({
-            where: { company_id: companyId },
-            include: [{ model: Customer, attributes: ['name'] }],
-            order: [['invoice_date', 'DESC']],
-            limit: 5,
-            attributes: ['invoice_number', 'total_amount', 'payment_status', 'invoice_date']
-          });
-          functionResponseData = { invoices };
-        }
-        else if (call.name === "get_top_debtors") {
-          const debtors = await Customer.findAll({
-            where: { company_id: companyId, outstanding_balance: { [Op.gt]: 0 } },
-            order: [['outstanding_balance', 'DESC']],
-            limit: 5,
-            attributes: ['name', 'outstanding_balance', 'phone']
-          });
-          functionResponseData = { debtors };
-        }
-
-        // Send the function response back to the model
-        const functionResult = await chat.sendMessage([{
-          functionResponse: {
-            name: call.name,
-            response: functionResponseData
-          }
-        }]);
-        response = functionResult;
-      } catch (err) {
-        console.error("Function call execution error:", err);
-        const errorResult = await chat.sendMessage([{
-          functionResponse: {
-            name: call.name,
-            response: { error: "Failed to fetch data from database." }
-          }
-        }]);
-        response = errorResult;
-      }
+      result = await aiProvider.chat({ messages, tools: round === 0 ? CHARIS_TOOLS : undefined });
     }
-
-    const text = typeof response.text === 'function' ? response.text() : response.text;
-
-    if (text) {
-      await usage.increment('count');
-      res.json({ answer: text, usage: usage.count + 1, limit: dailyLimit });
-    } else {
-      res.status(200).json({ answer: "I'm having trouble connecting right now. Please try again." });
-    }
-
+    if (!result.content) throw new aiProvider.AiUnavailableError();
+    return res.json({ answer: result.content, source: 'ai', usage: unit });
   } catch (error) {
-    console.error("Charis Assistant error:", error);
-    res.status(500).json({ 
-      error: "Charis is temporarily unavailable", 
-      details: error.message 
-    });
+    if (error instanceof aiProvider.AiUnavailableError) {
+      if (unit) await refundMonthly(companyId, 'ai_messages').catch(() => {});
+      return res.status(503).json({ error: error.message, code: error.code });
+    }
+    if (error instanceof QuotaError) return res.status(403).json({ error: error.message, code: error.code, feature: error.feature, limit: error.limit, used: error.used, upgradeRequired: true });
+    if (error instanceof charisOs.CharisOsError) return res.status(error.status).json({ error: error.message, code: error.code, feature: 'ai_messages', upgradeRequired: error.status === 403 });
+    if (unit) await refundMonthly(companyId, 'ai_messages').catch(() => {});
+    console.error('Charis Assistant error:', error);
+    return res.status(500).json({ error: 'Charis is temporarily unavailable' });
   }
 };
 
@@ -284,7 +176,6 @@ const processPDFExtract = async (req, res) => {
       return res.status(400).json({ error: "No text extracted from PDF" });
     }
 
-    // Use Gemini to parse the PDF content
     const prompt = `Extract product information from this ${documentType} and return JSON format:
     {
       "items": [
@@ -304,10 +195,9 @@ const processPDFExtract = async (req, res) => {
     
     Document text: ${extractedText.substring(0, 3000)}`;
 
-    const model = genAI.getGenerativeModel({ model: "gemini-3.0-flash" });
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const parsedData = JSON.parse(response.text());
+    const result = await aiProvider.chat({ messages: [{ role: 'user', content: `${prompt}\n\nReply with the JSON only.` }], json: true, maxTokens: 2000, temperature: 0 });
+    const parsedData = JSON.parse(result.content.replace(/^```(?:json)?|```$/g, '').trim());
+    if (!Array.isArray(parsedData.items)) throw new Error('The document could not be read');
 
     // Create or update products
     const createdItems = [];
@@ -348,7 +238,7 @@ const processPDFExtract = async (req, res) => {
     });
 
   } catch (error) {
-    // PDF processing error logged
+    if (error instanceof aiProvider.AiUnavailableError) return res.status(503).json({ error: error.message, code: error.code });
     res.status(500).json({ error: process.env.NODE_ENV === 'production' ? "Failed to process PDF" : "Failed to process PDF: " + error.message });
   }
 };
