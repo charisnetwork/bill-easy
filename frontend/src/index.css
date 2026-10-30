@@ -397,3 +397,21 @@
 [data-debug-wrapper="true"] {
   display: contents !important;
 }
+
+/* Subscription plan cards: floating artwork and a swinging offer tag (Charis OS presets). */
+@keyframes planFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-5px) rotate(2deg); }
+}
+@keyframes planSwing {
+  0%, 100% { transform: rotate(-7deg); }
+  50% { transform: rotate(7deg); }
+}
+.plan-float { animation: planFloat 4s ease-in-out infinite; }
+.plan-swing { transform-origin: top center; animation: planSwing 2.6s ease-in-out infinite; }
+.plan-card { transition: transform .25s ease, box-shadow .25s ease; }
+.plan-card:hover { transform: perspective(1000px) rotateX(3deg) translateY(-6px); }
+@media (prefers-reduced-motion: reduce) {
+  .plan-float, .plan-swing { animation: none; }
+  .plan-card:hover { transform: none; }
+}

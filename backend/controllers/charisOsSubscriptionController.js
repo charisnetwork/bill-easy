@@ -45,6 +45,18 @@ const planView = (plan) => ({
   // Monthly/yearly versions of one tier share a pricing group and render as one card.
   pricing_group: plan.pricing_group || plan.id,
   features: plan.entitlements,
+  // Card content from OS. Only plain strings and preset names reach the browser.
+  highlights: Array.isArray(plan.highlights) ? plan.highlights.filter((line) => typeof line === 'string').slice(0, 12) : [],
+  artwork: typeof plan.artwork === 'string' ? plan.artwork : 'auto',
+  accent: typeof plan.accent === 'string' ? plan.accent : 'auto',
+  coupons_allowed: plan.coupons_allowed !== false,
+  offer: plan.offer && typeof plan.offer.code === 'string' ? {
+    code: plan.offer.code,
+    label: plan.offer.label || '',
+    discount_type: plan.offer.discount_type === 'fixed' ? 'fixed' : 'percentage',
+    discount_value: Number(plan.offer.discount_value),
+    ends_at: plan.offer.ends_at || null,
+  } : null,
 });
 
 const getPlans = handle(async () => {
@@ -120,4 +132,4 @@ const managedElsewhere = (_req, res) => send(res, 409, {
   code: 'MANAGED_BY_CHARIS_OS',
 });
 
-module.exports = { getPlans, getCurrentSubscription, getUsage, getCheckout, quote, createOrder, verify, sync, managedElsewhere };
+module.exports = { getPlans, getCurrentSubscription, getUsage, getCheckout, quote, createOrder, verify, sync, managedElsewhere, planView };
