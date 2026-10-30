@@ -470,7 +470,7 @@ const addCompany = async (req, res) => {
       throw error;
     }
     if (currentCount >= limit) {
-      return res.status(403).json({ error: `Business limit reached. Your plan allows a maximum of ${limit} businesses.`, currentCount, maxLimit: limit, needsUpgrade: true });
+      return res.status(403).json({ error: `Business limit reached. Your plan allows a maximum of ${limit} businesses.`, code: 'QUOTA_EXCEEDED', feature: 'businesses', limit, used: currentCount, upgradeRequired: true, currentCount, maxLimit: limit, needsUpgrade: true });
     }
 
     // 4. Create new company

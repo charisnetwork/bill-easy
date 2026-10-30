@@ -164,15 +164,18 @@ function startOfMonthIst(now = new Date()) {
 
 /** Usage Bill Easy counts from its own records, per business. */
 async function usageFor(companyId, now = new Date()) {
-  const { Invoice, Product, Purchase, Godown } = require('../models');
+  const { Invoice, Product, Purchase, Godown, Company, UserCompany } = require('../models');
   const monthStart = startOfMonthIst(now);
-  const [invoices, products, purchase_bills, godowns] = await Promise.all([
+  const company = await Company.findByPk(companyId, { attributes: ['owner_id'] });
+  const [invoices, products, purchase_bills, godowns, businesses] = await Promise.all([
     Invoice.count({ where: { company_id: companyId, createdAt: { [Op.gte]: monthStart } } }),
     Product.count({ where: { company_id: companyId } }),
     Purchase.count({ where: { company_id: companyId, createdAt: { [Op.gte]: monthStart } } }),
     Godown.count({ where: { company_id: companyId } }),
+    // Businesses are counted for the owner: every business they own shares the plan.
+    company?.owner_id ? UserCompany.count({ where: { user_id: company.owner_id, role: 'owner' } }) : 1,
   ]);
-  return { invoices, products, purchase_bills, godowns };
+  return { invoices, products, purchase_bills, godowns, businesses };
 }
 
 /** Number of businesses the owner's plan allows (1000 stands for unlimited in the UI). */

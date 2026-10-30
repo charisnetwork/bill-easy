@@ -138,3 +138,16 @@ test('invoice design: locked templates and AI design follow the plan', async () 
     assert.equal(suggest.body.feature, 'ai_invoice_design');
   } finally { Company.findByPk = originalFind; }
 });
+
+test('a business over its plan limit gets the standard upgrade response', async () => {
+  const { UserCompany } = require('../models');
+  const originalFind = UserCompany.findAll;
+  const originalLimit = charisOs.businessLimit;
+  UserCompany.findAll = async () => [{ company_id: 'a' }, { company_id: 'b' }];
+  charisOs.businessLimit = async () => 2;
+  try {
+    const { status, body } = await call('POST', '/api/company/add-business');
+    assert.equal(status, 403);
+    assert.deepEqual([body.code, body.feature, body.limit, body.used, body.upgradeRequired], ['QUOTA_EXCEEDED', 'businesses', 2, 2, true]);
+  } finally { UserCompany.findAll = originalFind; charisOs.businessLimit = originalLimit; }
+});
