@@ -10,6 +10,7 @@ const path = require('path');
 const { rateLimit } = require('express-rate-limit');
 
 const { sequelize, Company, Godown, User, UserCompany } = require('./models');
+const { ensureDefaultGodown } = require('./services/companySetup');
 
 // Routes
 const authRoutes = require('./routes/auth');
@@ -712,16 +713,7 @@ const startServer = async () => {
 
       for (const company of companies) {
         // 1. Default Godown
-        if (!company.Godowns || company.Godowns.length === 0) {
-          // Creating default Godown
-          await Godown.create({
-            company_id: company.id,
-            name: 'Main Store',
-            address: company.address || 'Main Office',
-            is_default: true,
-            is_active: true
-          });
-        }
+        if (!company.Godowns || company.Godowns.length === 0) await ensureDefaultGodown(company);
       }
     } catch (companySetupError) {
       // Company setup warning

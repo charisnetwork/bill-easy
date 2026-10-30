@@ -1,5 +1,5 @@
-const { Invoice, Product, Company, Expense, Customer } = require("../models");
-const { Op, col } = require("sequelize");
+const { Invoice, InvoiceItem, Product, Company, Expense, Customer } = require("../models");
+const { Op, col, fn, literal } = require("sequelize");
 const aiProvider = require("../services/aiProvider");
 const aiQuickSearch = require("../services/aiQuickSearch");
 const { consumeMonthly, refundMonthly, QuotaError } = require("../services/usageLimits");
@@ -76,6 +76,7 @@ const CHARIS_TOOLS = [
   tool('get_financial_summary', "Today's sales, total sales, total expenses and net profit."),
   tool('get_recent_invoices', 'The 5 most recent invoices with totals, customer names and status.'),
   tool('get_top_debtors', 'The 5 customers who owe the most (highest outstanding balance).'),
+  tool('get_sales_by_item', 'Sales per item: quantity sold, sales value and GST collected, best sellers first. Use for "which item sells most", item-wise GST or what to restock.'),
 ];
 
 /** Runs one tool call against this business's data only. */
@@ -99,10 +100,20 @@ async function runTool(companyId, call) {
       return { invoices: await Invoice.findAll({ where: { company_id: companyId }, include: [{ model: Customer, attributes: ['name'] }], order: [['invoice_date', 'DESC']], limit: 5, attributes: ['invoice_number', 'total_amount', 'payment_status', 'invoice_date'] }) };
     case 'get_top_debtors':
       return { debtors: await Customer.findAll({ where: { company_id: companyId, outstanding_balance: { [Op.gt]: 0 } }, order: [['outstanding_balance', 'DESC']], limit: 5, attributes: ['name', 'outstanding_balance', 'phone'], raw: true }) };
+    case 'get_sales_by_item': {
+      const rows = await InvoiceItem.findAll({
+        attributes: ['product_id', [fn('SUM', col('quantity')), 'quantity'], [fn('SUM', col('InvoiceItem.total')), 'sales_value'], [fn('SUM', col('tax_amount')), 'gst']],
+        include: [{ model: Invoice, attributes: [], where: { company_id: companyId, status: { [Op.ne]: 'cancelled' } } }, { model: Product, attributes: ['name'] }],
+        group: ['product_id', 'Product.id'], order: [[literal('sales_value'), 'DESC']], limit: 10,
+      });
+      return { items: rows.map((r) => ({ name: r.Product?.name, quantity: Number(r.get('quantity')), sales_value: Number(r.get('sales_value')), gst: Number(r.get('gst') || 0) })) };
+    }
     default:
       return { error: 'Unknown tool' };
   }
 }
+
+const MAX_TOOL_ROUNDS = 3;
 
 // Whole words only: "HSN code" or a travel agency's question must still reach the assistant.
 const BLOCKED_TOPICS = [
@@ -139,8 +150,8 @@ const chatWithAssistant = async (req, res) => {
       { role: 'user', content: question },
     ];
     let result = await aiProvider.chat({ messages, tools: CHARIS_TOOLS });
-    // At most two rounds of tool calls, then the model must answer.
-    for (let round = 0; round < 2 && result.toolCalls.length > 0; round++) {
+    // Up to three rounds of tool calls; the last call forbids tools so the model must answer.
+    for (let round = 0; round < MAX_TOOL_ROUNDS && result.toolCalls.length > 0; round++) {
       messages.push(result.message);
       for (const call of result.toolCalls) {
         let output;
@@ -148,7 +159,8 @@ const chatWithAssistant = async (req, res) => {
         catch (error) { console.error('[AI] tool failed:', call.name, error.message); output = { error: 'Failed to fetch data.' }; }
         messages.push({ role: 'tool', tool_call_id: call.id, content: JSON.stringify(output) });
       }
-      result = await aiProvider.chat({ messages, tools: round === 0 ? CHARIS_TOOLS : undefined });
+      const last = round === MAX_TOOL_ROUNDS - 1;
+      result = await aiProvider.chat({ messages, tools: CHARIS_TOOLS, toolChoice: last ? 'none' : undefined });
     }
     if (!result.content) throw new aiProvider.AiUnavailableError();
     return res.json({ answer: result.content, source: 'ai', usage: unit });

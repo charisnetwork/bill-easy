@@ -1,6 +1,7 @@
 const { Company, User, UserCompany, Godown } = require("../models");
 const invoiceDesign = require("../services/invoiceDesign");
 const { resolveIndustry, signupSettingsFor } = require("../config/industries");
+const { ensureDefaultGodown } = require("../services/companySetup");
 const bcrypt = require("bcryptjs");
 const { Country } = require('country-state-city');
 const charisOs = require("../services/charisOsService");
@@ -479,6 +480,8 @@ const addCompany = async (req, res) => {
       business_category: industry,
       settings: signupSettingsFor(industry)
     });
+
+    await ensureDefaultGodown(company);
 
     // 5. Link user as owner
     await UserCompany.create({

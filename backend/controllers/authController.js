@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { User, Company, UserCompany } = require('../models');
 const { resolveIndustry, signupSettingsFor } = require('../config/industries');
+const { ensureDefaultGodown } = require('../services/companySetup');
 const tokenService = require('../services/tokenService');
 const { incrementBruteForce, clearBruteForce } = require('../middleware/rateLimit');
 const { logSecurityEvent, EVENT_TYPES, SEVERITY } = require('../services/auditService');
@@ -105,6 +106,7 @@ const register = async (req, res) => {
 
     // Update Company with owner_id
     await company.update({ owner_id: user.id });
+    await ensureDefaultGodown(company);
 
     // Register the business with Charis OS and start its free plan, if offered.
     // An OS outage never blocks signup; login retries onboarding.

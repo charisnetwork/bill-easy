@@ -107,6 +107,20 @@ test('chat', { skip: !dbUrl && 'TEST_DATABASE_URL not set' }, async (t) => {
     } finally { fetch.restore(); }
   });
 
+  await t.test('a model that keeps asking for tools is made to answer on the last round', async () => {
+    const companyId = crypto.randomUUID();
+    const toolCall = (n) => ({ content: '', tool_calls: [{ id: `t${n}`, type: 'function', function: { name: 'no_such_tool', arguments: '{}' } }] });
+    const fetch = mockFetch((n) => reply(n < 4 ? toolCall(n) : { content: 'Here is your answer.' }));
+    try {
+      const { status, body } = await ask(companyId, 'Tell me everything about my business');
+      assert.equal(status, 200);
+      assert.equal(body.answer, 'Here is your answer.');
+      assert.equal(fetch.calls.length, 4);
+      assert.equal(fetch.calls[3].body.tool_choice, 'none');
+      assert.equal(fetch.calls[0].body.tool_choice, undefined);
+    } finally { fetch.restore(); }
+  });
+
   await t.test('a provider failure gives the message back and returns 503', async () => {
     const companyId = crypto.randomUUID();
     const fetch = mockFetch(() => reply({}, 500));

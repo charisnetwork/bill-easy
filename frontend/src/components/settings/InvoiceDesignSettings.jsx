@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Lock, Loader2, Sparkles, RotateCcw, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import api, { invoiceAPI } from '../../services/api';
@@ -45,6 +45,31 @@ async function logoColours(logo) {
     return [];
   }
 }
+
+/** Shows a full-size page shrunk to the available width (never enlarged), keeping its layout. */
+const FitToWidth = ({ pageWidth, children }) => {
+  const outer = useRef(null);
+  const inner = useRef(null);
+  const [scale, setScale] = useState(1);
+  const [height, setHeight] = useState(0);
+  useEffect(() => {
+    const measure = () => {
+      const s = Math.min(1, (outer.current?.clientWidth || pageWidth) / pageWidth);
+      setScale(s);
+      setHeight((inner.current?.offsetHeight || 0) * s);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(outer.current);
+    observer.observe(inner.current);
+    return () => observer.disconnect();
+  }, [pageWidth]);
+  return (
+    <div ref={outer} className="w-full" style={{ height }}>
+      <div ref={inner} style={{ width: pageWidth, transform: `scale(${scale})`, transformOrigin: 'top left' }}>{children}</div>
+    </div>
+  );
+};
 
 const Section = ({ title, children }) => (
   <div className="space-y-3 border-b border-slate-200 p-5">
@@ -136,7 +161,7 @@ export const InvoiceDesignSettings = ({ company, onSaved }) => {
   };
 
   return (
-    <div className="-m-6 flex flex-col bg-slate-50 lg:h-[calc(100vh-140px)] lg:flex-row lg:overflow-hidden">
+    <div className="-m-6 flex flex-col bg-slate-50 xl:h-[calc(100vh-140px)] xl:flex-row xl:overflow-hidden">
       {/* Live preview: the same renderer the invoice page and PDF use */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-8">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -151,13 +176,15 @@ export const InvoiceDesignSettings = ({ company, onSaved }) => {
             </Button>
           </div>
         </div>
-        <div className="overflow-x-auto rounded-lg border border-slate-200 bg-slate-100 p-3 sm:p-6">
-          <InvoiceDocument invoice={previewInvoice} company={company} settings={design} />
+        <div className="rounded-lg border border-slate-200 bg-slate-100 p-3 sm:p-6">
+          <FitToWidth pageWidth={Math.round(PAPERS[design.paper].width * (4 / 3))}>
+            <InvoiceDocument invoice={previewInvoice} company={company} settings={design} />
+          </FitToWidth>
         </div>
       </div>
 
       {/* Controls */}
-      <div className="w-full shrink-0 overflow-y-auto border-l border-slate-200 bg-white lg:w-[380px]">
+      <div className="w-full shrink-0 overflow-y-auto border-t border-slate-200 bg-white xl:w-[380px] xl:border-l xl:border-t-0">
         <div className="border-b border-slate-200 p-5">
           <Button variant="outline" className="w-full gap-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50" onClick={suggest} disabled={suggesting}>
             {suggesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
@@ -168,7 +195,7 @@ export const InvoiceDesignSettings = ({ company, onSaved }) => {
         </div>
 
         <Section title="Template">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-2">
             {TEMPLATES.map((t) => {
               const isLocked = locked(t.id) && t.id !== saved.template_id;
               const active = design.template_id === t.id;

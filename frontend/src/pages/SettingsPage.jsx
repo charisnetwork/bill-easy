@@ -774,21 +774,24 @@ export const SettingsPage = () => {
             <Button className="h-8 bg-[#E66E26] hover:bg-[#d45d1d] text-white text-xs font-semibold" onClick={() => navigate('/settings/business/new')}>
               Create new business
             </Button>
-            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 border-slate-300">
+            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 border-slate-300" onClick={() => setSearchParams({ section: 'help' })}>
               <MessageCircle className="w-3.5 h-3.5" />
-              Chat Support
+              Help & support
             </Button>
-            <Button variant="outline" size="sm" className="h-8 text-xs border-slate-300" onClick={() => navigate(-1)}>
-              Cancel
+            {/* Sections with their own save (invoice design, godowns, team…) hide the shared buttons. */}
+            {currentForm && (<>
+            <Button variant="outline" size="sm" className="h-8 text-xs border-slate-300" onClick={() => currentForm.reset()} disabled={!currentForm.formState.isDirty}>
+              Discard
             </Button>
             <Button
-              disabled={submitting || (currentForm && !currentForm.formState.isDirty)}
+              disabled={submitting || !currentForm.formState.isDirty}
               onClick={handleGlobalSubmit}
               size="sm"
               className="h-8 bg-[#22C55E] hover:bg-[#16A34A] text-white text-xs font-semibold min-w-[100px]"
             >
               {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Save Changes"}
             </Button>
+            </>)}
           </div>
         </header>
 

@@ -30,14 +30,15 @@ const parseArguments = (text) => {
 };
 
 /**
- * @param {{ messages: object[], tools?: object[], temperature?: number, maxTokens?: number, json?: boolean }} request
+ * @param {{ messages: object[], tools?: object[], toolChoice?: 'auto'|'none', temperature?: number, maxTokens?: number, json?: boolean }} request
  * @returns {Promise<{ content: string, toolCalls: { id: string, name: string, arguments: object }[], message: object }>}
  */
-async function chat({ messages, tools, temperature = 0.3, maxTokens = 800, json = false }) {
+async function chat({ messages, tools, toolChoice, temperature = 0.3, maxTokens = 800, json = false }) {
   const { url, key, model } = config();
   // Nemotron reasoning models otherwise spend the whole token budget thinking and return no text.
   const body = { model, messages, temperature, max_tokens: maxTokens, chat_template_kwargs: { enable_thinking: false } };
   if (tools?.length) body.tools = tools;
+  if (tools?.length && toolChoice) body.tool_choice = toolChoice;
   if (json) body.response_format = { type: 'json_object' };
   let response;
   try {
