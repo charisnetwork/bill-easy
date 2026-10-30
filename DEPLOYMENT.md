@@ -69,7 +69,10 @@ VITE_GA_MEASUREMENT_ID=                        # optional
    | Premium Monthly / Yearly | ₹150 / ₹1,500 | ₹470 / ₹4,700 | Inaugural offer |
    | Pro Monthly / Yearly | ₹300 / ₹3,000 | ₹770 / ₹7,700 | Inaugural offer |
 
-   Monthly and yearly of one tier share a pricing group. Features and limits:
+   Monthly and yearly of one tier share a pricing group. Plan names must be unique even among
+   archived plans, so if an old plan already uses a name, give the new one a unique internal name
+   (e.g. "Pro Monthly 2026") and set its display label (Subscriptions → Plan page) to Free / Premium / Pro.
+   Features and limits:
 
    | Feature code | Free | Premium | Pro |
    | --- | --- | --- | --- |
@@ -86,7 +89,8 @@ VITE_GA_MEASUREMENT_ID=                        # optional
    | `pro_templates`, `ai_invoice_design` | off | off | on |
    | `eway_bills`, `staff_attendance_payroll`, `recurring_invoices`, `bulk_download_print_invoices`, `enterprise_reports` | off | off | on |
 
-4. Coupons → `WELCOME`, percentage discount, paid plans, promotion (not a partner code).
+4. Coupons → `WELCOME`, percentage discount (10% locally; set your real value), paid plans,
+   promotion (not a partner code).
 5. Existing customers: `cd backend && npm run charis-os:sync` (report), then `-- --apply`.
 6. Point the Razorpay webhook at Charis OS (`charis_control_center/RAZORPAY.md`).
 
