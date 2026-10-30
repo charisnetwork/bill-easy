@@ -1,4 +1,5 @@
 const { Quotation, QuotationItem, Product, Customer, Godown, Company, sequelize } = require("../models");
+const { assertOwnedByCompany, itemProductIds } = require("../services/tenantRefs");
 const { generateQuotationPdf } = require("../services/quotationPdfService");
 const { generateQuotationNumber, peekQuotationNumber } = require("../services/invoiceNumberService");
 
@@ -76,6 +77,7 @@ const createQuotation = async (req, res) => {
       industry_metadata
     } = req.body;
 
+    await assertOwnedByCompany(req.companyId, { customer: customer_id, godown: godown_id, product: itemProductIds(items) }, transaction);
     const qNumber = quotation_number || await generateQuotationNumber(req.companyId, transaction);
 
     let finalGodownId = godown_id;
@@ -141,6 +143,7 @@ const createQuotation = async (req, res) => {
     res.status(201).json(quotation);
   } catch (error) {
     if (transaction) await transaction.rollback();
+    if (error.status) return res.status(error.status).json({ error: error.message });
     // Error logged
     res.status(500).json({ error: process.env.NODE_ENV === 'production' ? "Failed to create quotation" : "Failed to create quotation: " + error.message });
   }
@@ -166,7 +169,12 @@ const updateQuotation = async (req, res) => {
       where: { id, company_id: req.companyId }
     });
 
-    if (!quotation) return res.status(404).json({ error: "Quotation not found" });
+    if (!quotation) {
+      await transaction.rollback();
+      return res.status(404).json({ error: "Quotation not found" });
+    }
+
+    await assertOwnedByCompany(req.companyId, { customer: customer_id, godown: godown_id, product: itemProductIds(items) }, transaction);
 
     await QuotationItem.destroy({ where: { quotation_id: id }, transaction });
 
@@ -230,6 +238,7 @@ const updateQuotation = async (req, res) => {
     res.json(quotation);
   } catch (error) {
     if (transaction) await transaction.rollback();
+    if (error.status) return res.status(error.status).json({ error: error.message });
     // Error logged
     res.status(500).json({ error: process.env.NODE_ENV === 'production' ? "Failed to update quotation" : "Failed to update quotation: " + error.message });
   }

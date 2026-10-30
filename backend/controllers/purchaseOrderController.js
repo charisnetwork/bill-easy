@@ -1,4 +1,5 @@
 const { PurchaseOrder, PurchaseOrderItem, Supplier, Product, sequelize } = require('../models');
+const { assertOwnedByCompany, itemProductIds } = require('../services/tenantRefs');
 const { Op } = require('sequelize');
 
 const generatePONumber = async (companyId) => {
@@ -88,6 +89,7 @@ const createPurchaseOrder = async (req, res) => {
       supplier_id, items, po_date, expected_date, po_number, notes 
     } = req.body;
 
+    await assertOwnedByCompany(req.companyId, { supplier: supplier_id, product: itemProductIds(items) }, t);
     const finalPONumber = po_number || await generatePONumber(req.companyId);
 
     // Calculate totals
@@ -143,6 +145,7 @@ const createPurchaseOrder = async (req, res) => {
     res.status(201).json({ message: 'Purchase Order created successfully', po });
   } catch (error) {
     await t.rollback();
+    if (error.status) return res.status(error.status).json({ error: error.message });
     // Error logged
     res.status(500).json({ error: 'Failed to create purchase order' });
   }
@@ -161,8 +164,11 @@ const updatePurchaseOrder = async (req, res) => {
     });
 
     if (!po) {
+      await t.rollback();
       return res.status(404).json({ error: 'Purchase Order not found' });
     }
+
+    await assertOwnedByCompany(req.companyId, { supplier: supplier_id, product: itemProductIds(items) }, t);
 
     // Calculate totals
     let subtotal = 0;
@@ -218,6 +224,7 @@ const updatePurchaseOrder = async (req, res) => {
     res.json({ message: 'Purchase Order updated successfully' });
   } catch (error) {
     await t.rollback();
+    if (error.status) return res.status(error.status).json({ error: error.message });
     // Error logged
     res.status(500).json({ error: 'Failed to update purchase order' });
   }
