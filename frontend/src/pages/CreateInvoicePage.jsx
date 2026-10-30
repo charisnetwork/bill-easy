@@ -6,6 +6,7 @@ import { getIndustryConfig } from '../lib/industryConfig';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { GodownSelect } from '../components/GodownSelect';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Textarea } from '../components/ui/textarea';
 import {
@@ -461,6 +462,7 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                     data-testid="invoice-date-input"
                   />
                 </div>
+                <GodownSelect className="form-field" value={formData.godown_id} onChange={(godown_id) => setFormData({ ...formData, godown_id })} label="Stock from godown" />
                 <div className="form-field">
                   <Label className="form-label">Due Date</Label>
                   <Input

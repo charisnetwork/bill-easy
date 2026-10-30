@@ -4,13 +4,14 @@ import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard, Users, Package, FileText, ShoppingCart,
   Wallet, BarChart3, Settings, Truck, ChevronDown, 
-  Building2, Plus, ArrowLeftRight, Repeat, TrendingUp, Lock
+  TrendingUp, Lock
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { BusinessSwitcher } from './BusinessSwitcher';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const Sidebar = ({ open, setOpen }) => {
-  const { user, company, companies, switchCompany, hasFeature, limitOf } = useAuth();
+  const { user, hasFeature, limitOf } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -118,18 +119,7 @@ export const Sidebar = ({ open, setOpen }) => {
             
             {/* Top Logo / Workspace Area */}
             <div className="p-5 border-b border-slate-100/50">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-500/20">
-                  <Building2 className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h1 className="font-bold text-slate-900 text-sm truncate">{company?.name || 'Bill Easy'}</h1>
-                  <p className="text-[10px] font-semibold text-indigo-600 uppercase tracking-wider truncate">Workspace</p>
-                </div>
-                <button className="p-1.5 hover:bg-slate-100 text-slate-400 hover:text-slate-700 rounded-lg transition-colors">
-                  <ArrowLeftRight className="w-4 h-4" />
-                </button>
-              </div>
+              <BusinessSwitcher />
             </div>
 
             {/* Navigation */}

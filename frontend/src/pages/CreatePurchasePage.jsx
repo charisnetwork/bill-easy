@@ -4,6 +4,7 @@ import { purchaseAPI, supplierAPI, productAPI, companyAPI } from '../services/ap
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { GodownSelect } from '../components/GodownSelect';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../components/ui/card';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
@@ -344,6 +345,7 @@ const CreatePurchasePage = ({ isEdit = false }) => {
                 <Label>Bill Number (Optional)</Label>
                 <Input placeholder="Enter supplier's bill #" value={formData.bill_number} onChange={(e) => setFormData({ ...formData, bill_number: e.target.value })} />
               </div>
+              <GodownSelect value={formData.godown_id} onChange={(godown_id) => setFormData({ ...formData, godown_id })} label="Stock into godown" />
               <div className="space-y-2">
                 <Label>Bill Date</Label>
                 <Input 

@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getAssetUrl } from '../../config/api';
 import { 
   Search, Bell, Sparkles, Moon, Sun, 
-  HelpCircle, ChevronDown, Menu, Building2,
+  HelpCircle, ChevronDown, Menu,
   Shield, LogOut, Settings, Calendar
 } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -24,7 +24,7 @@ import { useTheme } from 'next-themes';
 import { NotificationCenter } from './NotificationCenter';
 
 export const Header = ({ setSidebarOpen, setCmdkOpen }) => {
-  const { user, company, companies, logout, switchCompany, maxBusinesses } = useAuth();
+  const { user, company, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
@@ -136,31 +136,6 @@ export const Header = ({ setSidebarOpen, setCmdkOpen }) => {
             
             <DropdownMenuSeparator className="my-1" />
             
-            <DropdownMenuLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-3 py-1.5">
-              Workspaces
-            </DropdownMenuLabel>
-            
-            <div className="max-h-40 overflow-y-auto scrollbar-thin">
-              {companies.map((c) => (
-                <DropdownMenuItem
-                  key={c.id}
-                  onClick={() => switchCompany && switchCompany(c.id)}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-xl cursor-pointer transition-colors",
-                    c.id === company?.id ? "bg-indigo-50 text-indigo-700 font-medium" : "text-slate-700 hover:bg-slate-50"
-                  )}
-                >
-                  <Building2 className={cn("w-4 h-4", c.id === company?.id ? "text-indigo-600" : "text-slate-400")} />
-                  <span className="truncate flex-1">{c.name}</span>
-                  {c.id === company?.id && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
-                  )}
-                </DropdownMenuItem>
-              ))}
-            </div>
-
-            <DropdownMenuSeparator className="my-1" />
-
             <DropdownMenuItem onClick={() => navigate('/settings')} className="rounded-xl py-2 px-3 cursor-pointer text-slate-700 hover:bg-slate-50">
               <Settings className="w-4 h-4 mr-3 text-slate-400" />
               <span className="font-medium">Account Settings</span>
