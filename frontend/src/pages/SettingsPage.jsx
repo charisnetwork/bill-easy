@@ -175,10 +175,6 @@ const bankSchema = z.object({
   terms_conditions: z.string().optional()
 });
 
-const customizationSchema = z.object({
-  template_id: z.string().min(1, "Please select a template"),
-});
-
 // --- Constants ---
 
 const registrationTypes = [
@@ -198,13 +194,6 @@ const states = [
   "Uttar Pradesh", "Uttarakhand", "West Bengal", "Andaman and Nicobar Islands",
   "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi",
   "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
-];
-
-const templates = [
-  { id: 'modern', name: 'Modern Professional', preview: 'https://placehold.co/200x280?text=Modern' },
-  { id: 'classic', name: 'Classic Compact', preview: 'https://placehold.co/200x280?text=Classic' },
-  { id: 'minimal', name: 'Minimalist', preview: 'https://placehold.co/200x280?text=Minimal' },
-  { id: 'gst-standard', name: 'Standard GST', preview: 'https://placehold.co/200x280?text=GST' }
 ];
 
 const BUSINESS_CONFIGS = {
@@ -237,7 +226,7 @@ const BUSINESS_CONFIGS = {
 // --- Main Component ---
 
 export const SettingsPage = () => {
-  const { user, company, refreshProfile, hasFeature, subscription } = useAuth();
+  const { user, company, refreshProfile, hasFeature } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeSection = searchParams.get('section') || 'business-details';
@@ -368,11 +357,6 @@ export const SettingsPage = () => {
     }
   });
 
-  const customForm = useForm({
-    resolver: zodResolver(customizationSchema),
-    defaultValues: { template_id: "modern" }
-  });
-
   const invoiceCustomForm = useForm({
     defaultValues: {
       template_id: 'stylish',
@@ -459,9 +443,6 @@ export const SettingsPage = () => {
           terms_conditions: c.terms_conditions || ""
         });
 
-        customForm.reset({
-          template_id: c.settings?.template_id || c.settings?.invoice_template || "modern"
-        });
 
         if (c.logo) setLogoPreview(getAssetUrl(c.logo));
         if (c.signature) setSignaturePreview(getAssetUrl(c.signature));
@@ -477,7 +458,7 @@ export const SettingsPage = () => {
       }
     };
     fetchData();
-  }, [businessForm, taxForm, profileForm, bankForm, customForm, user]);
+  }, [businessForm, taxForm, profileForm, bankForm, user]);
 
   // --- Submit Handlers ---
 
@@ -569,21 +550,6 @@ export const SettingsPage = () => {
     }
   };
 
-  const handleCustomSubmit = async (values) => {
-    setSubmitting(true);
-    try {
-      await api.patch('/company/settings', {
-        settings: { template_id: values.template_id }
-      });
-      toast.success("Invoice template updated");
-      refreshProfile();
-    } catch {
-      toast.error("Failed to update template");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const handleInvoiceCustomSubmit = async (values) => {
     setSubmitting(true);
     try {
@@ -595,12 +561,6 @@ export const SettingsPage = () => {
     } finally {
       setSubmitting(false);
     }
-  };
-
-  // Plan-based template access
-  const getPlanName = () => {
-    const plan = subscription?.plan || subscription?.Plan;
-    return plan?.plan_name || 'Free';
   };
 
   // Helper for optimistic toggle updates
@@ -718,8 +678,8 @@ export const SettingsPage = () => {
     }
     
     // Feature Check
-    if (subscription?.plan?.plan_name !== 'Enterprise') {
-       return toast.error("This feature requires an Enterprise Plan.");
+    if (!hasFeature('enterprise_reports')) {
+       return toast.error("Send to CA is not included in your current plan.");
     }
     
     setSubmitting(true);
@@ -1198,7 +1158,6 @@ export const SettingsPage = () => {
             )}
 
             {activeSection === 'invoice-customization' && (() => {
-              const planName = getPlanName();
               const ALL_TEMPLATES = [
                 { id: 'luxury', name: 'Luxury', color: '#8B5CF6' },
                 { id: 'stylish', name: 'Stylish', color: '#4F46E5' },
@@ -1210,13 +1169,8 @@ export const SettingsPage = () => {
                 { id: 'simple', name: 'Simple', color: '#64748B' },
                 { id: 'custom', name: 'Custom', color: '#E11D48', enterprise: true },
               ];
-              const freeTemplates = ['stylish'];
-              const premiumTemplates = ['luxury', 'stylish', 'adv-gst', 'billbook', 'modern'];
-              const isTemplateLocked = (tid) => {
-                if (planName === 'Enterprise') return false;
-                if (planName === 'Premium') return !premiumTemplates.includes(tid);
-                return !freeTemplates.includes(tid);
-              };
+              // Plan locks are applied by the invoice design settings (Charis OS feature codes).
+              const isTemplateLocked = () => false;
               const selectedTmpl = ALL_TEMPLATES.find(t => t.id === invoiceCustomForm.watch('template_id')) || ALL_TEMPLATES[1];
               const activeColor = invoiceCustomForm.watch('theme_color') || selectedTmpl.color;
               return (
@@ -1436,7 +1390,6 @@ export const SettingsPage = () => {
                       <div className="p-5 border-b border-slate-200 space-y-4">
                         <h4 className="font-bold text-slate-800 flex items-center gap-2">
                           <div className="w-4 h-4 rounded-full border-[3px] border-indigo-600" /> Themes
-                          <span className="ml-auto text-[10px] font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{planName}</span>
                         </h4>
                         <div className="grid grid-cols-3 gap-3">
                           {ALL_TEMPLATES.map(t => {
@@ -1466,7 +1419,6 @@ export const SettingsPage = () => {
                             );
                           })}
                         </div>
-                        {planName === 'Free' && <p className="text-[10px] text-amber-600 bg-amber-50 p-2 rounded-lg">Upgrade to Premium for 5 templates or Enterprise for all + custom.</p>}
                       </div>
                       {/* Theme Styling */}
                       <div className="p-5 border-b border-slate-200 bg-slate-50/50 space-y-3">
@@ -1736,14 +1688,14 @@ export const SettingsPage = () => {
                   <p className="text-sm text-slate-500">Automatically generate and email your GSTR-1 return in Excel format directly to your Chartered Accountant.</p>
                 </div>
                 
-                {subscription?.plan?.plan_name !== 'Enterprise' ? (
+                {!hasFeature('enterprise_reports') ? (
                   <div className="p-6 bg-indigo-50 border border-indigo-200 rounded-xl text-center">
                     <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-3">
                       <Lock className="w-6 h-6" />
                     </div>
-                    <h4 className="text-base font-semibold text-indigo-900 mb-1">Enterprise Feature</h4>
+                    <h4 className="text-base font-semibold text-indigo-900 mb-1">Upgrade to unlock</h4>
                     <p className="text-sm text-indigo-700 max-w-md mx-auto mb-4">
-                      The "Send to CA" functionality is exclusively available for Enterprise plan users. Upgrade your plan to easily send automated government-compliant GST reports.
+                      Send to CA is not in your current plan. Upgrade to email automated, government-compliant GST reports to your accountant.
                     </p>
                     <Button onClick={() => navigate('/subscription')} className="bg-indigo-600 hover:bg-indigo-700">
                       Upgrade to Enterprise

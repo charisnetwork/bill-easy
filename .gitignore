@@ -11,7 +11,6 @@ dist/
 out/
 .vercel/
 **/dist/
-!backend/sdk/dist/
 **/build/
 
 # Environment variables
@@ -62,3 +61,13 @@ frontend/android/app/build/
 frontend/android/build/
 frontend/android/.idea/
 frontend/android/local.properties
+# Customer files (logos, QR codes, signatures, bills) live in storage, never in git
+backend/uploads/
+uploads/
+
+# Python caches
+__pycache__/
+*.pyc
+
+# Local agent scratch
+.superpowers/

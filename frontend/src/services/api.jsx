@@ -239,11 +239,7 @@ export const subscriptionAPI = {
   getPlans: () => api.get('/subscription/plans'),
   getCurrent: () => api.get('/subscription/current'),
   getUsage: () => api.get('/subscription/usage'),
-  upgrade: (data) => api.post('/subscription/upgrade', data),
-  cancel: () => api.post('/subscription/cancel'),
-  processPayment: (data) => api.post('/subscription/payment', data),
-  validateCoupon: (data) => api.post('/subscription/validate-coupon', data),
-  // Charis OS mode (backend CHARIS_SUBSCRIPTION_MODE=enforce)
+  // Plans, coupons and payments are owned by Charis OS
   sync: () => api.post('/subscription/sync'),
   getCheckout: () => api.get('/subscription/checkout'),
   quote: (data) => api.post('/subscription/checkout/quote', data),

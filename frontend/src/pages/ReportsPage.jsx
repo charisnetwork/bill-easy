@@ -46,9 +46,8 @@ const reportCategories = {
 };
 
 export const ReportsPage = () => {
-  const { user, subscription } = useAuth();
+  const { user, hasFeature } = useAuth();
   const navigate = useNavigate();
-  const planName = subscription?.plan?.plan_name || 'Free Account';
   
   const [activeReport, setActiveReport] = useState(null);
   const [activeReportDetails, setActiveReportDetails] = useState(null);
@@ -64,14 +63,14 @@ export const ReportsPage = () => {
 
   const checkAccess = (tier) => {
     if (tier === 'FREE') return true;
-    if (tier === 'PREMIUM' && (planName === 'Premium' || planName === 'Enterprise')) return true;
-    if (tier === 'ENTERPRISE' && planName === 'Enterprise') return true;
+    if (tier === 'PREMIUM') return hasFeature('advanced_reports');
+    if (tier === 'ENTERPRISE') return hasFeature('enterprise_reports');
     return false;
   };
 
   const handleReportClick = (report) => {
     if (!checkAccess(report.tier)) {
-      setUpgradeMessage(`The '${report.title}' requires a ${report.tier} plan.`);
+      setUpgradeMessage(`'${report.title}' is not included in your current plan.`);
       setShowUpgradeModal(true);
       return;
     }

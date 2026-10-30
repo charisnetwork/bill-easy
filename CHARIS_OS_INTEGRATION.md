@@ -4,21 +4,17 @@ Charis OS (the Control Centre, `charis_control_center`) creates and edits Bill E
 coupons, partner (affiliate) codes and notifications, and verifies every payment. Bill Easy keeps
 its own users and business data and enforces the plan in its own backend.
 
-The integration is **off by default**. With `CHARIS_SUBSCRIPTION_MODE` unset or `off`, Bill Easy
-behaves exactly as before (local plans, local coupons).
-
-## Switching it on (Bill Easy backend only)
+Charis OS is **required**: Bill Easy has no local plans and refuses to start without the OS
+connection.
 
 ```env
-CHARIS_SUBSCRIPTION_MODE=enforce
 CHARIS_OS_URL=https://<Control OS API origin>      # HTTPS origin, no path
 CHARIS_OS_APP_ID=<Bill Easy application ID in OS>
 CHARIS_OS_APP_KEY=<one-time application key from OS>
 ```
 
 Never put the app key in the frontend (`VITE_*`) or in git. The Razorpay keys and webhook belong to
-Charis OS; in enforce mode Bill Easy ignores its own `RAZORPAY_*` variables and its legacy
-`CONTROL_CENTER_*` SDK.
+Charis OS.
 
 ## Feature codes to create in OS for Bill Easy
 
@@ -54,15 +50,12 @@ Bill Easy's own records (invoices created this month, products saved).
 - **Cached for up to 60 seconds.** OS changes (suspend, cancel, new plan) apply within a minute, or
   immediately after a purchase or `POST /api/subscription/sync`. If OS cannot be reached and the
   cache has expired, gated actions return 503 rather than allowing access.
-- **Closed in enforce mode:** `POST /api/subscription/upgrade`, `/payment`, `/validate-coupon` and
-  `/cancel` return 409 `MANAGED_BY_CHARIS_OS`. (In local mode `/upgrade` still activates a plan
-  without verifying payment — another reason to move to enforce mode.)
 
 ## Go-live for existing customers
 
 1. In OS: register Bill Easy, create the features above, the plans (including a ₹0 Free plan) and
    publish them on the storefront.
-2. Deploy Bill Easy with the variables above.
+2. Deploy Bill Easy with the variables above (see `DEPLOYMENT.md`).
 3. Dry run, then apply:
 
    ```sh

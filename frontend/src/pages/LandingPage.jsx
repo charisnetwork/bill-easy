@@ -6,7 +6,7 @@ import {
   FileText, Package, Users, BarChart3, Shield, Smartphone,
   CheckCircle, ArrowRight, Star, Building2
 } from 'lucide-react';
-import { usePublicCatalog } from '../hooks/usePublicCatalog';
+import { usePlanCatalog } from '../hooks/usePlanCatalog';
 
 const features = [
   {
@@ -42,7 +42,7 @@ const features = [
 ];
 
 export const LandingPage = () => {
-  const { catalog, loading: catalogLoading, unavailable: catalogUnavailable } = usePublicCatalog();
+  const { plans: catalog, loading: catalogLoading, unavailable: catalogUnavailable } = usePlanCatalog();
 
   const formatPlanPrice = (amount, currency = 'INR') => {
     if (amount === null || amount === undefined || Number.isNaN(Number(amount))) return 'Contact us';
@@ -214,13 +214,12 @@ export const LandingPage = () => {
             {catalogLoading && <p className="col-span-full text-center text-slate-500">Loading current plans…</p>}
             {catalogUnavailable && <p className="col-span-full text-center text-slate-500">Current plan information is temporarily unavailable. Please contact Bill Easy for pricing.</p>}
             {catalog?.map((plan, index) => {
-              const firstPrice = Array.isArray(plan.prices) ? plan.prices[0] : null;
-              const amount = firstPrice?.finalAmount ?? firstPrice?.amount ?? firstPrice?.price ?? null;
-              const duration = firstPrice?.durationMonths ?? firstPrice?.months ?? null;
-              const featureLabels = plan.features.map((feature) => typeof feature === 'string' ? feature : feature.label || feature.name || feature.code).filter(Boolean);
+              const amount = plan.price;
+              const duration = plan.months;
+              const featureLabels = plan.highlights;
               return (
               <div 
-                key={plan.id || index}
+                key={plan.pricing_group || index}
                 className={`bg-white rounded-xl p-6 border-2 transition-all duration-200 ${
                   plan.recommended
                     ? 'border-emerald-500 shadow-lg scale-105' 
@@ -235,8 +234,8 @@ export const LandingPage = () => {
                 )}
                 <h3 className="font-heading text-xl font-semibold text-slate-900 mt-4">{plan.name}</h3>
                 <div className="flex items-baseline gap-1 mt-2 mb-6">
-                  <span className="text-4xl font-bold text-slate-900">{formatPlanPrice(amount, firstPrice?.currency || plan.currency)}</span>
-                  {duration && <span className="text-slate-500 text-xs font-medium">{duration === 1 ? '/month' : `/${duration} months`}</span>}
+                  <span className="text-4xl font-bold text-slate-900">{formatPlanPrice(amount, plan.currency)}</span>
+                  {amount > 0 && duration && <span className="text-slate-500 text-xs font-medium">{duration === 1 ? '/month' : `/${duration} months`}</span>}
                 </div>
                 <ul className="space-y-3 mb-6">
                   {featureLabels.map((feature, i) => (
