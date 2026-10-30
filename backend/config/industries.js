@@ -302,20 +302,6 @@ const getIndustryConfig = (industryName) => {
 };
 
 // Get template file name based on industry group
-const getTemplateFile = (group) => {
-  const templateMap = {
-    [INDUSTRY_GROUPS.RETAIL]: 'retailTemplate',
-    [INDUSTRY_GROUPS.AUTOMOBILE_SERVICE]: 'automobileTemplate',
-    [INDUSTRY_GROUPS.MANUFACTURING]: 'manufacturingTemplate',
-    [INDUSTRY_GROUPS.PROFESSIONAL_SERVICES]: 'serviceTemplate',
-    [INDUSTRY_GROUPS.HEALTHCARE]: 'healthcareTemplate',
-    [INDUSTRY_GROUPS.PHARMA]: 'pharmaTemplate',
-    [INDUSTRY_GROUPS.HOSPITALITY]: 'hospitalityTemplate',
-    [INDUSTRY_GROUPS.LOGISTICS]: 'logisticsTemplate',
-    [INDUSTRY_GROUPS.CONSTRUCTION]: 'constructionTemplate'
-  };
-  return templateMap[group] || 'retailTemplate';
-};
 
 // Get all industry names for dropdown
 const getAllIndustries = () => {
@@ -342,7 +328,6 @@ module.exports = {
   INDUSTRY_GROUPS,
   INDUSTRIES,
   getIndustryConfig,
-  getTemplateFile,
   getAllIndustries,
   getIndustriesByGroup
 };

@@ -1,6 +1,6 @@
 const { Invoice, InvoiceItem, Customer, Product, Company, Payment, User, StockLevel, StockMovement, Godown, sequelize } = require('../models');
 const { generateInvoiceNumber, peekInvoiceNumber } = require('../services/invoiceNumberService');
-const { generateInvoicePdf } = require('../services/invoicePdfService');
+const { generateInvoicePdf } = require('../services/invoicePdf');
 const { Op } = require('sequelize');
 
 const getInvoices = async (req, res) => {
@@ -113,6 +113,9 @@ const createInvoice = async (req, res) => {
       
       return {
         ...item,
+        discount,
+        tax_rate: taxRate,
+        tax_amount: tax.toFixed(2),
         total: total.toFixed(2)
       };
     });
@@ -236,6 +239,9 @@ const createInvoice = async (req, res) => {
         product_id: item.product_id,
         quantity: item.quantity,
         unit_price: item.unit_price,
+        discount: item.discount,
+        tax_rate: item.tax_rate,
+        tax_amount: item.tax_amount,
         total: item.total,
         description: item.description || ''
       }, { transaction });
@@ -524,7 +530,7 @@ const updateInvoice = async (req, res) => {
       totalTax += tax;
       totalAmount += total;
       
-      return { ...item, total: total.toFixed(2) };
+      return { ...item, discount, tax_rate: taxRate, tax_amount: tax.toFixed(2), total: total.toFixed(2) };
     });
 
     const globalDiscount = parseFloat(req.body.discount) || 0;
@@ -600,6 +606,9 @@ const updateInvoice = async (req, res) => {
         product_id: item.product_id,
         quantity: item.quantity,
         unit_price: item.unit_price,
+        discount: item.discount,
+        tax_rate: item.tax_rate,
+        tax_amount: item.tax_amount,
         total: item.total,
         description: item.description || ''
       }, { transaction });

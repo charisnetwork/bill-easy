@@ -7,7 +7,8 @@
     "start": "node server.js",
     "dev": "node server.js",
     "test": "node --test tests/",
-    "charis-os:sync": "node scripts/syncCompaniesToCharisOs.js"
+    "charis-os:sync": "node scripts/syncCompaniesToCharisOs.js",
+    "sync:invoice-core": "node -e \"require('fs').copyFileSync('../frontend/src/lib/invoice/invoiceCore.js', 'services/invoicePdf/invoiceCore.mjs')\""
   },
   "dependencies": {
     "@google-cloud/storage": "^7.19.0",
