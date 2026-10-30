@@ -71,18 +71,24 @@ const getCurrentSubscription = handle(async (req) => {
     try { planId = (await charisOs.checkout(req.companyId)).current_term?.plan_id || null; }
     catch { planId = null; } // Plan highlighting only; access decisions use the snapshot.
   }
+  // The plan page name (OS display label, e.g. "Pro") rather than the internal plan name.
+  let planName = snapshot.plan_name;
+  if (planId) {
+    try { planName = (await charisOs.getCatalog()).plans.find((p) => p.id === planId)?.name || planName; }
+    catch { /* keep the internal name */ }
+  }
   return {
     managed_by: MANAGED,
     status: snapshot.status,
     subscription_id: snapshot.subscription_id,
     plan_id: planId,
-    plan_name: snapshot.plan_name,
+    plan_name: planName,
     starts_at: snapshot.starts_at,
     ends_at: snapshot.ends_at,
     shared_from_primary_business: tenantId !== req.companyId,
     features: snapshot.entitlements,
     // Fields the existing UI already reads.
-    Plan: { plan_name: snapshot.plan_name },
+    Plan: { plan_name: planName },
     start_date: snapshot.starts_at,
     expiry_date: snapshot.ends_at,
   };

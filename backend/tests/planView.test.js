@@ -23,3 +23,18 @@ test('an older OS without card content still gives safe defaults', () => {
   assert.equal(view.coupons_allowed, true);
   assert.equal(view.offer, null);
 });
+
+test('the current plan shows the name customers see on the plan page', async () => {
+  const charisOs = require('../services/charisOsService');
+  const saved = { getSnapshot: charisOs.getSnapshot, billingTenantId: charisOs.billingTenantId, checkout: charisOs.checkout, getCatalog: charisOs.getCatalog };
+  charisOs.getSnapshot = async () => ({ status: 'active', plan_name: 'Pro Monthly 2026', entitlements: [] });
+  charisOs.billingTenantId = async () => 'c1';
+  charisOs.checkout = async () => ({ current_term: { plan_id: 'p-pro' } });
+  charisOs.getCatalog = async () => ({ plans: [{ id: 'p-pro', name: 'Pro' }] });
+  try {
+    const { getCurrentSubscription } = require('../controllers/charisOsSubscriptionController');
+    const body = await new Promise((resolve, reject) => getCurrentSubscription({ companyId: 'c1' }, { set() { return this; }, status() { return this; }, json: resolve }, reject));
+    assert.equal(body.plan_name, 'Pro');
+    assert.equal(body.Plan.plan_name, 'Pro');
+  } finally { Object.assign(charisOs, saved); }
+});
