@@ -31,7 +31,7 @@ test('Charis OS is required and needs a server-side HTTPS credential', () => {
 test('no gating code decides access by plan name', () => {
   const fs = require('node:fs');
   const path = require('node:path');
-  for (const file of ['middleware/auth.js', 'middleware/reportAccess.js', 'services/subscriptionService.js', 'routes/subscription.js']) {
+  for (const file of ['middleware/auth.js', 'middleware/reportAccess.js', 'services/usageLimits.js', 'routes/subscription.js']) {
     const source = fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
     assert.doesNotMatch(source, /'(Free|Premium|Enterprise|Zero)( Account)?'/, file);
     assert.doesNotMatch(source, /CHARIS_SUBSCRIPTION_MODE|SubscriptionGuard|upgradePlan|processPayment/, file);
@@ -84,8 +84,15 @@ test('every enforced feature code is published to Charis OS', () => {
   const published = new Set(BILLEASY_FEATURES.map((f) => f.code));
   assert.equal(published.size, BILLEASY_FEATURES.length);
   const src = ['routes', 'middleware', 'controllers'].flatMap((dir) => fs.readdirSync(path.join(__dirname, '..', dir)).map((f) => fs.readFileSync(path.join(__dirname, '..', dir, f), 'utf8'))).join('\n');
-  const used = new Set([...src.matchAll(/checkFeatureAccess\('([a-z_]+)'\)/g)].map((m) => m[1]));
+  const used = new Set([...src.matchAll(/(?:checkFeatureAccess|checkSubscriptionQuota|requireFeature|requireRecordLimit|consumeMonthly)\((?:[a-zA-Z.]+, )?'([a-z_]+)'/g)].map((m) => m[1]));
   for (const code of [...used, 'invoices', 'products', 'businesses', 'advanced_reports', 'enterprise_reports']) assert.ok(published.has(code), `${code} is enforced but not published`);
+  for (const code of ['purchase_bills', 'purchase_orders', 'godowns', 'report_exports', 'ai_messages', 'premium_templates', 'pro_templates', 'ai_invoice_design']) assert.ok(published.has(code), `${code} must be published`);
+  assert.ok(!published.has('multi_godowns'), 'multi_godowns is replaced by the godowns limit');
+  const kinds = Object.fromEntries(BILLEASY_FEATURES.map((f) => [f.code, `${f.kind || 'switch'}:${(f.reset_periods || []).join(',')}`]));
+  assert.deepEqual(
+    { invoices: kinds.invoices, purchase_bills: kinds.purchase_bills, report_exports: kinds.report_exports, ai_messages: kinds.ai_messages, products: kinds.products, godowns: kinds.godowns, businesses: kinds.businesses },
+    { invoices: 'limit:monthly', purchase_bills: 'limit:monthly', report_exports: 'limit:monthly', ai_messages: 'limit:monthly', products: 'limit:total', godowns: 'limit:total', businesses: 'limit:total' },
+  );
 });
 
 test('operator restriction is read strictly; older OS responses and an unconfigured OS mean not restricted', async () => {

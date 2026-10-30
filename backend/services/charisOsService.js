@@ -162,13 +162,17 @@ function startOfMonthIst(now = new Date()) {
   return new Date(Date.UTC(ist.getUTCFullYear(), ist.getUTCMonth(), 1) - 330 * 60 * 1000);
 }
 
+/** Usage Bill Easy counts from its own records, per business. */
 async function usageFor(companyId, now = new Date()) {
-  const { Invoice, Product } = require('../models');
-  const [invoices, products] = await Promise.all([
-    Invoice.count({ where: { company_id: companyId, createdAt: { [Op.gte]: startOfMonthIst(now) } } }),
+  const { Invoice, Product, Purchase, Godown } = require('../models');
+  const monthStart = startOfMonthIst(now);
+  const [invoices, products, purchase_bills, godowns] = await Promise.all([
+    Invoice.count({ where: { company_id: companyId, createdAt: { [Op.gte]: monthStart } } }),
     Product.count({ where: { company_id: companyId } }),
+    Purchase.count({ where: { company_id: companyId, createdAt: { [Op.gte]: monthStart } } }),
+    Godown.count({ where: { company_id: companyId } }),
   ]);
-  return { invoices, products };
+  return { invoices, products, purchase_bills, godowns };
 }
 
 /** Number of businesses the owner's plan allows (1000 stands for unlimited in the UI). */
@@ -273,16 +277,27 @@ async function claimFreePlan(companyId, actorId) {
  */
 const BILLEASY_FEATURES = [
   { code: 'invoices', name: 'Invoices per month', group: 'Billing', kind: 'limit', unit: 'invoices', reset_periods: ['monthly'], description: 'GST invoices created each month, per business' },
-  { code: 'products', name: 'Products', group: 'Inventory', kind: 'limit', unit: 'products', reset_periods: ['total'], description: 'Items in the product catalogue, per business' },
-  { code: 'multi_godowns', name: 'Multiple godowns', group: 'Inventory', description: 'Stock in several warehouses with transfers' },
-  { code: 'eway_bills', name: 'E-way bills', group: 'GST & compliance', description: 'Generate and track e-way bills' },
-  { code: 'advanced_reports', name: 'Profit & loss and GST reports', group: 'Reports', description: 'P&L statement, GSTR summaries' },
-  { code: 'enterprise_reports', name: 'Enterprise reports', group: 'Reports', description: 'Enterprise-tier analytics' },
+  { code: 'gst_billing', name: 'GST billing', group: 'Billing', description: 'GST invoices, credit notes and sales returns' },
+  { code: 'quotations', name: 'Quotations', group: 'Billing', description: 'Quotations and estimates' },
   { code: 'recurring_invoices', name: 'Recurring invoices', group: 'Billing', description: 'Automatic repeat billing for subscriptions' },
   { code: 'bulk_download_print_invoices', name: 'Bulk download & print', group: 'Billing', description: 'Download or print many invoices at once' },
+  { code: 'purchase_bills', name: 'Purchase bills per month', group: 'Purchases', kind: 'limit', unit: 'bills', reset_periods: ['monthly'], description: 'Supplier bills recorded each month, per business' },
+  { code: 'purchase_orders', name: 'Purchase orders', group: 'Purchases', description: 'Create and send purchase orders to suppliers' },
+  { code: 'products', name: 'Items', group: 'Inventory', kind: 'limit', unit: 'items', reset_periods: ['total'], description: 'Items in the product catalogue, per business' },
+  { code: 'inventory_management', name: 'Inventory', group: 'Inventory', description: 'Stock levels, movements and low-stock alerts' },
+  { code: 'godowns', name: 'Godowns', group: 'Inventory', kind: 'limit', unit: 'godowns', reset_periods: ['total'], description: 'Warehouses per business, with stock transfers' },
+  { code: 'eway_bills', name: 'E-way bills', group: 'GST & compliance', description: 'Generate and track e-way bills' },
+  { code: 'reports', name: 'Reports', group: 'Reports', description: 'Sales, purchase, stock and outstanding reports on screen' },
+  { code: 'report_exports', name: 'Report downloads per month', group: 'Reports', kind: 'limit', unit: 'downloads', reset_periods: ['monthly'], description: 'PDF/Excel downloads and prints from Reports' },
+  { code: 'advanced_reports', name: 'Profit & loss and GST reports', group: 'Reports', description: 'P&L statement, GSTR summaries' },
+  { code: 'enterprise_reports', name: 'Enterprise reports', group: 'Reports', description: 'Balance sheet, GSTR-1/2/3B, TDS/TCS, send to CA' },
+  { code: 'premium_templates', name: 'Premium invoice templates', group: 'Invoice design', description: 'Bold and Elegant templates' },
+  { code: 'pro_templates', name: 'Pro invoice templates', group: 'Invoice design', description: 'Corporate and Creative templates' },
+  { code: 'ai_invoice_design', name: 'AI invoice design', group: 'Invoice design', description: 'AI suggests a template and colours from your business and logo' },
+  { code: 'ai_assistant', name: 'Charis AI assistant', group: 'AI tools', description: 'Ask questions about your sales, stock and dues' },
+  { code: 'ai_messages', name: 'AI messages per month', group: 'AI tools', kind: 'limit', unit: 'messages', reset_periods: ['monthly'], description: 'AI answers each month; quick searches are free' },
   { code: 'staff_attendance_payroll', name: 'Staff attendance & payroll', group: 'Team', description: 'Attendance, salary and payroll' },
   { code: 'businesses', name: 'Businesses', group: 'Team', kind: 'limit', unit: 'businesses', reset_periods: ['total'], description: 'Businesses one owner can manage' },
-  { code: 'ai_assistant', name: 'Charis AI assistant', group: 'AI tools', description: 'Ask questions about your sales, stock and dues' },
 ];
 
 /** Publish the catalog to OS in the background; retried, never blocks startup. */

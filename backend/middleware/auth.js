@@ -9,9 +9,9 @@
  */
 
 const jwt = require('jsonwebtoken');
-const { User, Company, Subscription, Plan, RefreshToken } = require('../models');
-const { checkSubscriptionFeature } = require('../services/subscriptionService');
+const { User, Company, RefreshToken } = require('../models');
 const charisOs = require('../services/charisOsService');
+const { requireFeature, requireRecordLimit } = require('../services/usageLimits');
 const { logSecurityEvent, EVENT_TYPES, SEVERITY } = require('../services/auditService');
 
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET;
@@ -62,12 +62,9 @@ const authenticateToken = async (req, res, next) => {
       throw jwtError;
     }
 
-    // 3. Load user with company and subscription
+    // 3. Load user with company
     const user = await User.findByPk(decoded.sub, {
-      include: [{ 
-        model: Company, 
-        include: [{ model: Subscription, include: [Plan] }] 
-      }]
+      include: [{ model: Company }]
     });
 
     if (!user || !user.is_active) {
@@ -194,57 +191,9 @@ const checkPermission = (permission) => {
   };
 };
 
-/**
- * Subscription quota check middleware
- */
-const QUOTA_RESPONSES = {
-  invoices: (limit, used) => ({ error: `Monthly invoice limit reached (${limit}). Upgrade your plan for more.`, limitCode: 'invoice.monthly', limit, used }),
-  products: (limit, used) => ({ error: `Product limit reached (${limit}). Upgrade your plan for more.`, limitCode: 'product.total', limit, used }),
-};
-
-/** Limits come from the OS plan; usage is counted from this business's records. */
-const checkCharisOsQuota = async (req, res, next, quotaType) => {
-  try {
-    const snapshot = await charisOs.getSnapshot(req.companyId);
-    const limit = charisOs.limitFor(snapshot, quotaType);
-    if (limit !== null) {
-      const used = (await charisOs.usageFor(req.companyId))[quotaType];
-      if (used >= limit) return res.status(403).json({ ...QUOTA_RESPONSES[quotaType](limit, used), code: 'QUOTA_EXCEEDED', upgradeRequired: true });
-    }
-    return next();
-  } catch (error) {
-    if (error instanceof charisOs.CharisOsError) return res.status(error.status).json({ error: error.message, code: error.code, upgradeRequired: error.status === 403 });
-    return next(error);
-  }
-};
-
-const checkSubscriptionQuota = (quotaType) => (req, res, next) => checkCharisOsQuota(req, res, next, quotaType);
-
-/**
- * Feature access check middleware
- */
-const checkFeatureAccess = (featureKey) => {
-  return async (req, res, next) => {
-    let hasAccess;
-    try {
-      hasAccess = await checkSubscriptionFeature(req.companyId, featureKey);
-    } catch (error) {
-      if (error instanceof charisOs.CharisOsError) return res.status(error.status).json({ error: error.message, code: error.code });
-      return next(error);
-    }
-
-    if (hasAccess) {
-      return next();
-    }
-
-    return res.status(403).json({ 
-      error: 'Your current plan does not include this feature. Please upgrade.',
-      code: 'FEATURE_NOT_AVAILABLE',
-      feature: featureKey,
-      upgradeRequired: true
-    });
-  };
-};
+// Plan gates (Charis OS feature codes); see services/usageLimits.js.
+const checkSubscriptionQuota = (quotaType) => requireRecordLimit(quotaType);
+const checkFeatureAccess = (featureKey) => requireFeature(featureKey);
 
 /**
  * Optional authentication - doesn't fail if no token
@@ -265,10 +214,7 @@ const optionalAuth = async (req, res, next) => {
     });
 
     const user = await User.findByPk(decoded.sub, {
-      include: [{ 
-        model: Company, 
-        include: [{ model: Subscription, include: [Plan] }] 
-      }]
+      include: [{ model: Company }]
     });
 
     if (user && user.is_active && (user.token_version || 1) === decoded.ver) {

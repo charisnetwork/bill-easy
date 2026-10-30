@@ -491,6 +491,18 @@ const AIUsage = sequelize.define('AIUsage', {
   indexes: [{ unique: true, fields: ['user_id', 'date'] }]
 });
 
+// Monthly usage that Bill Easy cannot count from its own records (report exports, AI answers).
+const UsageCounter = sequelize.define('UsageCounter', {
+  id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+  company_id: { type: DataTypes.UUID, allowNull: false },
+  feature_code: { type: DataTypes.STRING(64), allowNull: false },
+  period: { type: DataTypes.STRING(7), allowNull: false }, // 'YYYY-MM', India time
+  count: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 }
+}, {
+  tableName: 'usage_counters',
+  indexes: [{ unique: true, fields: ['company_id', 'feature_code', 'period'] }]
+});
+
 const RecurringSubscription = sequelize.define('RecurringSubscription', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
   company_id: { type: DataTypes.UUID, allowNull: false },
@@ -780,6 +792,7 @@ module.exports = {
   sequelize,
   Plan,
   PlanFeature,
+  UsageCounter,
   Company,
   Affiliate,
   User,

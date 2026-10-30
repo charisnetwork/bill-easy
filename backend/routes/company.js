@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const companyController = require('../controllers/companyController');
 const godownController = require('../controllers/godownController');
-const { authenticateToken, checkFeatureAccess, requireRole } = require('../middleware/auth');
+const { authenticateToken, requireRole } = require('../middleware/auth');
+const { requireRecordLimit } = require('../services/usageLimits');
 const companyContext = require('../middleware/companyContext');
 const { uploadLogo, uploadSignature, uploadQRCode } = require('../services/uploadService');
 
@@ -29,9 +30,10 @@ router.delete('/users/:id', requireRole('owner', 'admin'), companyController.del
 
 // Godowns
 router.get('/godowns', godownController.getGodowns);
-router.post('/godowns', checkFeatureAccess('multi_godowns'), godownController.createGodown);
-router.put('/godowns/:id', checkFeatureAccess('multi_godowns'), godownController.updateGodown);
-router.delete('/godowns/:id', checkFeatureAccess('multi_godowns'), godownController.deleteGodown);
+// Creating is limited by the plan's godown count; existing godowns can always be edited or removed.
+router.post('/godowns', requireRecordLimit('godowns'), godownController.createGodown);
+router.put('/godowns/:id', godownController.updateGodown);
+router.delete('/godowns/:id', godownController.deleteGodown);
 router.post('/stock-transfer', godownController.transferStock);
 
 module.exports = router;
