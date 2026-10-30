@@ -1,75 +1,81 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, ArrowRight, AlertTriangle, TrendingUp, ShieldAlert, Target } from 'lucide-react';
+import { Sparkles, ArrowRight, AlertTriangle, TrendingUp, TrendingDown, ShieldAlert, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { formatINR, plural } from './dashboardData';
 
 export const AIInsights = ({ data }) => {
-  // Generate insights locally based on data thresholds
+  // Plain rules over the business's own figures (no AI call): only facts the data supports.
   const generateInsights = () => {
     const insights = [];
+    const sales = data?.comparison?.sales;
+    const receivables = data?.receivables;
 
-    // Revenue insight
-    if (data?.monthlySales > 50000) {
+    if (sales?.change !== null && sales?.change !== undefined) {
+      const up = sales.change >= 0;
       insights.push({
-        id: 1,
-        type: 'success',
-        icon: TrendingUp,
-        title: 'Strong Sales Performance',
-        desc: `Your monthly revenue is looking solid. You are tracking 15% higher than last month's average.`,
+        id: 'sales-trend',
+        type: up ? 'success' : 'warning',
+        icon: up ? TrendingUp : TrendingDown,
+        title: up ? 'Sales are up this month' : 'Sales are down this month',
+        desc: `${formatINR(sales.current)} so far this month against ${formatINR(sales.previous)} last month (${up ? '+' : ''}${sales.change}%).`,
         action: 'View Sales Report',
         link: '/reports'
       });
     }
 
-    // Pending Payments insight
-    if (data?.pendingPayments > 10000) {
+    if (receivables?.overdueCount > 0) {
       insights.push({
-        id: 2,
+        id: 'overdue',
         type: 'warning',
         icon: AlertTriangle,
-        title: 'High Outstanding Receivables',
-        desc: `You have ₹${(data.pendingPayments).toLocaleString('en-IN')} in pending payments. Consider sending automated reminders.`,
-        action: 'View Receivables',
+        title: 'Overdue receivables',
+        desc: `${plural(receivables.overdueCount, 'invoice')} worth ${formatINR(receivables.overdueAmount)} ${receivables.overdueCount === 1 ? 'is' : 'are'} past the due date.`,
+        action: 'View Invoices',
         link: '/invoices'
       });
     }
 
-    // Goal insight
-    if (data?.monthlySales < 10000) {
-       insights.push({
-        id: 3,
-        type: 'info',
-        icon: Target,
-        title: 'Revenue Goal Alert',
-        desc: 'You are currently 40% below your monthly revenue target.',
-        action: 'Adjust Strategy',
-        link: '/reports'
+    if (data?.lowStock?.count > 0) {
+      const first = data.lowStock.items?.[0];
+      insights.push({
+        id: 'low-stock',
+        type: 'alert',
+        icon: ShieldAlert,
+        title: 'Low stock',
+        desc: `${plural(data.lowStock.count, 'product')} at or below the low-stock level${first ? `, including ${first.name} (${first.stock} ${first.unit || ''} left)` : ''}.`,
+        action: 'Check Inventory',
+        link: '/products'
       });
     }
 
-    // Default insight if none trigger
-    if (insights.length === 0) {
+    const top = data?.topProducts?.[0];
+    if (top) {
       insights.push({
-        id: 4,
+        id: 'top-product',
+        type: 'info',
+        icon: Trophy,
+        title: 'Best seller this month',
+        desc: `${top.name} has brought in ${formatINR(top.revenue)} this month.`,
+        action: 'View Products',
+        link: '/products'
+      });
+    }
+
+    if (insights.length === 0) {
+      const hasInvoices = (data?.recentInvoices?.length || 0) > 0;
+      insights.push({
+        id: 'start',
         type: 'info',
         icon: Sparkles,
-        title: 'Ready to Grow',
-        desc: 'Create your first few invoices this month to see AI-powered growth insights here.',
+        title: hasInvoices ? 'Insights build up as you bill' : 'Create your first invoice',
+        desc: hasInvoices
+          ? 'Once you have a month of sales to compare, trends and reminders will show up here.'
+          : 'Your sales trends, overdue reminders and stock alerts will show up here as you use Bill Easy.',
         action: 'Create Invoice',
         link: '/invoices/new'
       });
     }
-
-    // Stock transfer insight if Enterprise (we'll just fake it based on random)
-    insights.push({
-      id: 5,
-      type: 'alert',
-      icon: ShieldAlert,
-      title: 'Low Stock Alert',
-      desc: '3 products in your main warehouse are running critically low.',
-      action: 'Check Inventory',
-      link: '/products'
-    });
 
     return insights.slice(0, 2); // Show top 2 insights
   };
@@ -99,7 +105,7 @@ export const AIInsights = ({ data }) => {
         <div className="p-1.5 bg-gradient-to-tr from-indigo-600 to-purple-600 rounded-lg shadow-sm">
           <Sparkles className="w-4 h-4 text-white" />
         </div>
-        <h3 className="text-sm font-bold text-slate-900 dark:text-white">Smart Insights</h3>
+        <h3 className="text-sm font-bold text-slate-900 dark:text-white">Insights</h3>
       </div>
 
       <div className="flex-1 space-y-4">

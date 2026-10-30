@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Bell, Check, CheckCircle2, Clock, FileText, AlertTriangle, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Bell, Check, Clock, FileText, AlertTriangle, ArrowRight, PackageX } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,32 +9,59 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
-import { Button } from '../ui/button';
+import { useAuth } from '../../context/AuthContext';
+import { reportAPI } from '../../services/api';
+import { buildAlerts } from './dashboardData';
 import { cn } from '../../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const MOCK_NOTIFICATIONS = [
-  { id: 1, type: 'critical', title: 'GST Filing Due', desc: 'GSTR-1 filing is due tomorrow for Apr 2026.', time: '2 hours ago', read: false },
-  { id: 2, type: 'invoice', title: 'Invoice #1042 Paid', desc: 'Apex Solutions paid ₹45,200.', time: '4 hours ago', read: false },
-  { id: 3, type: 'alert', title: 'Low Stock Alert', desc: 'Ultra Cement stock fell below minimum.', time: '1 day ago', read: false },
-  { id: 4, type: 'system', title: 'Report Generated', desc: 'Monthly sales report is ready.', time: '2 days ago', read: true },
-];
+// Alerts come from the business's own figures (overdue invoices, low stock, GST returns due this week).
+// The header mounts on every page, so the figures are cached for a few minutes.
+let cache = { at: 0, companyId: null, alerts: null };
+const CACHE_MS = 5 * 60 * 1000;
 
 export const NotificationCenter = () => {
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  const navigate = useNavigate();
+  const { company } = useAuth();
+  const companyId = company?.id;
+  const [notifications, setNotifications] = useState(() =>
+    cache.alerts && cache.companyId === companyId ? cache.alerts : []);
+  const [seen, setSeen] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem('seen_alerts') || '[]'); } catch { return []; }
+  });
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  useEffect(() => {
+    if (cache.alerts && cache.companyId === companyId && Date.now() - cache.at < CACHE_MS) return;
+    let cancelled = false;
+    reportAPI.getDashboard()
+      .then(({ data }) => {
+        const alerts = buildAlerts(data);
+        cache = { at: Date.now(), companyId, alerts };
+        if (!cancelled) setNotifications(alerts);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [companyId]);
+
+  const remember = (ids) => {
+    const next = Array.from(new Set([...seen, ...ids]));
+    setSeen(next);
+    try { sessionStorage.setItem('seen_alerts', JSON.stringify(next)); } catch { /* ignore */ }
+  };
+  const isRead = (n) => seen.includes(`${n.id}:${n.desc}`);
+
+  const unreadCount = notifications.filter(n => !isRead(n)).length;
 
   const markAllAsRead = (e) => {
     e.stopPropagation();
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    remember(notifications.map(n => `${n.id}:${n.desc}`));
   };
 
   const getIcon = (type) => {
     switch(type) {
-      case 'critical': return <AlertTriangle className="w-4 h-4 text-rose-500" />;
-      case 'invoice': return <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
-      case 'alert': return <Clock className="w-4 h-4 text-amber-500" />;
+      case 'gst': return <AlertTriangle className="w-4 h-4 text-rose-500" />;
+      case 'overdue': return <Clock className="w-4 h-4 text-amber-500" />;
+      case 'stock': return <PackageX className="w-4 h-4 text-rose-500" />;
       default: return <FileText className="w-4 h-4 text-indigo-500" />;
     }
   };
@@ -79,7 +107,8 @@ export const NotificationCenter = () => {
           {notifications.length === 0 ? (
             <div className="py-8 text-center px-4">
               <Bell className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">No new notifications</p>
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">You're all caught up</p>
+              <p className="text-xs text-slate-400 mt-1">Overdue invoices, low stock and GST due dates show up here.</p>
             </div>
           ) : (
             <div className="flex flex-col">
@@ -88,38 +117,34 @@ export const NotificationCenter = () => {
                   key={notif.id}
                   className={cn(
                     "flex gap-3 p-4 border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group",
-                    !notif.read ? "bg-slate-50/50 dark:bg-slate-800/20" : "opacity-75"
+                    !isRead(notif) ? "bg-slate-50/50 dark:bg-slate-800/20" : "opacity-75"
                   )}
                   onClick={() => {
-                    setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, read: true } : n));
+                    remember([`${notif.id}:${notif.desc}`]);
+                    navigate(notif.route);
                   }}
                 >
                   <div className={cn(
                     "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm",
-                    !notif.read ? "bg-white dark:bg-slate-800 ring-1 ring-slate-100 dark:ring-slate-700" : "bg-slate-100 dark:bg-slate-800"
+                    !isRead(notif) ? "bg-white dark:bg-slate-800 ring-1 ring-slate-100 dark:ring-slate-700" : "bg-slate-100 dark:bg-slate-800"
                   )}>
-                    {getIcon(notif.type)}
+                    {getIcon(notif.kind)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <p className={cn(
                         "text-sm truncate",
-                        !notif.read ? "font-bold text-slate-900 dark:text-white" : "font-medium text-slate-700 dark:text-slate-300"
+                        !isRead(notif) ? "font-bold text-slate-900 dark:text-white" : "font-medium text-slate-700 dark:text-slate-300"
                       )}>
                         {notif.title}
                       </p>
-                      <span className="text-[10px] font-medium text-slate-400 whitespace-nowrap mt-0.5">
-                        {notif.time}
-                      </span>
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
                       {notif.desc}
                     </p>
-                    {!notif.read && (
-                      <button className="mt-2 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                        View details <ArrowRight className="w-3 h-3" />
-                      </button>
-                    )}
+                    <span className="mt-2 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                      Open <ArrowRight className="w-3 h-3" />
+                    </span>
                   </div>
                 </div>
               ))}
@@ -127,11 +152,6 @@ export const NotificationCenter = () => {
           )}
         </div>
         
-        <div className="p-2 border-t border-slate-100 dark:border-slate-800">
-          <Button variant="ghost" className="w-full text-xs font-semibold text-slate-600 dark:text-slate-400 h-8">
-            View All Activity
-          </Button>
-        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );

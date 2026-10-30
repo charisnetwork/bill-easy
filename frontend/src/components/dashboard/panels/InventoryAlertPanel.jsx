@@ -1,14 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { PackageX, ShoppingCart, AlertTriangle, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { PackageX, AlertTriangle, ArrowRight } from 'lucide-react';
 
-const MOCK_INVENTORY = [
-  { id: 1, name: 'Ultra Cement 50kg', current: 15, minimum: 50, status: 'critical', supplier: 'Ambuja Corp' },
-  { id: 2, name: 'Steel TMT Bars 12mm', current: 120, minimum: 150, status: 'warning', supplier: 'Tata Steel' },
-  { id: 3, name: 'Asian Paints White 20L', current: 5, minimum: 20, status: 'critical', supplier: 'Asian Paints' },
-];
+export const InventoryAlertPanel = ({ data }) => {
+  const items = data?.lowStock?.items || [];
+  const count = data?.lowStock?.count || 0;
 
-export const InventoryAlertPanel = () => {
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}
@@ -21,36 +19,29 @@ export const InventoryAlertPanel = () => {
             <PackageX className="w-4 h-4 text-rose-500" />
           </div>
           <h3 className="text-sm font-bold text-slate-900 dark:text-white">Inventory Alerts</h3>
+          {count > 0 && (
+            <span className="text-xs font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">{count}</span>
+          )}
         </div>
-        <button className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 transition-colors flex items-center gap-1">
+        <Link to="/products" className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 transition-colors flex items-center gap-1">
           View All <ArrowRight className="w-3 h-3" />
-        </button>
+        </Link>
       </div>
 
       <div className="flex-1 space-y-4">
-        {MOCK_INVENTORY.map((item) => {
-          const isCritical = item.status === 'critical';
-          const percent = Math.max(5, (item.current / item.minimum) * 100);
-          
+        {items.map((item) => {
+          const isCritical = item.stock <= 0 || item.stock <= item.minimum / 2;
+          const percent = item.minimum > 0 ? Math.max(5, Math.min(100, (item.stock / item.minimum) * 100)) : 5;
           return (
-            <div key={item.id} className="group flex flex-col gap-2 p-3 rounded-2xl border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                    {isCritical && <AlertTriangle className="w-3 h-3 text-rose-500" />}
-                    {item.name}
-                  </h4>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Supplier: {item.supplier}</p>
-                </div>
-                <button className="p-1.5 bg-indigo-50 dark:bg-indigo-500/10 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-lg transition-colors" title="Create Purchase Order">
-                  <ShoppingCart className="w-3.5 h-3.5" />
-                </button>
-              </div>
-              
+            <div key={item.id} className="flex flex-col gap-2 p-3 rounded-2xl border border-slate-100 dark:border-slate-800">
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                {isCritical && <AlertTriangle className="w-3 h-3 text-rose-500" />}
+                {item.name}
+              </h4>
               <div>
                 <div className="flex justify-between text-[10px] font-bold mb-1.5">
-                  <span className={isCritical ? 'text-rose-500' : 'text-amber-500'}>{item.current} in stock</span>
-                  <span className="text-slate-400">Min: {item.minimum}</span>
+                  <span className={isCritical ? 'text-rose-500' : 'text-amber-500'}>{item.stock} {item.unit} in stock</span>
+                  <span className="text-slate-400">Alert at {item.minimum}</span>
                 </div>
                 <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                   <motion.div 
@@ -64,6 +55,11 @@ export const InventoryAlertPanel = () => {
             </div>
           );
         })}
+        {items.length === 0 && (
+          <p className="text-xs text-slate-500 dark:text-slate-400 py-6 text-center">
+            {data?.productsCount > 0 ? 'Every product is above its low-stock level.' : 'Add products to track their stock here.'}
+          </p>
+        )}
       </div>
     </motion.div>
   );

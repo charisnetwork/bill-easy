@@ -1,4 +1,4 @@
-const { Invoice, Purchase, Expense, Customer, Supplier, Product, InvoiceItem, PurchaseItem, UserCompany, sequelize } = require('../models');
+const { Invoice, Purchase, Expense, Customer, Supplier, Product, InvoiceItem, PurchaseItem, UserCompany, Company, sequelize } = require('../models');
 const { Op } = require('sequelize');
 
 class ReportService {
@@ -205,110 +205,182 @@ class ReportService {
     return { products, lowStock, totalStockValue: Number(totalStockValue) };
   }
 
-  static async getDashboardSummary(companyId, user = null) {
-    const today = new Date();
-    const startOfDay = new Date(new Date().setHours(0, 0, 0, 0));
-    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59);
+  static async getDashboardSummary(companyId, user = null, now = new Date()) {
+    const { QueryTypes } = require('sequelize');
+    const figures = require('./dashboardFigures');
+    const q = (sql, replacements = {}) => sequelize.query(sql, { type: QueryTypes.SELECT, replacements: { companyId, ...replacements } });
+    const num = (v) => Number(v || 0);
+    const IST = `'Asia/Kolkata'`;
+    const monthOf = (col) => `to_char(${col} AT TIME ZONE ${IST}, 'YYYY-MM')`;
+
+    const months = figures.lastMonths(now, 6);
+    const range = { start: months[0].start, end: months[months.length - 1].end };
+    const { days, start: daysStart, end: daysEnd } = figures.lastDays(now, 14);
+    const { y, m, d } = figures.istParts(now);
+    const todayStart = figures.istStart(y, m, d);
+    const thisMonth = months[months.length - 1];
+    const soon = new Date(todayStart.getTime() + 15 * 24 * 60 * 60 * 1000);
 
     const [
-      todaySales, monthlySales, pendingPayments, 
-      monthlyExpenses, monthlyPurchases, invoicesCount, 
-      productsCount, activeBusinessesCount
+      sales, purchases, expenses, received, upfrontReceived, made, upfrontPaid,
+      daily, todayRow, pendingRow, overdueRow, lowStockRows, lowStockCount,
+      receivables, recentInvoices, topProducts, dueSoon, activity, invoicesCount, productsCount,
+      company, activeBusinessesCount,
     ] = await Promise.all([
-      Invoice.sum('total_amount', {
-        where: {
-          company_id: companyId,
-          invoice_date: { [Op.gte]: startOfDay },
-          status: { [Op.ne]: 'cancelled' }
-        }
-      }),
-      Invoice.sum('total_amount', {
-        where: {
-          company_id: companyId,
-          invoice_date: { [Op.between]: [startOfMonth, endOfMonth] },
-          status: { [Op.ne]: 'cancelled' }
-        }
-      }),
-      Invoice.sum('total_amount', {
-        where: {
-          company_id: companyId,
-          payment_status: { [Op.in]: ['unpaid', 'partial'] }
-        }
-      }),
-      Expense.sum('amount', {
-        where: {
-          company_id: companyId,
-          date: { [Op.between]: [startOfMonth, endOfMonth] }
-        }
-      }),
-      Purchase.sum('total_amount', {
-        where: {
-          company_id: companyId,
-          bill_date: { [Op.between]: [startOfMonth, endOfMonth] },
-          status: { [Op.ne]: 'cancelled' }
-        }
-      }),
-      Invoice.count({
-        where: {
-          company_id: companyId,
-          invoice_date: { [Op.between]: [startOfMonth, endOfMonth] },
-          status: { [Op.ne]: 'cancelled' }
-        }
-      }),
-      Product.count({
-        where: { company_id: companyId }
-      }),
-      user ? UserCompany.count({ where: { user_id: user.id } }) : Promise.resolve(1)
+      q(`SELECT ${monthOf('invoice_date')} AS month, SUM(total_amount) AS total, COUNT(*) AS count FROM invoices
+         WHERE company_id = :companyId AND status <> 'cancelled' AND invoice_date >= :start AND invoice_date < :end GROUP BY 1`, range),
+      q(`SELECT ${monthOf('bill_date')} AS month, SUM(total_amount) AS total FROM purchases
+         WHERE company_id = :companyId AND status <> 'cancelled' AND bill_date >= :start AND bill_date < :end GROUP BY 1`, range),
+      q(`SELECT ${monthOf('date')} AS month, SUM(amount) AS total FROM expenses
+         WHERE company_id = :companyId AND date >= :start AND date < :end GROUP BY 1`, range),
+      // Money in: payments recorded against customers, plus what was paid when the invoice was made
+      // (paid_amount not covered by a payment record or the customer's wallet).
+      q(`SELECT ${monthOf('payment_date')} AS month, SUM(amount) AS total FROM payments
+         WHERE company_id = :companyId AND payment_type = 'received' AND payment_date >= :start AND payment_date < :end GROUP BY 1`, range),
+      q(`SELECT ${monthOf('i.invoice_date')} AS month,
+                SUM(GREATEST(i.paid_amount - COALESCE(i.wallet_amount, 0) - COALESCE(p.total, 0), 0)) AS total
+         FROM invoices i
+         LEFT JOIN (SELECT invoice_id, SUM(amount) AS total FROM payments
+                    WHERE company_id = :companyId AND payment_type = 'received' AND invoice_id IS NOT NULL GROUP BY invoice_id) p ON p.invoice_id = i.id
+         WHERE i.company_id = :companyId AND i.status <> 'cancelled' AND i.invoice_date >= :start AND i.invoice_date < :end GROUP BY 1`, range),
+      // Money out: payments made to suppliers, plus what was paid when the bill was entered.
+      q(`SELECT ${monthOf('payment_date')} AS month, SUM(amount) AS total FROM payments
+         WHERE company_id = :companyId AND payment_type = 'made' AND payment_date >= :start AND payment_date < :end GROUP BY 1`, range),
+      q(`SELECT ${monthOf('b.bill_date')} AS month, SUM(GREATEST(b.paid_amount - COALESCE(p.total, 0), 0)) AS total
+         FROM purchases b
+         LEFT JOIN (SELECT purchase_id, SUM(amount) AS total FROM payments
+                    WHERE company_id = :companyId AND payment_type = 'made' AND purchase_id IS NOT NULL GROUP BY purchase_id) p ON p.purchase_id = b.id
+         WHERE b.company_id = :companyId AND b.status <> 'cancelled' AND b.bill_date >= :start AND b.bill_date < :end GROUP BY 1`, range),
+      q(`SELECT to_char(invoice_date AT TIME ZONE ${IST}, 'YYYY-MM-DD') AS day, SUM(total_amount) AS total FROM invoices
+         WHERE company_id = :companyId AND status <> 'cancelled' AND invoice_date >= :start AND invoice_date < :end GROUP BY 1`,
+        { start: daysStart, end: daysEnd }),
+      q(`SELECT SUM(total_amount) AS total FROM invoices
+         WHERE company_id = :companyId AND status <> 'cancelled' AND invoice_date >= :start AND invoice_date < :end`,
+        { start: todayStart, end: daysEnd }),
+      q(`SELECT SUM(total_amount - paid_amount) AS total, COUNT(*) AS count FROM invoices
+         WHERE company_id = :companyId AND status <> 'cancelled' AND payment_status IN ('unpaid', 'partial')`),
+      q(`SELECT SUM(total_amount - paid_amount) AS total, COUNT(*) AS count FROM invoices
+         WHERE company_id = :companyId AND status <> 'cancelled' AND payment_status IN ('unpaid', 'partial') AND due_date < :today`,
+        { today: todayStart }),
+      q(`SELECT id, name, unit, stock_quantity, low_stock_alert FROM products
+         WHERE company_id = :companyId AND COALESCE(type, 'product') <> 'service' AND stock_quantity <= low_stock_alert
+         ORDER BY stock_quantity / NULLIF(low_stock_alert, 0) ASC NULLS FIRST, name LIMIT 5`),
+      q(`SELECT COUNT(*) AS count FROM products
+         WHERE company_id = :companyId AND COALESCE(type, 'product') <> 'service' AND stock_quantity <= low_stock_alert`),
+      q(`SELECT c.id, c.name, c.phone, SUM(i.total_amount - i.paid_amount) AS amount, COUNT(*) AS invoices, MIN(i.due_date) AS oldest_due
+         FROM invoices i JOIN customers c ON c.id = i.customer_id
+         WHERE i.company_id = :companyId AND i.status <> 'cancelled' AND i.payment_status IN ('unpaid', 'partial')
+         GROUP BY c.id, c.name, c.phone HAVING SUM(i.total_amount - i.paid_amount) > 0 ORDER BY amount DESC LIMIT 5`),
+      q(`SELECT i.id, i.invoice_number, c.name AS customer, i.total_amount, i.paid_amount, i.payment_status, i.status, i.invoice_date, i.due_date
+         FROM invoices i LEFT JOIN customers c ON c.id = i.customer_id
+         WHERE i.company_id = :companyId ORDER BY i.invoice_date DESC, i.created_at DESC LIMIT 10`),
+      q(`SELECT p.id, p.name, SUM(ii.total) AS revenue, SUM(ii.quantity) AS quantity
+         FROM invoice_items ii JOIN invoices i ON i.id = ii.invoice_id JOIN products p ON p.id = ii.product_id
+         WHERE i.company_id = :companyId AND i.status <> 'cancelled' AND i.invoice_date >= :start AND i.invoice_date < :end
+         GROUP BY p.id, p.name ORDER BY revenue DESC LIMIT 5`, { start: thisMonth.start, end: thisMonth.end }),
+      q(`(SELECT 'receivable' AS kind, i.id, i.invoice_number AS ref, c.name AS party, i.total_amount - i.paid_amount AS amount, i.due_date
+          FROM invoices i LEFT JOIN customers c ON c.id = i.customer_id
+          WHERE i.company_id = :companyId AND i.status <> 'cancelled' AND i.payment_status IN ('unpaid', 'partial') AND i.due_date >= :today AND i.due_date < :soon)
+         UNION ALL
+         (SELECT 'payable' AS kind, b.id, b.bill_number AS ref, s.name AS party, b.total_amount - b.paid_amount AS amount, b.due_date
+          FROM purchases b LEFT JOIN suppliers s ON s.id = b.supplier_id
+          WHERE b.company_id = :companyId AND b.status <> 'cancelled' AND b.payment_status IN ('unpaid', 'partial') AND b.due_date >= :today AND b.due_date < :soon)
+         ORDER BY due_date ASC LIMIT 6`, { today: todayStart, soon }),
+      q(`SELECT * FROM (
+           (SELECT 'invoice' AS type, i.id, i.invoice_number AS ref, c.name AS party, i.total_amount AS amount, i.created_at
+            FROM invoices i LEFT JOIN customers c ON c.id = i.customer_id WHERE i.company_id = :companyId ORDER BY i.created_at DESC LIMIT 8)
+           UNION ALL
+           (SELECT CASE WHEN p.payment_type = 'received' THEN 'payment_in' ELSE 'payment_out' END, p.id, p.reference_number, COALESCE(c.name, s.name), p.amount, p.created_at
+            FROM payments p LEFT JOIN customers c ON c.id = p.customer_id LEFT JOIN suppliers s ON s.id = p.supplier_id
+            WHERE p.company_id = :companyId ORDER BY p.created_at DESC LIMIT 8)
+           UNION ALL
+           (SELECT 'purchase', b.id, b.bill_number, s.name, b.total_amount, b.created_at
+            FROM purchases b LEFT JOIN suppliers s ON s.id = b.supplier_id WHERE b.company_id = :companyId ORDER BY b.created_at DESC LIMIT 8)
+           UNION ALL
+           (SELECT 'expense', e.id, e.category, NULL, e.amount, e.created_at FROM expenses e WHERE e.company_id = :companyId ORDER BY e.created_at DESC LIMIT 8)
+           UNION ALL
+           (SELECT 'customer', cu.id, NULL, cu.name, NULL, cu.created_at FROM customers cu WHERE cu.company_id = :companyId ORDER BY cu.created_at DESC LIMIT 8)
+         ) a ORDER BY created_at DESC LIMIT 8`),
+      Invoice.count({ where: { company_id: companyId, status: { [Op.ne]: 'cancelled' }, invoice_date: { [Op.gte]: thisMonth.start, [Op.lt]: thisMonth.end } } }),
+      Product.count({ where: { company_id: companyId } }),
+      Company.findByPk(companyId, { attributes: ['gst_number', 'gst_registered'] }),
+      user ? UserCompany.count({ where: { user_id: user.id } }) : Promise.resolve(1),
     ]);
 
     // Business limit from the owner's Charis OS plan (1 when OS cannot be reached).
     let totalBusinessesLimit = 1;
     try { totalBusinessesLimit = await require('./charisOsService').businessLimit(companyId); } catch { /* keep 1 */ }
 
-    const resTodaySales = Number(todaySales || 0);
-    const resMonthlySales = Number(monthlySales || 0);
-    const resPendingPayments = Number(pendingPayments || 0);
-    const resMonthlyExpenses = Number(monthlyExpenses || 0);
-    const resMonthlyPurchases = Number(monthlyPurchases || 0);
+    const byMonth = (rows) => Object.fromEntries(rows.map((r) => [r.month, num(r.total)]));
+    const [salesM, purchasesM, expensesM, receivedM, upfrontInM, madeM, upfrontOutM] =
+      [sales, purchases, expenses, received, upfrontReceived, made, upfrontPaid].map(byMonth);
+    const monthly = months.map(({ key }) => {
+      const s = salesM[key] || 0;
+      const p = purchasesM[key] || 0;
+      const e = expensesM[key] || 0;
+      const moneyIn = (receivedM[key] || 0) + (upfrontInM[key] || 0);
+      return {
+        month: key,
+        label: figures.monthLabel(key),
+        sales: s,
+        purchases: p,
+        expenses: e,
+        profit: s - p - e,
+        collections: moneyIn,
+        moneyOut: (madeM[key] || 0) + (upfrontOutM[key] || 0) + e,
+      };
+    });
+    const current = monthly[monthly.length - 1];
+    const previous = monthly[monthly.length - 2];
+    const comparison = Object.fromEntries(['sales', 'profit', 'expenses', 'collections'].map((k) => [k, {
+      current: current[k],
+      previous: previous[k],
+      change: figures.percentChange(current[k], previous[k]),
+    }]));
 
-    const grossProfit = resMonthlySales - resMonthlyPurchases;
-    const netProfit = grossProfit - resMonthlyExpenses;
-
-    // Get sales data for chart (last 7 days)
-    const salesChartData = [];
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      const dayStart = new Date(date.setHours(0, 0, 0, 0));
-      const dayEnd = new Date(date.setHours(23, 59, 59, 999));
-
-      const daySales = await Invoice.sum('total_amount', {
-        where: {
-          company_id: companyId,
-          invoice_date: { [Op.between]: [dayStart, dayEnd] },
-          status: { [Op.ne]: 'cancelled' }
-        }
-      }) || 0;
-
-      salesChartData.push({
-        date: dayStart.toISOString().split('T')[0],
-        sales: Number(daySales)
-      });
-    }
+    const dailyMap = Object.fromEntries(daily.map((r) => [r.day, num(r.total)]));
+    const pendingAmount = num(pendingRow[0]?.total);
+    const overdueAmount = num(overdueRow[0]?.total);
 
     return {
-      todaySales: resTodaySales,
-      monthlySales: resMonthlySales,
-      pendingPayments: resPendingPayments,
-      monthlyExpenses: resMonthlyExpenses,
-      grossProfit,
-      netProfit,
-      salesChartData,
+      // Kept for existing callers.
+      todaySales: num(todayRow[0]?.total),
+      monthlySales: current.sales,
+      pendingPayments: pendingAmount,
+      monthlyExpenses: current.expenses,
+      grossProfit: current.sales - current.purchases,
+      netProfit: current.profit,
+      salesChartData: days.slice(-7).map((day) => ({ date: day, sales: dailyMap[day] || 0 })),
       invoicesCount,
       productsCount,
       activeBusinessesCount: activeBusinessesCount || 1,
-      totalBusinessesLimit
+      totalBusinessesLimit,
+
+      thisMonth: current,
+      lastMonth: previous,
+      comparison,
+      monthly,
+      dailySales: days.map((day) => ({ date: day, sales: dailyMap[day] || 0 })),
+      receivables: {
+        pendingAmount,
+        pendingCount: num(pendingRow[0]?.count),
+        overdueAmount,
+        overdueCount: num(overdueRow[0]?.count),
+        topCustomers: receivables.map((r) => ({ id: r.id, name: r.name, phone: r.phone, amount: num(r.amount), invoices: num(r.invoices), oldestDue: r.oldest_due })),
+      },
+      lowStock: {
+        count: num(lowStockCount[0]?.count),
+        items: lowStockRows.map((r) => ({ id: r.id, name: r.name, unit: r.unit, stock: num(r.stock_quantity), minimum: num(r.low_stock_alert) })),
+      },
+      gst: { registered: Boolean(company?.gst_registered || company?.gst_number), dueDates: figures.gstDueDates(now) },
+      upcomingDues: dueSoon.map((r) => ({ kind: r.kind, id: r.id, ref: r.ref, party: r.party, amount: num(r.amount), dueDate: r.due_date })),
+      recentInvoices: recentInvoices.map((r) => ({
+        id: r.id, number: r.invoice_number, customer: r.customer, amount: num(r.total_amount), paid: num(r.paid_amount),
+        paymentStatus: r.payment_status, status: r.status, date: r.invoice_date, dueDate: r.due_date,
+      })),
+      topProducts: topProducts.map((r) => ({ id: r.id, name: r.name, revenue: num(r.revenue), quantity: num(r.quantity) })),
+      recentActivity: activity.map((r) => ({ type: r.type, id: r.id, ref: r.ref, party: r.party, amount: r.amount === null ? null : num(r.amount), at: r.created_at })),
+      health: figures.healthScore({ thisMonth: current, lastMonth: previous, pendingAmount, overdueAmount }),
     };
   }
   // --- ADVANCED & PREMIUM REPORTS ---

@@ -98,7 +98,7 @@ export const RegisterPage = () => {
             Start Your Business Journey
           </h2>
           <p className="text-slate-400 text-lg mb-10">
-            Join thousands of businesses using Bill Easy to streamline their billing and inventory management.
+            Set up GST billing, inventory and payments for your business in a few minutes.
           </p>
           
           <div className="space-y-4 text-left">
@@ -141,7 +141,7 @@ export const RegisterPage = () => {
                 <div className="h-1.5 w-full bg-emerald-600" />
                 <CardHeader className="px-5 pt-7 pb-4 sm:px-8">
                   <CardTitle className="font-heading text-2xl sm:text-3xl font-bold">Create account</CardTitle>
-                  <CardDescription className="text-slate-500 mt-1">Start your 14-day free trial today</CardDescription>
+                  <CardDescription className="text-slate-500 mt-1">Start on the Free plan. No card needed.</CardDescription>
                 </CardHeader>
 
                 <CardContent className="px-5 pb-8 sm:px-8">
