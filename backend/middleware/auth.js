@@ -202,7 +202,7 @@ const QUOTA_RESPONSES = {
   products: (limit, used) => ({ error: `Product limit reached (${limit}). Upgrade your plan for more.`, limitCode: 'product.total', limit, used }),
 };
 
-/** Charis OS mode: limits come from the OS plan, usage is counted from this business's records. */
+/** Limits come from the OS plan; usage is counted from this business's records. */
 const checkCharisOsQuota = async (req, res, next, quotaType) => {
   try {
     const snapshot = await charisOs.getSnapshot(req.companyId);
@@ -218,76 +218,7 @@ const checkCharisOsQuota = async (req, res, next, quotaType) => {
   }
 };
 
-const checkSubscriptionQuota = (quotaType) => {
-  return async (req, res, next) => {
-    if (charisOs.enabled()) return checkCharisOsQuota(req, res, next, quotaType);
-    const subscription = req.user.Company?.Subscription;
-    const plan = subscription?.Plan;
-
-    if (!subscription || !plan) {
-      return res.status(403).json({ 
-        error: 'No active subscription',
-        code: 'NO_SUBSCRIPTION'
-      });
-    }
-
-    if (subscription.status !== 'active' && subscription.status !== 'trial') {
-      return res.status(403).json({ 
-        error: 'Subscription expired or inactive',
-        code: 'SUBSCRIPTION_INACTIVE'
-      });
-    }
-
-    const usage = subscription.usage || {};
-    const now = new Date();
-
-    // Check lazy billing-period expiration: if a new period started, effective usage is 0
-    let effectiveInvoiceUsage = usage.invoices || 0;
-    if (usage.invoice_period_end && now >= new Date(usage.invoice_period_end)) {
-      effectiveInvoiceUsage = 0;
-    }
-
-    // Limits Logic
-    const isFreeAccount = plan.plan_name === 'Free Account' || plan.plan_name === 'Free' || plan.plan_name === 'Zero Account';
-    const isPremium = plan.plan_name === 'Premium';
-    
-    const invoiceLimit = Number.isFinite(plan.max_invoices_per_month) && plan.max_invoices_per_month >= 0
-      ? plan.max_invoices_per_month
-      : (isFreeAccount ? 50 : (isPremium ? 200 : 1000));
-    const productLimit = Number.isFinite(plan.max_products) && plan.max_products >= 0
-      ? plan.max_products
-      : (isFreeAccount ? 100 : (isPremium ? 1000 : 5000));
-
-    switch (quotaType) {
-      case 'invoices':
-        if (effectiveInvoiceUsage >= invoiceLimit) {
-          return res.status(403).json({ 
-            error: `Monthly invoice limit reached (${invoiceLimit}). Upgrade your plan for more.`, 
-            limitCode: 'invoice.monthly',
-            limit: invoiceLimit,
-            used: effectiveInvoiceUsage,
-            code: 'QUOTA_EXCEEDED',
-            upgradeRequired: true
-          });
-        }
-        break;
-      case 'products':
-        if ((usage.products || 0) >= productLimit) {
-          return res.status(403).json({ 
-            error: `Product limit reached (${productLimit}). Upgrade your plan for more.`, 
-            limitCode: 'product.total',
-            limit: productLimit,
-            used: (usage.products || 0),
-            code: 'QUOTA_EXCEEDED',
-            upgradeRequired: true
-          });
-        }
-        break;
-    }
-
-    next();
-  };
-};
+const checkSubscriptionQuota = (quotaType) => (req, res, next) => checkCharisOsQuota(req, res, next, quotaType);
 
 /**
  * Feature access check middleware
@@ -306,9 +237,8 @@ const checkFeatureAccess = (featureKey) => {
       return next();
     }
 
-    const planName = req.user.Company?.Subscription?.Plan?.plan_name || 'Free';
     return res.status(403).json({ 
-      error: `Your current plan (${planName}) does not include access to this feature. Please upgrade.`,
+      error: 'Your current plan does not include this feature. Please upgrade.',
       code: 'FEATURE_NOT_AVAILABLE',
       feature: featureKey,
       upgradeRequired: true

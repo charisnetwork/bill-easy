@@ -1,9 +1,7 @@
-const { Invoice, InvoiceItem, Customer, Product, Company, Payment, User, StockLevel, StockMovement, Godown, Subscription, sequelize } = require('../models');
+const { Invoice, InvoiceItem, Customer, Product, Company, Payment, User, StockLevel, StockMovement, Godown, sequelize } = require('../models');
 const { generateInvoiceNumber, peekInvoiceNumber } = require('../services/invoiceNumberService');
 const { generateInvoicePdf } = require('../services/invoicePdfService');
 const { Op } = require('sequelize');
-const SubscriptionGuard = require('../utils/subscriptionGuard');
-const { consumeInvoiceQuota } = require('../services/billingPeriodUsageService');
 
 const getInvoices = async (req, res) => {
   try {
@@ -276,8 +274,6 @@ const createInvoice = async (req, res) => {
       transaction
     });
 
-    await consumeInvoiceQuota({ Subscription, Plan: require('../models').Plan, companyId: req.companyId, transaction });
-
     await transaction.commit();
     res.status(201).json({
       message: "Invoice created successfully",
@@ -286,16 +282,6 @@ const createInvoice = async (req, res) => {
     });
   } catch (error) {
     if (transaction) await transaction.rollback();
-    if (error.code === 'QUOTA_EXCEEDED') {
-      return res.status(403).json({
-        error: 'Invoice quota exceeded. Upgrade your plan for more.',
-        code: 'QUOTA_EXCEEDED',
-        limitCode: error.limitCode || 'invoice.monthly',
-        limit: error.limit,
-        used: error.used,
-        upgradeRequired: true
-      });
-    }
     console.error("Create invoice error:", error);
     res.status(500).json({
       error: process.env.NODE_ENV === 'production' ? "Failed to create invoice" : "Failed to create invoice: " + error.message

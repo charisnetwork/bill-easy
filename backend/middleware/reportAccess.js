@@ -1,4 +1,3 @@
-const SubscriptionGuard = require('../utils/subscriptionGuard');
 const charisOs = require('../services/charisOsService');
 
 // Charis OS feature codes for paid report tiers.
@@ -6,7 +5,7 @@ const TIER_FEATURES = { PREMIUM: 'advanced_reports', ENTERPRISE: 'enterprise_rep
 
 /**
  * Middleware to check if the company has access to a specific report tier.
- * @param {string} tier - 'FREE', 'PREMIUM', or 'ENTERPRISE'
+ * @param {string} tier - FREE (everyone), PREMIUM (advanced_reports) or ENTERPRISE (enterprise_reports)
  */
 const checkReportAccess = (tier) => {
   return async (req, res, next) => {
@@ -15,15 +14,12 @@ const checkReportAccess = (tier) => {
         return next(); // Free reports are available to all authenticated companies
       }
 
-      const action = tier === 'ENTERPRISE' ? 'REPORT_ENTERPRISE' : 'REPORT_PREMIUM';
-      const hasAccess = charisOs.enabled()
-        ? charisOs.featureAllowed(await charisOs.getSnapshot(req.companyId), TIER_FEATURES[tier])
-        : await SubscriptionGuard.canPerformAction(req.companyId, action);
+      const hasAccess = charisOs.featureAllowed(await charisOs.getSnapshot(req.companyId), TIER_FEATURES[tier]);
 
       if (!hasAccess) {
         return res.status(403).json({
           error: `Upgrade Required`,
-          message: `This report requires the ${tier} plan. Please upgrade your subscription to access it.`
+          message: 'Your current plan does not include this report. Please upgrade your subscription to access it.'
         });
       }
 

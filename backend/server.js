@@ -8,9 +8,8 @@ const http = require('http');
 const path = require('path');
 
 const { rateLimit } = require('express-rate-limit');
-const { CharisSDK } = require('@charis/sdk');
 
-const { sequelize, Plan, Company, Subscription, Godown, User, UserCompany } = require('./models');
+const { sequelize, Company, Godown, User, UserCompany } = require('./models');
 
 // Routes
 const authRoutes = require('./routes/auth');
@@ -30,7 +29,6 @@ const creditNoteRoutes = require('./routes/creditNotes');
 const aiRoutes = require('./routes/ai');
 const enquiryRoutes = require('./routes/enquiry');
 const paymentRoutes = require('./routes/payments');
-const controlRoutes = require('./routes/control');
 
 const app = express();
 
@@ -188,7 +186,6 @@ app.use('/api/enquiries', enquiryRoutes);
 app.use('/api/staff', require('./routes/staff'));
 app.use("/api/utilities", require("./routes/utilities"));
 // Server-to-server Control Centre integration. Every endpoint enforces its own API key.
-app.use('/control', controlRoutes);
 
 // NOTE: Bare-path duplicate routes removed — Railway now correctly preserves /api/ prefix.
 // All API calls must go through /api/* routes above.
@@ -332,101 +329,16 @@ app.get('/api-info', (req, res) => {
 });
 
 /* =========================================
-   CHARIS CONTROL CENTRE SDK & WEBHOOKS
+   CHARIS OS (plans, coupons, payments)
 ========================================= */
 
-// Validate Control Centre credentials on startup
-const ccEnvVars = {
-  CONTROL_CENTER_API_KEY: process.env.CONTROL_CENTER_API_KEY,
-  CONTROL_CENTER_APPLICATION_ID: process.env.CONTROL_CENTER_APPLICATION_ID,
-  CONTROL_CENTER_PUBLIC_KEY: process.env.CONTROL_CENTER_PUBLIC_KEY,
-  CONTROL_CENTER_WEBHOOK_SECRET: process.env.CONTROL_CENTER_WEBHOOK_SECRET
-};
-const missingCC = Object.entries(ccEnvVars).filter(([, v]) => !v).map(([k]) => k);
-// Charis OS mode (CHARIS_SUBSCRIPTION_MODE=enforce) replaces the legacy Control Centre SDK.
-const charisOsManaged = require('./services/charisOsService').enabled();
-if (charisOsManaged) {
-  console.log('[CharisOS] ✅ Plans, coupons and payments are managed by Charis OS');
-} else if (missingCC.length > 0) {
-  console.warn(`[CharisSDK] ⚠️  Missing env vars: ${missingCC.join(', ')}`);
-  console.warn('[CharisSDK] ⚠️  Subscription enforcement will use LOCAL plan data only.');
-}
-
+// Charis OS owns plans, coupons and Razorpay; Bill Easy only enforces entitlements.
 try {
-  if (!charisOsManaged && missingCC.length === 0) {
-    CharisSDK.init({
-      productId: 'billeasy',
-      applicationId: process.env.CONTROL_CENTER_APPLICATION_ID,
-      apiKey: process.env.CONTROL_CENTER_API_KEY,
-      gatewayUrl: process.env.CONTROL_CENTER_URL || 'https://chariscontrol-production.up.railway.app',
-      publicKey: process.env.CONTROL_CENTER_PUBLIC_KEY,
-      webhookSecret: process.env.CONTROL_CENTER_WEBHOOK_SECRET
-    });
-
-    if (CharisSDK.entitlements) {
-      // Charis entitlement webhook (subscription changes, plan updates)
-      app.post('/api/webhooks/charis', express.raw({ type: 'application/json' }), CharisSDK.entitlements.webhookReceiver());
-      console.log('[CharisSDK] ✅ Webhook receiver mounted at /api/webhooks/charis');
-    }
-
-    console.log('[CharisSDK] ✅ Initialized — entitlements enforced via Control Centre');
-  } else if (!charisOsManaged) {
-    console.log('[CharisSDK] ℹ️  Skipped initialization — using local subscription enforcement');
-  }
+  require('./services/charisOsService').charisOsConfig();
+  console.log('[CharisOS] ✅ Plans, coupons and payments are managed by Charis OS');
 } catch (err) {
-  console.error('[CharisSDK] ❌ Failed to initialize:', err.message);
-  console.warn('[CharisSDK] ⚠️  Falling back to local subscription enforcement');
-}
-
-// Razorpay payment webhook (server-to-server payment confirmations)
-// In Charis OS mode, OS receives the shared Razorpay account's webhooks and verifies payments.
-const razorpayWebhookSecret = charisOsManaged ? null : process.env.RAZORPAY_WEBHOOK_SECRET;
-if (razorpayWebhookSecret) {
-  const crypto = require('crypto');
-  app.post('/api/webhooks/razorpay', express.raw({ type: 'application/json' }), async (req, res) => {
-    try {
-      const signature = req.headers['x-razorpay-signature'];
-      if (!signature) return res.status(400).json({ error: 'Missing signature' });
-      
-      const body = Buffer.isBuffer(req.body) ? req.body : Buffer.from(JSON.stringify(req.body));
-      const expected = crypto.createHmac('sha256', razorpayWebhookSecret).update(body).digest('hex');
-      
-      if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
-        return res.status(401).json({ error: 'Invalid webhook signature' });
-      }
-      
-      const event = JSON.parse(body.toString('utf8'));
-      const { Subscription: SubModel, Plan: PlanModel } = require('./models');
-      
-      if (event.event === 'payment.captured') {
-        const notes = event.payload?.payment?.entity?.notes;
-        if (notes?.company_id) {
-          await SubModel.update(
-            { payment_status: 'paid', status: 'active' },
-            { where: { company_id: notes.company_id } }
-          );
-          console.log(`[Razorpay Webhook] ✅ Payment captured for company ${notes.company_id}`);
-        }
-      } else if (event.event === 'payment.failed') {
-        const notes = event.payload?.payment?.entity?.notes;
-        if (notes?.company_id) {
-          await SubModel.update(
-            { payment_status: 'failed' },
-            { where: { company_id: notes.company_id } }
-          );
-          console.warn(`[Razorpay Webhook] ❌ Payment failed for company ${notes.company_id}`);
-        }
-      }
-      
-      return res.status(200).json({ status: 'ok' });
-    } catch (err) {
-      console.error('[Razorpay Webhook] Error:', err.message);
-      return res.status(400).json({ error: 'Webhook processing failed' });
-    }
-  });
-  console.log('[Razorpay] ✅ Payment webhook mounted at /api/webhooks/razorpay');
-} else if (!charisOsManaged) {
-  console.warn('[Razorpay] ⚠️  RAZORPAY_WEBHOOK_SECRET not set — payment webhooks disabled');
+  console.error(`❌ FATAL: ${err.message}. Bill Easy needs Charis OS to enforce plans. Exiting.`);
+  process.exit(1);
 }
 
 /* =========================================
@@ -467,110 +379,6 @@ app.use((req, res) => {
     method: req.method
   });
 });
-
-/* =========================================
-   SEED DEFAULT PLANS
-========================================= */
-
-const seedPlans = async () => {
-  try {
-    const plans = [
-      {
-        plan_name: 'Free Account',
-        price: 0,
-        billing_cycle: 'lifetime',
-        max_users: 1,
-        max_invoices_per_month: 50,
-        max_products: 100,
-        features: {
-          gst_billing: true,
-          inventory_management: true,
-          reports: true,
-          quotations: true,
-          eway_bills: false,
-          multi_godowns: false,
-          staff_attendance_payroll: false,
-          manage_businesses: 1,
-          user_activity_tracker: false
-        },
-        is_active: true
-      },
-      {
-        plan_name: 'Premium',
-        price: 499,
-        billing_cycle: '3month',
-        max_users: 5,
-        max_invoices_per_month: 999999,
-        max_products: 10000,
-        features: {
-          gst_billing: true,
-          inventory_management: true,
-          reports: true,
-          quotations: true,
-          eway_bills: true, // Limited access check in Guard
-          multi_godowns: true,
-          staff_attendance_payroll: false,
-          manage_businesses: 2,
-          user_activity_tracker: false
-        },
-        is_active: true
-      },
-      {
-        plan_name: 'Enterprise',
-        price: 699,
-        billing_cycle: '3month',
-        max_users: 20,
-        max_invoices_per_month: 999999,
-        max_products: 100000,
-        features: {
-          gst_billing: true,
-          inventory_management: true,
-          reports: true,
-          quotations: true,
-          eway_bills: true,
-          multi_godowns: true,
-          staff_attendance_payroll: true,
-          manage_businesses: 3,
-          user_activity_tracker: true,
-          priority_support: true
-        },
-        is_active: true
-      }
-    ];
-
-    for (const planData of plans) {
-      const [plan, created] = await Plan.findOrCreate({
-        where: { plan_name: planData.plan_name },
-        defaults: planData
-      });
-
-      if (!created) {
-        await plan.update(planData);
-      }
-    }
-
-    // Also handle migration from old names if they exist
-    const oldPlans = ['Zero Account', 'Free'];
-    const newFreePlan = await Plan.findOne({ where: { plan_name: 'Free Account' } });
-    
-    if (newFreePlan) {
-      for (const oldName of oldPlans) {
-        const oldPlan = await Plan.findOne({ where: { plan_name: oldName } });
-        if (oldPlan) {
-          await Subscription.update(
-            { plan_id: newFreePlan.id },
-            { where: { plan_id: oldPlan.id } }
-          );
-          await oldPlan.destroy();
-        }
-      }
-    }
-
-    // Plans seeded
-  } catch (error) {
-    // Plan seed error handled
-  }
-};
 
 /* =========================================
    SERVER START
@@ -878,28 +686,6 @@ const startServer = async () => {
     await sequelize.sync(syncOptions);
     // Database synchronized
 
-    await seedPlans();
-
-    // Scan for expired subscriptions and downgrade
-    try {
-      const { Op } = require('sequelize');
-      const freePlan = await Plan.findOne({ where: { plan_name: 'Free Account' } });
-      if (freePlan) {
-        await Subscription.update(
-          { plan_id: freePlan.id, expiry_date: null, status: 'active' },
-          { 
-            where: { 
-              expiry_date: { [Op.lt]: new Date() },
-              plan_id: { [Op.ne]: freePlan.id }
-            } 
-          }
-        );
-      }
-    } catch (checkExpiredError) {
-      // Subscription check warning
-      // Continue startup - this might happen if plans table columns are missing
-    }
-    
     // Ensure data integrity
     try {
       // Check if User table has password column before query
@@ -922,16 +708,7 @@ const startServer = async () => {
     }
 
     try {
-      const companies = await Company.findAll({
-        include: [{ model: Subscription }, { model: Godown }]
-      });
-      
-      let freePlan;
-      try {
-        freePlan = await Plan.findOne({ where: { plan_name: 'Free Account' } });
-      } catch (planError) {
-        // Free plan fetch warning
-      }
+      const companies = await Company.findAll({ include: [{ model: Godown }] });
 
       for (const company of companies) {
         // 1. Default Godown
@@ -945,21 +722,6 @@ const startServer = async () => {
             is_active: true
           });
         }
-        
-        // 2. Default Subscription
-        if (!company.Subscription && freePlan) {
-          // Creating default Subscription
-          const expiry = new Date();
-          expiry.setFullYear(expiry.getFullYear() + 10);
-          await Subscription.create({
-            company_id: company.id,
-            plan_id: freePlan.id,
-            status: 'active',
-            payment_status: 'paid',
-            expiry_date: expiry,
-            usage: { invoices: 0, eway_bills: 0, godowns: 0, products: 0 }
-          });
-        }
       }
     } catch (companySetupError) {
       // Company setup warning
@@ -967,7 +729,6 @@ const startServer = async () => {
 
     serverReady = true;
     console.log(`✅ DB bootstrap complete — server is fully ready on port ${PORT}`);
-    console.log('Charis is now powered by Gemini Flash');
 
     // Start recurring invoice scheduler
     const { startScheduler } = require('./services/recurringInvoiceScheduler');

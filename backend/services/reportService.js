@@ -1,4 +1,4 @@
-const { Invoice, Purchase, Expense, Customer, Supplier, Product, InvoiceItem, PurchaseItem, UserCompany, Subscription, Plan, sequelize } = require('../models');
+const { Invoice, Purchase, Expense, Customer, Supplier, Product, InvoiceItem, PurchaseItem, UserCompany, sequelize } = require('../models');
 const { Op } = require('sequelize');
 
 class ReportService {
@@ -262,15 +262,9 @@ class ReportService {
       user ? UserCompany.count({ where: { user_id: user.id } }) : Promise.resolve(1)
     ]);
 
-    // Get business limit from plan
+    // Business limit from the owner's Charis OS plan (1 when OS cannot be reached).
     let totalBusinessesLimit = 1;
-    if (user?.Company?.Subscription?.Plan) {
-      let features = user.Company.Subscription.Plan.features || {};
-      if (typeof features === 'string') {
-        try { features = JSON.parse(features); } catch (e) { features = {}; }
-      }
-      totalBusinessesLimit = features.manage_businesses || 1;
-    }
+    try { totalBusinessesLimit = await require('./charisOsService').businessLimit(companyId); } catch { /* keep 1 */ }
 
     const resTodaySales = Number(todaySales || 0);
     const resMonthlySales = Number(monthlySales || 0);

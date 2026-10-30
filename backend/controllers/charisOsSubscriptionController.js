@@ -1,5 +1,5 @@
 /**
- * /api/subscription when CHARIS_SUBSCRIPTION_MODE=enforce.
+ * /api/subscription: Bill Easy proxies the Charis OS customer API (plans, checkout, usage).
  *
  * Plans, prices, coupons and payment verification come from Charis OS. The browser never
  * supplies amounts, entitlements or the billing tenant; the owner's session decides them.
@@ -127,9 +127,5 @@ const sync = handle(async (req) => {
 });
 
 /** Local plan changes, local coupons and unverified payment upgrades are disabled in OS mode. */
-const managedElsewhere = (_req, res) => send(res, 409, {
-  error: 'Plans and payments are managed by Charis OS. Choose a plan on the Subscription page.',
-  code: 'MANAGED_BY_CHARIS_OS',
-});
 
-module.exports = { getPlans, getCurrentSubscription, getUsage, getCheckout, quote, createOrder, verify, sync, managedElsewhere, planView };
+module.exports = { getPlans, getCurrentSubscription, getUsage, getCheckout, quote, createOrder, verify, sync, planView };

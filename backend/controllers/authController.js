@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const { User, Company, Plan, Subscription, UserCompany } = require('../models');
+const { User, Company, UserCompany } = require('../models');
 const tokenService = require('../services/tokenService');
 const { incrementBruteForce, clearBruteForce } = require('../middleware/rateLimit');
 const { logSecurityEvent, EVENT_TYPES, SEVERITY } = require('../services/auditService');
@@ -100,47 +100,11 @@ const register = async (req, res) => {
     // Update Company with owner_id
     await company.update({ owner_id: user.id });
 
-    // Find or create Free plan
-    let freePlan = await Plan.findOne({ where: { plan_name: 'Free Account' } });
-
-    if (!freePlan) {
-      freePlan = await Plan.create({
-        plan_name: 'Free Account',
-        price: 0,
-        billing_cycle: 'lifetime',
-        max_users: 1,
-        max_invoices_per_month: 50,
-        max_products: 50,
-        storage_limit: 100
-      });
-    }
-
-    // Create trial subscription
-    const trialEnd = new Date();
-    trialEnd.setDate(trialEnd.getDate() + 14);
-
-    await Subscription.create({
-      company_id: company.id,
-      plan_id: freePlan.id,
-      start_date: new Date(),
-      expiry_date: trialEnd,
-      status: 'trial',
-      payment_status: 'pending',
-      usage: {
-        invoices: 0,
-        products: 0,
-        eway_bills: 0,
-        godowns: 0
-      }
-    });
-
-    // Charis OS mode: register the business with OS and start the OS free plan, if offered.
+    // Register the business with Charis OS and start its free plan, if offered.
     // An OS outage never blocks signup; login retries onboarding.
     let subscriptionSyncPending = false;
-    if (charisOs.enabled()) {
-      try { await charisOs.claimFreePlan(company.id, user.id); }
-      catch { subscriptionSyncPending = true; }
-    }
+    try { await charisOs.claimFreePlan(company.id, user.id); }
+    catch { subscriptionSyncPending = true; }
 
     // Generate session ID
     const sessionId = crypto.randomUUID();
@@ -193,10 +157,7 @@ const login = async (req, res) => {
     const user = await User.findOne({
       where: { email },
       include: [
-        {
-          model: Company,
-          include: [{ model: Subscription, include: [Plan] }]
-        }
+        { model: Company }
       ]
     });
 
@@ -246,35 +207,14 @@ const login = async (req, res) => {
     let maxBusinesses = 1;
     
     if (companyIds.length > 0) {
-      const allSubs = await Subscription.findAll({
-        where: { company_id: companyIds },
-        include: [Plan]
-      });
-      allSubs.forEach(sub => {
-        const limit = sub.Plan?.features?.manage_businesses || 1;
-        if (limit > maxBusinesses) maxBusinesses = limit;
-      });
-    }
-    if (charisOs.enabled() && companyIds.length > 0) {
       try { maxBusinesses = await charisOs.businessLimit(companyIds[0]); }
-      catch { /* OS unavailable: keep the conservative local value for display only. */ }
+      catch { /* OS unavailable: show one business; adding more is checked again server-side. */ }
     }
 
     // Update last login
     await user.update({ last_login: new Date() });
     if (companyIds.length) charisOs.onboardInBackground(companyIds[0], user.id); // Owned businesses share one OS customer.
 
-    // Trigger CharisSDK fetch for entitlements in the background
-    try {
-      const { CharisSDK } = require('@charis/sdk');
-      if (CharisSDK && CharisSDK.entitlements) {
-        for (const cid of companyIds) {
-          CharisSDK.entitlements.fetchEntitlement(cid).catch(e => console.warn('[CharisSDK] Async fetch failed for', cid));
-        }
-      }
-    } catch (err) {
-      console.warn('[CharisSDK] Not initialized or fetch error', err.message);
-    }
 
     // Generate session ID and tokens
     const sessionId = crypto.randomUUID();
@@ -313,16 +253,7 @@ const login = async (req, res) => {
         currency: user.Company.currency
       } : null,
       companies,
-      subscription: charisOs.enabled() && user.Company
-        ? await charisOs.sessionSummary(user.Company.id)
-        : (user.Company && user.Company.Subscription)
-        ? {
-            plan: user.Company.Subscription.Plan,
-            status: user.Company.Subscription.status,
-            expiryDate: user.Company.Subscription.expiry_date,
-            usage: user.Company.Subscription.usage
-          }
-        : null
+      subscription: user.Company ? await charisOs.sessionSummary(user.Company.id) : null
     });
 
   } catch (error) {
@@ -495,18 +426,8 @@ const getProfile = async (req, res) => {
     let maxBusinesses = 1;
     
     if (companyIds.length > 0) {
-      const allSubs = await Subscription.findAll({
-        where: { company_id: companyIds },
-        include: [Plan]
-      });
-      allSubs.forEach(sub => {
-        const limit = sub.Plan?.features?.manage_businesses || 1;
-        if (limit > maxBusinesses) maxBusinesses = limit;
-      });
-    }
-    if (charisOs.enabled() && companyIds.length > 0) {
       try { maxBusinesses = await charisOs.businessLimit(companyIds[0]); }
-      catch { /* OS unavailable: keep the conservative local value for display only. */ }
+      catch { /* OS unavailable: show one business; adding more is checked again server-side. */ }
     }
 
     res.json({
@@ -545,16 +466,7 @@ const getProfile = async (req, res) => {
         settings: user.Company.settings
       } : null,
       companies,
-      subscription: charisOs.enabled() && user.Company
-        ? await charisOs.sessionSummary(user.Company.id)
-        : (user.Company && user.Company.Subscription)
-        ? {
-            plan: user.Company.Subscription.Plan,
-            status: user.Company.Subscription.status,
-            expiryDate: user.Company.Subscription.expiry_date,
-            usage: user.Company.Subscription.usage
-          }
-        : null
+      subscription: user.Company ? await charisOs.sessionSummary(user.Company.id) : null
     });
 
   } catch (error) {
@@ -648,14 +560,6 @@ const switchCompany = async (req, res) => {
     }
 
     await req.user.update({ company_id: companyId });
-
-    // Pre-fetch entitlement for the switched company
-    try {
-      const { CharisSDK } = require('@charis/sdk');
-      if (CharisSDK && CharisSDK.entitlements) {
-        CharisSDK.entitlements.fetchEntitlement(companyId).catch(e => console.warn('[CharisSDK] Async fetch failed for', companyId));
-      }
-    } catch (err) {}
 
     res.json({ message: 'Switched company successfully' });
   } catch (error) {

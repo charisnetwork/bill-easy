@@ -1,6 +1,5 @@
-const { Product, Category, StockMovement, Subscription, Godown, StockLevel, sequelize } = require('../models');
+const { Product, Category, StockMovement, Godown, StockLevel, sequelize } = require('../models');
 const { Op } = require('sequelize');
-const SubscriptionGuard = require('../utils/subscriptionGuard');
 
 const getProducts = async (req, res) => {
   try {
@@ -124,16 +123,6 @@ const createProduct = async (req, res) => {
       description
     });
 
-    const subscription = await Subscription.findOne({
-      where: { company_id: req.companyId }
-    });
-
-    if (subscription) {
-      const usage = { ... (subscription.usage || { invoices: 0, products: 0, eway_bills: 0, godowns: 0 }) };
-      usage.products = (usage.products || 0) + 1;
-      await subscription.update({ usage });
-    }
-
     if (type === 'product' && stock_quantity && parseFloat(stock_quantity) > 0) {
       const defaultGodown = await Godown.findOne({
         where: { company_id: req.companyId, is_default: true }
@@ -256,26 +245,6 @@ const deleteProduct = async (req, res) => {
 
     await product.destroy();
 
-    const subscription = await Subscription.findOne({
-      where: { company_id: req.companyId }
-    });
-
-    if (subscription) {
-      const usage = subscription.usage || {
-        invoices: 0,
-        products: 0,
-        eway_bills: 0,
-        godowns: 0
-      };
-
-      usage.products = Math.max(
-        0,
-        (usage.products || 0) - 1
-      );
-
-      await subscription.update({ usage });
-    }
-
     res.json({ message: 'Product deleted successfully' });
 
   } catch (error) {
@@ -301,20 +270,6 @@ const bulkDeleteProducts = async (req, res) => {
       },
       transaction
     });
-
-    // Decrement subscription usage
-    if (deletedCount > 0) {
-      const subscription = await Subscription.findOne({
-        where: { company_id: req.companyId },
-        transaction
-      });
-
-      if (subscription) {
-        const usage = { ...(subscription.usage || { invoices: 0, products: 0, eway_bills: 0, godowns: 0 }) };
-        usage.products = Math.max(0, (usage.products || 0) - deletedCount);
-        await subscription.update({ usage }, { transaction });
-      }
-    }
 
     await transaction.commit();
     res.json({ message: `${deletedCount} product(s) deleted successfully`, deletedCount });

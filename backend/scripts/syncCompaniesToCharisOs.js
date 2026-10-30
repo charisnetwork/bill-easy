@@ -1,5 +1,5 @@
 /**
- * Go-live helper for CHARIS_SUBSCRIPTION_MODE=enforce.
+ * Go-live helper: registers existing businesses with Charis OS.
  *
  *   node scripts/syncCompaniesToCharisOs.js           # dry run: report only, changes nothing
  *   node scripts/syncCompaniesToCharisOs.js --apply   # register customers in OS, start Free plans
@@ -16,7 +16,7 @@ const charisOs = require('../services/charisOsService');
 const apply = process.argv.includes('--apply');
 
 async function main() {
-  if (!charisOs.enabled()) throw new Error('Set CHARIS_SUBSCRIPTION_MODE=enforce and the CHARIS_OS_* variables first');
+  charisOs.charisOsConfig(); // throws when the CHARIS_OS_* variables are missing
   const companies = await Company.findAll({ attributes: ['id', 'name', 'owner_id', 'createdAt'], order: [['createdAt', 'ASC']] });
   const tenants = new Map();
   for (const company of companies) {

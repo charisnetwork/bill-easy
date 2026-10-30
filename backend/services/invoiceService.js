@@ -1,4 +1,4 @@
-const { Invoice, InvoiceItem, Product, Customer, Company, Subscription, StockMovement, sequelize } = require('../models');
+const { Invoice, InvoiceItem, Product, Customer, Company, StockMovement, sequelize } = require('../models');
 
 class InvoiceService {
   static async generateInvoiceNumber(companyId) {
@@ -129,17 +129,6 @@ class InvoiceService {
         where: { id: data.customer_id },
         transaction: t
       });
-
-      // Update subscription usage - proper JSON field update
-      const subscription = await Subscription.findOne({ 
-        where: { company_id: companyId },
-        transaction: t 
-      });
-      if (subscription) {
-        const usage = subscription.usage || { invoices: 0, products: 0, eway_bills: 0, godowns: 0 };
-        usage.invoices = (usage.invoices || 0) + 1;
-        await subscription.update({ usage }, { transaction: t });
-      }
 
       await t.commit();
       return invoice;

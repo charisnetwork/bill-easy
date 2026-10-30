@@ -1,4 +1,4 @@
-const { Company, User, Subscription, Plan, UserCompany, Godown } = require("../models");
+const { Company, User, UserCompany, Godown } = require("../models");
 const bcrypt = require("bcryptjs");
 const { Country } = require('country-state-city');
 const charisOs = require("../services/charisOsService");
@@ -417,53 +417,16 @@ const addCompany = async (req, res) => {
     const companyIds = userCompanies.map(uc => uc.company_id);
     const currentCount = companyIds.length;
 
-    // Charis OS mode: the owner's plan in OS sets the business limit.
-    if (charisOs.enabled()) {
-      let limit;
-      try {
-        limit = await charisOs.businessLimit(req.companyId);
-      } catch (error) {
-        if (error instanceof charisOs.CharisOsError) return res.status(error.status).json({ error: error.message, code: error.code, needsUpgrade: error.status === 403 });
-        throw error;
-      }
-      if (currentCount >= limit) {
-        return res.status(403).json({ error: `Company creation limit reached. Your plan allows a maximum of ${limit} companies.`, currentCount, maxLimit: limit, needsUpgrade: true });
-      }
+    // The owner's plan in Charis OS sets the business limit.
+    let limit;
+    try {
+      limit = await charisOs.businessLimit(req.companyId);
+    } catch (error) {
+      if (error instanceof charisOs.CharisOsError) return res.status(error.status).json({ error: error.message, code: error.code, needsUpgrade: error.status === 403 });
+      throw error;
     }
-
-    // 2. Identify the highest business limit among all active subscriptions
-    const subscriptions = await Subscription.findAll({
-      where: { company_id: companyIds, status: ['active', 'trial'] },
-      include: [Plan]
-    });
-
-    let maxBusinesses = 1; // Default for Free/Zero
-    let currentHighestPlan = 'Free Account';
-
-    subscriptions.forEach(sub => {
-      let features = sub.Plan?.features || {};
-      if (typeof features === 'string') {
-        try { features = JSON.parse(features); } catch (e) { features = {}; }
-      }
-      
-      const planLimit = parseInt(features.manage_businesses) || 1;
-      if (planLimit > maxBusinesses) {
-        maxBusinesses = planLimit;
-        currentHighestPlan = sub.Plan.plan_name;
-      }
-    });
-    
-    // Add company request processed
-
-    // 3. Validation: Block if limit reached
-    if (!charisOs.enabled() && currentCount >= maxBusinesses) {
-      const planName = currentHighestPlan === 'Free Account' ? 'Free' : currentHighestPlan;
-      return res.status(403).json({ 
-        error: `Company creation limit reached. Your ${currentHighestPlan} plan allows a maximum of ${maxBusinesses} companies.`,
-        currentCount,
-        maxLimit: maxBusinesses,
-        needsUpgrade: true
-      });
+    if (currentCount >= limit) {
+      return res.status(403).json({ error: `Business limit reached. Your plan allows a maximum of ${limit} businesses.`, currentCount, maxLimit: limit, needsUpgrade: true });
     }
 
     // 4. Create new company
@@ -478,33 +441,6 @@ const addCompany = async (req, res) => {
       company_id: company.id,
       role: 'owner'
     });
-
-    // 6. Assign the best active subscription plan to the new company
-    // This gives it the Enterprise/Premium features but isolated usage tracking
-    let bestPlan = await Plan.findOne({ where: { plan_name: currentHighestPlan } });
-    if (!bestPlan) {
-      bestPlan = await Plan.findOne({ where: { plan_name: 'Free Account' } });
-    }
-
-    if (bestPlan) {
-      // Find the subscription that gave us this best plan to copy its expiry date
-      const sourceSub = subscriptions.find(s => s.Plan && s.Plan.plan_name === currentHighestPlan);
-      
-      await Subscription.create({
-        company_id: company.id,
-        plan_id: bestPlan.id,
-        start_date: new Date(),
-        expiry_date: sourceSub ? sourceSub.expiry_date : null,
-        status: sourceSub ? sourceSub.status : 'active',
-        payment_status: 'paid',
-        usage: {
-          invoices: 0,
-          products: 0,
-          eway_bills: 0,
-          godowns: 0
-        }
-      });
-    }
 
     res.status(201).json({ 
       message: 'New business created successfully', 

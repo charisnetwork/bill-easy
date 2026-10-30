@@ -15,17 +15,27 @@ const snapshot = (overrides = {}) => ({
   ...overrides,
 });
 
-test('OS mode is explicit and requires a server-side HTTPS credential', () => {
-  assert.equal(charisOsConfig({}), null);
-  assert.equal(charisOsConfig({ CHARIS_SUBSCRIPTION_MODE: 'off', CHARIS_OS_APP_KEY: 'unused' }), null);
-  assert.throws(() => charisOsConfig({ CHARIS_SUBSCRIPTION_MODE: 'on' }));
-  assert.throws(() => charisOsConfig({ CHARIS_SUBSCRIPTION_MODE: 'enforce' }));
-  const base = { CHARIS_SUBSCRIPTION_MODE: 'enforce', CHARIS_OS_APP_ID: appId, CHARIS_OS_APP_KEY: 'key' };
+test('Charis OS is required and needs a server-side HTTPS credential', () => {
+  assert.throws(() => charisOsConfig({}), /CHARIS_OS_URL/);
+  assert.throws(() => charisOsConfig({ CHARIS_OS_APP_KEY: 'only-key' }), /CHARIS_OS_URL/);
+  const base = { CHARIS_OS_APP_ID: appId, CHARIS_OS_APP_KEY: 'key' };
   assert.throws(() => charisOsConfig({ ...base, NODE_ENV: 'production', CHARIS_OS_URL: 'http://localhost:8010' }));
   assert.throws(() => charisOsConfig({ ...base, CHARIS_OS_URL: 'https://os.example.com/api' }));
   assert.throws(() => charisOsConfig({ ...base, CHARIS_OS_URL: 'https://os.example.com', CHARIS_OS_APP_ID: 'not-a-uuid' }));
   assert.deepEqual(charisOsConfig({ ...base, CHARIS_OS_URL: 'https://os.example.com/' }), { origin: 'https://os.example.com', appId, key: 'key' });
   assert.equal(charisOsConfig({ ...base, CHARIS_OS_URL: 'http://127.0.0.1:8010' }).origin, 'http://127.0.0.1:8010');
+  // The old on/off switch no longer exists: "off" cannot turn OS enforcement off.
+  assert.throws(() => charisOsConfig({ CHARIS_SUBSCRIPTION_MODE: 'off' }), /CHARIS_OS_URL/);
+});
+
+test('no gating code decides access by plan name', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  for (const file of ['middleware/auth.js', 'middleware/reportAccess.js', 'services/subscriptionService.js', 'routes/subscription.js']) {
+    const source = fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
+    assert.doesNotMatch(source, /'(Free|Premium|Enterprise|Zero)( Account)?'/, file);
+    assert.doesNotMatch(source, /CHARIS_SUBSCRIPTION_MODE|SubscriptionGuard|upgradePlan|processPayment/, file);
+  }
 });
 
 test('snapshots must match this app and tenant and be well formed', () => {
@@ -61,7 +71,7 @@ test('monthly invoice quota resets at midnight India time on the 1st', () => {
 });
 
 test('plain HTTP to OS only for an explicitly allowed private service name', () => {
-  const base = { NODE_ENV: 'production', CHARIS_SUBSCRIPTION_MODE: 'enforce', CHARIS_OS_APP_ID: appId, CHARIS_OS_APP_KEY: 'key' };
+  const base = { NODE_ENV: 'production', CHARIS_OS_APP_ID: appId, CHARIS_OS_APP_KEY: 'key' };
   assert.throws(() => charisOsConfig({ ...base, CHARIS_OS_URL: 'http://os-api:8000' }));
   assert.equal(charisOsConfig({ ...base, CHARIS_OS_URL: 'http://os-api:8000', CHARIS_OS_INTERNAL_HTTP: 'true' }).origin, 'http://os-api:8000');
   assert.throws(() => charisOsConfig({ ...base, CHARIS_OS_URL: 'http://os.example.com', CHARIS_OS_INTERNAL_HTTP: 'true' }));
@@ -78,10 +88,10 @@ test('every enforced feature code is published to Charis OS', () => {
   for (const code of [...used, 'invoices', 'products', 'businesses', 'advanced_reports', 'enterprise_reports']) assert.ok(published.has(code), `${code} is enforced but not published`);
 });
 
-test('operator restriction is read strictly; older OS responses and disabled mode mean not restricted', async () => {
+test('operator restriction is read strictly; older OS responses and an unconfigured OS mean not restricted', async () => {
   assert.equal(parseSnapshot(snapshot(), appId, 'company-a').restricted, false);
   assert.equal(parseSnapshot(snapshot({ restricted: 'yes' }), appId, 'company-a').restricted, false);
   assert.equal(parseSnapshot(snapshot({ status: 'suspended', restricted: true }), appId, 'company-a').restricted, true);
   const { isRestricted } = require('../services/charisOsService');
-  assert.equal(await isRestricted('company-a'), false); // CHARIS_SUBSCRIPTION_MODE is off in tests
+  assert.equal(await isRestricted('company-a'), false); // OS is not configured in unit tests
 });

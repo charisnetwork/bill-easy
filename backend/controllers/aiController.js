@@ -1,5 +1,5 @@
 const { GoogleGenAI, Type } = require("@google/genai");
-const { Invoice, Product, Company, Expense, Subscription, Plan, AIUsage, Purchase, Supplier, Customer } = require("../models");
+const { Invoice, Product, Company, Expense, AIUsage, Purchase, Supplier, Customer } = require("../models");
 const { Op, sequelize } = require("sequelize");
 
 // Initialize Gemini
@@ -119,20 +119,7 @@ const chatWithAssistant = async (req, res) => {
       return res.status(500).json({ error: "AI service is not configured on the server." });
     }
 
-    // 1. Check Usage Limits (Enterprise ONLY)
-    const subscription = await Subscription.findOne({
-      where: { company_id: companyId },
-      include: [Plan]
-    });
-
-    const planName = subscription?.Plan?.plan_name || 'Free Account';
-
-    if (!planName.toLowerCase().includes('enterprise')) {
-      return res.status(403).json({ 
-        error: `Charis AI Assistant is exclusive to Enterprise users. Please upgrade your plan to access this feature.` 
-      });
-    }
-    
+    // 1. Access comes from the ai_assistant entitlement (route middleware).
     const dailyLimit = 50;
     const today = new Date().toISOString().split('T')[0];
     const [usage] = await AIUsage.findOrCreate({

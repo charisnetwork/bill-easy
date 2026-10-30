@@ -2,8 +2,7 @@
  * Charis OS subscription client (contract_version 1).
  *
  * OS owns plans, coupons, affiliates and payment verification; Bill Easy enforces the
- * resulting entitlements. Disabled unless CHARIS_SUBSCRIPTION_MODE=enforce, in which case
- * local plan tables are no longer consulted for access decisions.
+ * resulting entitlements. OS is the only source of plans: Bill Easy has no local plan mode.
  *
  * Billing tenant: an owner's first business. Businesses added later share its plan;
  * invoice/product usage is still counted per business.
@@ -22,16 +21,14 @@ const SNAPSHOT_TTL_MS = 60 * 1000;
 const TENANT_TTL_MS = 5 * 60 * 1000;
 const STATUSES = ['active', 'pending', 'suspended', 'cancelled', 'expired', 'unassigned'];
 
+/** The OS connection; throws when it is not configured (Bill Easy cannot gate without OS). */
 function charisOsConfig(source = process.env) {
-  const mode = (source.CHARIS_SUBSCRIPTION_MODE || 'off').trim();
-  if (!['off', 'enforce'].includes(mode)) throw new Error('CHARIS_SUBSCRIPTION_MODE must be off or enforce');
-  if (mode === 'off') return null;
   const connection = osConnection(source);
-  if (!connection) throw new Error('CHARIS_OS_URL, CHARIS_OS_APP_ID and CHARIS_OS_APP_KEY are required when enforcing');
+  if (!connection) throw new Error('CHARIS_OS_URL, CHARIS_OS_APP_ID and CHARIS_OS_APP_KEY are required');
   return connection;
 }
 
-/** The OS connection when all three CHARIS_OS_* values are set (any mode); null otherwise. */
+/** The OS connection when all three CHARIS_OS_* values are set; null otherwise. */
 function osConnection(source = process.env) {
   const url = source.CHARIS_OS_URL?.trim();
   const appId = source.CHARIS_OS_APP_ID?.trim();
@@ -49,11 +46,11 @@ function osConnection(source = process.env) {
   return { origin: parsed.origin, appId, key };
 }
 
-const enabled = () => charisOsConfig() !== null;
+/** True when OS is configured. Only unit tests run without it; the server refuses to start. */
+const enabled = () => osConnection() !== null;
 
 async function osRequest(resource, { method = 'GET', body, checkout = false } = {}) {
   const config = charisOsConfig();
-  if (!config) return null;
   let response;
   let text;
   try {
@@ -133,7 +130,6 @@ async function billingTenantId(companyId) {
 
 async function getSnapshot(companyId) {
   const config = charisOsConfig();
-  if (!config) return null;
   const tenantId = await billingTenantId(companyId);
   const entry = snapshotCache.get(tenantId);
   if (entry && entry.until > Date.now()) return entry.snapshot;
@@ -234,7 +230,6 @@ async function syncCompany(companyId) {
 
 async function getCatalog() {
   const config = charisOsConfig();
-  if (!config) return null;
   const data = await osRequest('subscription-catalog');
   if (data.contract_version !== 1 || data.application_id !== config.appId || !Array.isArray(data.plans)) {
     throw new CharisOsError(503, 'SUBSCRIPTION_UNAVAILABLE', 'Subscription catalog is unavailable');
