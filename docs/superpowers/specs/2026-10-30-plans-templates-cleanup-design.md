@@ -1,6 +1,6 @@
 # Bill Easy: Control Centre plans, modern invoice templates, cleanup — design
 
-Date: 2026-10-30 · Status: awaiting review
+Date: 2026-10-30 · Status: approved (with revision 1 below)
 
 ## Why
 
@@ -52,9 +52,11 @@ New feature codes published in `BILLEASY_FEATURES` (OS shows them in the plan ed
 | `purchase_bills` | limit, monthly | create purchase bill (`routes/purchases.js`) |
 | `report_exports` | limit, monthly | report PDF/Excel export and print endpoints |
 | `ai_messages` | limit, monthly | `/api/ai/chat`, only when the AI model is called |
-| `premium_templates` | on/off | saving a premium template / branding options |
+| `premium_templates` | on/off | saving Bold / Elegant templates |
+| `pro_templates` | on/off | saving Corporate / Creative templates |
+| `godowns` | limit, total | create godown (replaces `multi_godowns`) |
 | `ai_invoice_design` | on/off | AI template suggestion |
-| existing: `eway_bills`, `multi_godowns`, `staff_attendance_payroll`, `recurring_invoices`, `bulk_download_print_invoices`, `advanced_reports`, `enterprise_reports`, `ai_assistant`, `businesses` | | unchanged |
+| existing: `eway_bills`, `staff_attendance_payroll`, `recurring_invoices`, `bulk_download_print_invoices`, `advanced_reports`, `enterprise_reports`, `ai_assistant`, `businesses` | | unchanged |
 
 Counting: invoices, products and purchase bills are counted from Bill Easy's own records. Report
 exports and AI messages use a new Bill Easy table `usage_counters (company_id, feature_code,
@@ -74,13 +76,15 @@ Plans created in the **local** OS through its web UI (the six existing local pla
 | Items | 100 | 500 | unlimited |
 | Report exports / month | 10 | unlimited | unlimited |
 | AI messages / month | 10 | 50 | unlimited |
-| E-way bills | off | off | on |
-| Premium templates, AI design | off | off | on |
-| Everything else | off | per OS editor (default: GST billing, inventory, quotations, reports on) | on |
+| Godowns | 1 | 2 | unlimited |
+| Businesses | 1 | 2 | unlimited |
+| GST billing, inventory, quotations, reports, P&L/GST reports, AI assistant | on | on | on |
+| Premium templates (Bold, Elegant) | off | on | on |
+| Pro templates (Corporate, Creative), AI design | off | off | on |
+| E-way bills, staff & payroll, recurring invoices, bulk download/print, enterprise reports | off | off | on |
 
 "Was" prices use OS `compare_at_price`, so the plan card shows the strike-through. A separate
-coupon (e.g. `INAUGURAL`) is created in OS for QA; its real discount value is the user's to set
-in OS. Production OS on Railway gets the same plans by the user in the OS UI, following a
+percentage coupon **`WELCOME`** (10% off, paid plans, editable in OS) is the inaugural coupon. Production OS on Railway gets the same plans by the user in the OS UI, following a
 checklist in `DEPLOYMENT.md`.
 
 ### 3. AI provider
@@ -100,9 +104,9 @@ it consume `ai_messages`. Keys never reach the frontend.
   existing `config/industries.js` extra fields extended to the new types.
 - Templates: one shared **template definition** (layout + style tokens) per template, rendered by
   React for screen and by the PDF service from the same definition, so screen and PDF match.
-  Six real templates: **Modern**, **Classic GST** (Tally-style, full tax table), **Minimal**,
-  **Bold**, **Elegant**, **Thermal 80 mm**. Paper size A4 / A5 / 80 mm is a setting, not a template.
-  Free: Modern, Classic GST, Minimal, Thermal. Others need `premium_templates`.
+  Eight real templates: **Modern**, **Classic GST** (Tally-style, full tax table), **Minimal**,
+  **Thermal 80 mm** (all plans); **Bold**, **Elegant** (`premium_templates`); **Corporate**,
+  **Creative** (`pro_templates`). Paper size A4 / A5 / 80 mm is a setting, not a template.
 - Industry → recommended template and default fields (e.g. pharmacy → Classic GST with batch/
   expiry columns; restaurant → Thermal; services → Minimal without HSN-heavy columns).
 - Settings → **Invoice design** (one screen, live preview from the real renderer, real thumbnails):
@@ -123,6 +127,15 @@ an industry → Free plan claimed → limits hit at 50 invoices / 100 items / 10
 messages → PO screens locked → plan page shows three plans with strike-through prices and coupon
 → upgrade with the Razorpay test stand-in → limits lift → template picker locks/unlocks with plan.
 Civil regression run on its plan page. No push or deploy without the user's go-ahead.
+
+## Revision 1 (2026-10-30, user)
+
+- Coupon `WELCOME`, percentage discount. Premium gets the two premium templates.
+- Godowns and businesses become limits (Premium 2 each). A clear business switcher (and godown
+  selector where stock is chosen) lets users toggle between them.
+- Staff & payroll, e-way bills, recurring, bulk download and enterprise reports: Pro only.
+- AI provider key: the NVIDIA key the user keeps in `~/Documents`, copied only into the
+  git-ignored `backend/.env`.
 
 ## Testing
 
