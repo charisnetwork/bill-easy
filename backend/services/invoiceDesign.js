@@ -23,7 +23,8 @@ const UPI = /^[\w.-]{2,}@[a-zA-Z][\w]{1,}$/;
 const DESIGN_KEYS = ['template_id', 'accent', 'font', 'paper', 'logo_position', 'columns', 'party', 'show', 'footer_note', 'upi_id'];
 const LEGACY_KEYS = ['invoice_template', 'theme_color', 'show_item_description', 'show_phone_number', 'enable_free_quantity', 'show_alternate_unit', 'show_po_number', 'show_eway_bill', 'show_vehicle_number', 'show_time', 'show_party_balance'];
 
-const isDesignUpdate = (settings) => !!settings && DESIGN_KEYS.some((key) => key in settings);
+// Older keys count too: they must never set the template without validation.
+const isDesignUpdate = (settings) => !!settings && [...DESIGN_KEYS, ...LEGACY_KEYS].some((key) => key in settings);
 
 function checkSwitches(name, value, keys) {
   if (value === undefined) return;
@@ -79,6 +80,20 @@ const mergeIntoCompanySettings = (currentSettings, design) => {
   return { ...next, ...design };
 };
 
+/**
+ * company.settings after an update from any settings form. Design keys are validated against the
+ * plan; older design keys (invoice_template, theme_color, …) are never stored.
+ * @param {{ current: object, update: object, features: object }} args
+ */
+async function applySettingsUpdate({ current = {}, update = {}, features = {} }) {
+  if (!isDesignUpdate(update)) return { ...current, ...update };
+  const design = await validateInvoiceSettings(
+    Object.fromEntries(DESIGN_KEYS.filter((k) => k in update).map((k) => [k, update[k]])),
+    { features, current });
+  const others = Object.fromEntries(Object.entries(update).filter(([k]) => !DESIGN_KEYS.includes(k) && !LEGACY_KEYS.includes(k)));
+  return mergeIntoCompanySettings({ ...current, ...others }, design);
+}
+
 const SYSTEM = `You design GST invoices for Indian small businesses. Reply with JSON only:
 {"template_id": one of TEMPLATE_IDS, "accent": "#RRGGBB", "columns": {"hsn": bool, "discount": bool, "batch": bool, "expiry": bool, "description": bool}}
 Pick a template that suits the business type, and an accent colour that matches the logo colours when given (dark enough to read white text on it).`;
@@ -112,4 +127,4 @@ async function suggestDesign({ industry, logoColors = [], features = {} }) {
   }
 }
 
-module.exports = { DesignError, DESIGN_KEYS, isDesignUpdate, validateInvoiceSettings, mergeIntoCompanySettings, suggestDesign };
+module.exports = { DesignError, DESIGN_KEYS, isDesignUpdate, validateInvoiceSettings, mergeIntoCompanySettings, applySettingsUpdate, suggestDesign };

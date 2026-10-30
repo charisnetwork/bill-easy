@@ -65,7 +65,6 @@ test('quick search answers an invoice number from the database without AI', asyn
 test('chat', { skip: !dbUrl && 'TEST_DATABASE_URL not set' }, async (t) => {
   const { sequelize, UsageCounter, Company } = require('../models');
   await UsageCounter.sync();
-  t.after(() => sequelize.close());
   const charisOs = require('../services/charisOsService');
   charisOs.getSnapshot = async () => ({ status: 'active', entitlements: [{ feature_code: 'ai_messages', enabled: true, limit_type: 'limited', limit_value: 10 }] });
   Company.findByPk = async () => ({ name: 'Test Shop' });
@@ -164,4 +163,49 @@ test('business questions that mention "code" are not refused as off-topic', asyn
     const body = await new Promise((resolve) => chatWithAssistant({ companyId: 'c1', user: { id: 'u1' }, body: { question: 'What is the HSN code for rice?' } }, { status() { return this; }, json: resolve }));
     assert.equal(body.source, 'quick_search');
   } finally { aiQuickSearch.answer = original; }
+});
+
+test('bill scanning', { skip: !dbUrl && 'TEST_DATABASE_URL not set' }, async (t) => {
+  const { sequelize, UsageCounter } = require('../models');
+  await UsageCounter.sync();
+  t.after(() => sequelize.close());
+  const charisOs = require('../services/charisOsService');
+  charisOs.getSnapshot = async () => ({ status: 'active', entitlements: [{ feature_code: 'ai_messages', enabled: true, limit_type: 'limited', limit_value: 10 }] });
+  charisOs.usageFor = async () => ({});
+  const { processPDFExtract } = require('../controllers/aiController');
+  const { usageSummary } = require('../services/usageLimits');
+  const scan = (companyId) => new Promise((resolve) => processPDFExtract({ companyId, body: { extractedText: 'Paracetamol 10 x 20', documentType: 'bill' } }, { code: 200, status(c) { this.code = c; return this; }, json(body) { resolve({ status: this.code, body }); } }));
+
+  await t.test('with the AI key missing it returns 503 and uses no message', async () => {
+    const companyId = crypto.randomUUID();
+    const restore = withEnv({ ...env, NVIDIA_API_KEY: undefined });
+    try {
+      const { status, body } = await scan(companyId);
+      assert.equal(status, 503);
+      assert.equal(body.code, 'AI_UNAVAILABLE');
+      assert.equal((await usageSummary(companyId)).ai_messages, 0);
+    } finally { restore(); }
+  });
+
+  await t.test('a successful scan uses one message, taken by the scan itself (not by route middleware)', async () => {
+    const companyId = crypto.randomUUID();
+    const restore = withEnv(env);
+    const fetch = mockFetch(() => reply({ content: '{"items":[]}' }));
+    try {
+      assert.equal((await scan(companyId)).status, 200);
+      assert.equal((await usageSummary(companyId)).ai_messages, 1);
+      const route = require('fs').readFileSync(require('path').join(__dirname, '../routes/ai.js'), 'utf8');
+      assert.doesNotMatch(route, /consumeMonthlyUnit\('ai_messages'\)/, 'the route must not take a message before the AI has run');
+    } finally { fetch.restore(); restore(); }
+  });
+
+  await t.test('with the AI down it gives the message back', async () => {
+    const companyId = crypto.randomUUID();
+    const restore = withEnv(env);
+    const fetch = mockFetch(() => reply({}, 500));
+    try {
+      assert.equal((await scan(companyId)).status, 503);
+      assert.equal((await usageSummary(companyId)).ai_messages, 0);
+    } finally { fetch.restore(); restore(); }
+  });
 });

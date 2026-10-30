@@ -171,7 +171,7 @@ async function usageFor(companyId, now = new Date()) {
     Invoice.count({ where: { company_id: companyId, createdAt: { [Op.gte]: monthStart } } }),
     Product.count({ where: { company_id: companyId } }),
     Purchase.count({ where: { company_id: companyId, createdAt: { [Op.gte]: monthStart } } }),
-    Godown.count({ where: { company_id: companyId } }),
+    Godown.count({ where: { company_id: companyId, is_active: true } }), // same list Settings shows
     // Businesses are counted for the owner: every business they own shares the plan.
     company?.owner_id ? UserCompany.count({ where: { user_id: company.owner_id, role: 'owner' } }) : 1,
   ]);

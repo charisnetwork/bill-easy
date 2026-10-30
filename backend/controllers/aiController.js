@@ -180,7 +180,8 @@ const chatWithAssistant = async (req, res) => {
 // PDF Processing Helper
 const processPDFExtract = async (req, res) => {
   const companyId = req.companyId;
-  
+  let unit;
+
   try {
     const { extractedText, documentType } = req.body;
     
@@ -207,6 +208,9 @@ const processPDFExtract = async (req, res) => {
     
     Document text: ${extractedText.substring(0, 3000)}`;
 
+    // Reading a bill with AI uses one AI message, taken only once the AI is configured.
+    aiProvider.config();
+    unit = await consumeMonthly(companyId, 'ai_messages');
     const result = await aiProvider.chat({ messages: [{ role: 'user', content: `${prompt}\n\nReply with the JSON only.` }], json: true, maxTokens: 2000, temperature: 0 });
     const parsedData = JSON.parse(result.content.replace(/^```(?:json)?|```$/g, '').trim());
     if (!Array.isArray(parsedData.items)) throw new Error('The document could not be read');
@@ -217,7 +221,8 @@ const processPDFExtract = async (req, res) => {
       let product = await Product.findOne({
         where: { 
           company_id: companyId,
-          name: { [Op.iLike]: item.name }
+          // Exact name match: model output must not act as a LIKE wildcard.
+          name: { [Op.iLike]: String(item.name || '').replace(/[\\%_]/g, '\\$&') }
         }
       });
 
@@ -250,6 +255,10 @@ const processPDFExtract = async (req, res) => {
     });
 
   } catch (error) {
+    if (error instanceof QuotaError) return res.status(403).json({ error: error.message, code: error.code, feature: error.feature, limit: error.limit, used: error.used, upgradeRequired: true });
+    if (error instanceof charisOs.CharisOsError) return res.status(error.status).json({ error: error.message, code: error.code, feature: 'ai_messages', upgradeRequired: error.status === 403 });
+    // The AI did not deliver a usable answer: give the message back.
+    if (unit) await refundMonthly(companyId, 'ai_messages').catch(() => {});
     if (error instanceof aiProvider.AiUnavailableError) return res.status(503).json({ error: error.message, code: error.code });
     res.status(500).json({ error: process.env.NODE_ENV === 'production' ? "Failed to process PDF" : "Failed to process PDF: " + error.message });
   }

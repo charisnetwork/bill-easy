@@ -11,7 +11,7 @@ import { BusinessSwitcher } from './BusinessSwitcher';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const Sidebar = ({ open, setOpen }) => {
-  const { user, hasFeature, limitOf } = useAuth();
+  const { user, hasFeature } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -72,8 +72,8 @@ export const Sidebar = ({ open, setOpen }) => {
           key: 'inventory',
           subItems: [
             { path: '/products', label: 'All Items' },
-            // Transfers need a second godown: shown when the plan allows more than one.
-            { path: '/stock-transfer', label: 'Stock Transfer', hidden: limitOf('godowns') !== null && limitOf('godowns') < 2 },
+            // Always reachable: after a downgrade, stock must still be movable out of extra godowns.
+            { path: '/stock-transfer', label: 'Stock Transfer' },
           ]
         },
       ]

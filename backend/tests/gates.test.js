@@ -151,3 +151,31 @@ test('a business over its plan limit gets the standard upgrade response', async 
     assert.deepEqual([body.code, body.feature, body.limit, body.used, body.upgradeRequired], ['QUOTA_EXCEEDED', 'businesses', 2, 2, true]);
   } finally { UserCompany.findAll = originalFind; charisOs.businessLimit = originalLimit; }
 });
+
+test('the old invoice_template key cannot unlock a paid template', async () => {
+  const { Company } = require('../models');
+  const originalFind = Company.findByPk;
+  let saved = null;
+  Company.findByPk = async () => ({ settings: { template_id: 'modern' }, update: async (data) => { saved = data; } });
+  entitlements = [];
+  try {
+    const res = await fetch(`${base}/api/company/settings`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ settings: { invoice_template: 'corporate' } }) });
+    assert.ok(res.status === 200 || res.status === 403, `status ${res.status}`);
+    if (saved) {
+      assert.equal(saved.settings.template_id, 'modern');
+      assert.equal(saved.settings.invoice_template, undefined);
+    }
+  } finally { Company.findByPk = originalFind; }
+});
+
+test('a locked design sent with business details is refused with 403, not a server error', async () => {
+  const { Company } = require('../models');
+  const originalFind = Company.findByPk;
+  Company.findByPk = async () => ({ settings: { template_id: 'modern' }, country_code: 'IN', update: async () => {} });
+  entitlements = [];
+  try {
+    const res = await fetch(`${base}/api/company`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'Shop', settings: { template_id: 'corporate' } }) });
+    assert.equal(res.status, 403);
+    assert.equal((await res.json()).feature, 'pro_templates');
+  } finally { Company.findByPk = originalFind; }
+});

@@ -2,6 +2,18 @@ const { Company, User, UserCompany, Godown } = require("../models");
 const invoiceDesign = require("../services/invoiceDesign");
 const { resolveIndustry, signupSettingsFor } = require("../config/industries");
 const { ensureDefaultGodown } = require("../services/companySetup");
+
+/** Settings after an update from any form; invoice design keys are validated against the OS plan. */
+async function mergeCompanySettings(companyId, current, update) {
+  let features = {};
+  if (invoiceDesign.isDesignUpdate(update)) {
+    try { features = charisOs.summaryFromSnapshot(await charisOs.getSnapshot(companyId)).features; }
+    catch { /* OS unreachable: only free templates can be newly chosen */ }
+  }
+  return invoiceDesign.applySettingsUpdate({ current: current || {}, update: update || {}, features });
+}
+
+const sendDesignError = (res, error) => res.status(error.status).json({ error: error.message, code: error.code, feature: error.feature, upgradeRequired: error.status === 403 || undefined });
 const bcrypt = require("bcryptjs");
 const { Country } = require('country-state-city');
 const charisOs = require("../services/charisOsService");
@@ -73,23 +85,8 @@ const updateCompany = async (req, res) => {
       return res.status(404).json({ error: "Company not found" });
     }
 
-    // Merge settings instead of overwriting
-    let newSettings = {
-      ...(company.settings || {}),
-      ...(settings || {})
-    };
-
-    // Invoice design changes are validated and checked against the Charis OS plan.
-    if (invoiceDesign.isDesignUpdate(settings)) {
-      let features = {};
-      try { features = charisOs.summaryFromSnapshot(await charisOs.getSnapshot(req.companyId)).features; }
-      catch { /* OS unreachable: only free templates can be newly chosen */ }
-      const design = await invoiceDesign.validateInvoiceSettings(
-        Object.fromEntries(invoiceDesign.DESIGN_KEYS.filter((k) => k in settings).map((k) => [k, settings[k]])),
-        { features, current: company.settings || {} });
-      const others = Object.fromEntries(Object.entries(settings).filter(([k]) => !invoiceDesign.DESIGN_KEYS.includes(k)));
-      newSettings = invoiceDesign.mergeIntoCompanySettings({ ...(company.settings || {}), ...others }, design);
-    }
+    // Merge settings instead of overwriting; invoice design keys are checked against the plan.
+    const newSettings = await mergeCompanySettings(req.companyId, company.settings, settings);
 
     const normalizedCountry = country_code ? String(country_code).toUpperCase() : company.country_code || 'IN';
     const countryCurrency = currencyForCountry(normalizedCountry);
@@ -129,7 +126,7 @@ const updateCompany = async (req, res) => {
     });
 
   } catch (error) {
-    // Error logged
+    if (error instanceof invoiceDesign.DesignError) return sendDesignError(res, error);
     res.status(500).json({ error: "Failed to update company" });
   }
 };
@@ -148,22 +145,7 @@ const updateSettings = async (req, res) => {
       return res.status(404).json({ error: "Company not found" });
     }
 
-    let newSettings = {
-      ...(company.settings || {}),
-      ...(settings || {})
-    };
-
-    // Invoice design changes are validated and checked against the Charis OS plan.
-    if (invoiceDesign.isDesignUpdate(settings)) {
-      let features = {};
-      try { features = charisOs.summaryFromSnapshot(await charisOs.getSnapshot(req.companyId)).features; }
-      catch { /* OS unreachable: only free templates can be newly chosen */ }
-      const design = await invoiceDesign.validateInvoiceSettings(
-        Object.fromEntries(invoiceDesign.DESIGN_KEYS.filter((k) => k in settings).map((k) => [k, settings[k]])),
-        { features, current: company.settings || {} });
-      const others = Object.fromEntries(Object.entries(settings).filter(([k]) => !invoiceDesign.DESIGN_KEYS.includes(k)));
-      newSettings = invoiceDesign.mergeIntoCompanySettings({ ...(company.settings || {}), ...others }, design);
-    }
+    const newSettings = await mergeCompanySettings(req.companyId, company.settings, settings);
 
     const updateData = { settings: newSettings };
     
@@ -187,9 +169,7 @@ const updateSettings = async (req, res) => {
     });
 
   } catch (error) {
-    if (error instanceof invoiceDesign.DesignError) {
-      return res.status(error.status).json({ error: error.message, code: error.code, feature: error.feature, upgradeRequired: error.status === 403 || undefined });
-    }
+    if (error instanceof invoiceDesign.DesignError) return sendDesignError(res, error);
     res.status(500).json({ error: "Failed to update settings" });
   }
 };

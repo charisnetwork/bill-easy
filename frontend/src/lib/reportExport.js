@@ -1,6 +1,11 @@
 /** CSV of every table shown in a report, so any report on screen can be downloaded. */
 export function tablesToCsv(container) {
-  const quote = (text) => `"${String(text).replace(/\s+/g, ' ').trim().replace(/"/g, '""')}"`;
+  const quote = (text) => {
+    let value = String(text).replace(/\s+/g, ' ').trim();
+    // A cell starting with = + - @ would run as a formula in Excel: keep it as text.
+    if (/^[=+\-@]/.test(value) && !/^-?[\d.,]+%?$/.test(value)) value = `'${value}`;
+    return `"${value.replace(/"/g, '""')}"`;
+  };
   const blocks = [...container.querySelectorAll('table')].map((table) =>
     [...table.querySelectorAll('tr')]
       .map((row) => [...row.querySelectorAll('th, td')].map((cell) => quote(cell.innerText)).join(','))

@@ -445,8 +445,8 @@ export const SettingsPage = () => {
       const payload = {
         ...values,
         business_category: values.industry,
+        // Only this form's own keys: the server merges them, so the invoice design is never overwritten.
         settings: {
-          ...company.settings,
           industry: values.industry,
           ownerType: values.registration_type,
           businessTypes: values.business_types,
