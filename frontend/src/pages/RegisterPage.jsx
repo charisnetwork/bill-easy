@@ -5,6 +5,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { InputGroup } from '../components/ui/input-group';
 import { Label } from '../components/ui/label';
+import { IndustryPicker } from '../components/IndustryPicker';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Building2, Mail, Lock, User, Phone, Eye, EyeOff, MapPin, Hash, Loader2, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -19,8 +20,10 @@ export const RegisterPage = () => {
   const { register } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [industryMissing, setIndustryMissing] = useState(false);
   const [formData, setFormData] = useState({
     companyName: '',
+    businessCategory: '',
     name: '',
     email: '',
     phone: '',
@@ -52,6 +55,11 @@ export const RegisterPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.businessCategory) {
+      setIndustryMissing(true);
+      toast.error('Please choose your business type');
+      return;
+    }
     setLoading(true);
 
     try {
@@ -154,6 +162,14 @@ export const RegisterPage = () => {
                           className="h-11 border-slate-200 focus-within:border-emerald-600 focus-within:ring-emerald-100"
                           data-testid="register-company-input"
                         />
+                      </div>
+
+                      <div className="sm:col-span-2 space-y-2">
+                        <Label htmlFor="industry" className="text-sm font-semibold text-slate-700">
+                          Business type <span className="text-red-500">*</span>
+                        </Label>
+                        <IndustryPicker value={formData.businessCategory} invalid={industryMissing} onChange={(businessCategory) => { setFormData({ ...formData, businessCategory }); setIndustryMissing(false); }} />
+                        <p className="text-xs text-slate-500">We set up a matching invoice design for you. You can change it any time in Settings.</p>
                       </div>
 
                       <div className="space-y-2">

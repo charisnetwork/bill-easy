@@ -70,7 +70,7 @@ test('requireRecordLimit passes below the limit', async () => {
 
 test('monthly counters', { skip: !dbUrl && 'TEST_DATABASE_URL not set' }, async (t) => {
   const { sequelize, UsageCounter } = require('../models');
-  await UsageCounter.sync({ force: true });
+  await UsageCounter.sync(); // shared with other test files running in parallel; tests use random company ids
   t.after(() => sequelize.close());
   const may = new Date('2026-10-15T10:00:00+05:30');
 

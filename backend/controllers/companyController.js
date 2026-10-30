@@ -1,5 +1,6 @@
 const { Company, User, UserCompany, Godown } = require("../models");
 const invoiceDesign = require("../services/invoiceDesign");
+const { resolveIndustry, signupSettingsFor } = require("../config/industries");
 const bcrypt = require("bcryptjs");
 const { Country } = require('country-state-city');
 const charisOs = require("../services/charisOsService");
@@ -446,7 +447,9 @@ const deleteUser = async (req, res) => {
 
 const addCompany = async (req, res) => {
   try {
-    const { name, gst_number, address, city, state, pincode, phone, email } = req.body;
+    const { name, gst_number, address, city, state, pincode, phone, email, business_category } = req.body;
+    const industry = business_category ? resolveIndustry(business_category) : 'General Store';
+    if (!industry) return res.status(400).json({ error: 'Please choose your business type from the list.' });
     
     // 1. Count existing businesses owned by this user
     const userCompanies = await UserCompany.findAll({ 
@@ -472,7 +475,9 @@ const addCompany = async (req, res) => {
     // 4. Create new company
     const company = await Company.create({
       owner_id: req.user.id,
-      name, gst_number, address, city, state, pincode, phone, email
+      name, gst_number, address, city, state, pincode, phone, email,
+      business_category: industry,
+      settings: signupSettingsFor(industry)
     });
 
     // 5. Link user as owner

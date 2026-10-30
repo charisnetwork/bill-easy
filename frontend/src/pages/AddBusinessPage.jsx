@@ -18,6 +18,7 @@ import {
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { IndustryPicker } from '../components/IndustryPicker';
 import { 
   Card, 
   CardContent, 
@@ -49,6 +50,7 @@ const formSchema = z.object({
   state: z.string().min(2, "State is required"),
   pincode: z.string().length(6, "Pincode must be 6 digits"),
   gst_number: z.string().optional().or(z.literal("")),
+  business_category: z.string().min(1, "Please choose your business type"),
 });
 
 const AddBusinessPage = () => {
@@ -103,6 +105,7 @@ const AddBusinessPage = () => {
       state: '',
       pincode: '',
       gst_number: '',
+      business_category: '',
     },
   });
 
@@ -122,7 +125,7 @@ const AddBusinessPage = () => {
 
   const nextStep = async () => {
     let fields = [];
-    if (step === 1) fields = ['name', 'email', 'phone'];
+    if (step === 1) fields = ['name', 'business_category', 'email', 'phone'];
     if (step === 2) fields = ['address', 'city', 'state', 'pincode'];
     
     const isValid = await form.trigger(fields);
@@ -177,6 +180,18 @@ const AddBusinessPage = () => {
                             <Input style={{ paddingLeft: '2.5rem' }} placeholder="e.g. Acme Solutions" {...field} />
                           </div>
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="business_category"
+                    render={({ field, fieldState }) => (
+                      <FormItem>
+                        <FormLabel>Business type *</FormLabel>
+                        <IndustryPicker value={field.value} onChange={field.onChange} invalid={!!fieldState.error} />
                         <FormMessage />
                       </FormItem>
                     )}

@@ -99,7 +99,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '../lib/utils';
-import { industries } from "../lib/industryConfig";
+import { IndustryPicker } from "../components/IndustryPicker";
 import { InvoiceDesignSettings } from "../components/settings/InvoiceDesignSettings";
 import { COUNTRIES, countryByCode, regionsForCountry } from '../lib/localization';
 
@@ -315,7 +315,7 @@ export const SettingsPage = () => {
     resolver: zodResolver(businessSchema),
     defaultValues: {
       name: "", phone: "", email: "", address: "", state: "Karnataka",
-      pincode: "", city: "", country_code: 'IN', language: 'en-IN', business_types: [], industry: "Retail",
+      pincode: "", city: "", country_code: 'IN', language: 'en-IN', business_types: [], industry: "General Store",
       registration_type: "Sole Proprietorship", extra_details: []
     }
   });
@@ -371,7 +371,7 @@ export const SettingsPage = () => {
           country_code: c.country_code || 'IN',
           language: c.language || countryByCode(c.country_code || 'IN').locale,
           business_types: c.settings?.businessTypes || [],
-          industry: c.business_category || "Retail",
+          industry: c.business_category || "General Store",
           registration_type: c.settings?.ownerType || "Sole Proprietorship",
           extra_details: c.settings?.extra_details || []
         });
@@ -942,10 +942,9 @@ export const SettingsPage = () => {
                             <PopoverContent className="w-full p-0"><Command><CommandInput placeholder="Search type..." /><CommandList><CommandEmpty>No results</CommandEmpty><CommandGroup>{businessTypes.map(t => <CommandItem key={t} onSelect={() => { const cur = field.value || []; const next = cur.includes(t) ? cur.filter(x => x !== t) : [...cur, t]; field.onChange(next); businessForm.setValue('business_types', next, { shouldDirty: true }); }}><Check className={cn("mr-2 h-4 w-4", field.value?.includes(t) ? "opacity-100" : "opacity-0")} />{t}</CommandItem>)}</CommandGroup></CommandList></Command></PopoverContent></Popover>
                           <FormMessage /></FormItem>
                       )} />
-                      <FormField control={businessForm.control} name="industry" render={({ field }) => (
-                        <FormItem><FormLabel>Industry Type</FormLabel>
-                          <Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className="h-11 w-full justify-between font-normal"><div className="flex items-center gap-2"><Briefcase className="w-4 h-4 text-slate-400" />{field.value || "Select"}</div><Search className="w-4 h-4 opacity-50" /></Button></FormControl></PopoverTrigger>
-                            <PopoverContent className="w-full p-0"><Command><CommandInput placeholder="Search..." /><CommandList><CommandEmpty>No results</CommandEmpty><CommandGroup>{industries.map(i => <CommandItem key={i} onSelect={() => businessForm.setValue("industry", i, { shouldDirty: true })}><Check className={cn("mr-2 h-4 w-4", i === field.value ? "opacity-100" : "opacity-0")} />{i}</CommandItem>)}</CommandGroup></CommandList></Command></PopoverContent></Popover>
+                      <FormField control={businessForm.control} name="industry" render={({ field, fieldState }) => (
+                        <FormItem><FormLabel>Business type</FormLabel>
+                          <IndustryPicker value={field.value} invalid={!!fieldState.error} onChange={(v) => businessForm.setValue('industry', v, { shouldDirty: true, shouldValidate: true })} />
                           <FormMessage /></FormItem>
                       )} />
                       <FormField control={businessForm.control} name="registration_type" render={({ field }) => (

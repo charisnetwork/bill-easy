@@ -18,39 +18,71 @@ const INDUSTRY_GROUPS = {
 
 // All supported industries with their group mapping
 const INDUSTRIES = {
-  // Retail & Distribution Group
-  'General Store': { group: INDUSTRY_GROUPS.RETAIL, icon: 'shopping-cart' },
-  'Retail Shop': { group: INDUSTRY_GROUPS.RETAIL, icon: 'store' },
-  'Cloth Store': { group: INDUSTRY_GROUPS.RETAIL, icon: 'shirt' },
-  'Distribution': { group: INDUSTRY_GROUPS.RETAIL, icon: 'truck' },
-  'Electronics': { group: INDUSTRY_GROUPS.RETAIL, icon: 'smartphone' },
-  'Hardware': { group: INDUSTRY_GROUPS.RETAIL, icon: 'wrench' },
-  
-  // Automobile & Service Group (Dual table: Products + Services)
-  'Automobile': { group: INDUSTRY_GROUPS.AUTOMOBILE_SERVICE, icon: 'car', hasServiceTable: true },
-  'Service Center': { group: INDUSTRY_GROUPS.AUTOMOBILE_SERVICE, icon: 'settings', hasServiceTable: true },
-  
-  // Manufacturing Group
-  'Manufacturing': { group: INDUSTRY_GROUPS.MANUFACTURING, icon: 'factory' },
-  
-  // Professional Services Group
-  'IT and Consultant': { group: INDUSTRY_GROUPS.PROFESSIONAL_SERVICES, icon: 'laptop' },
-  'Consultant': { group: INDUSTRY_GROUPS.PROFESSIONAL_SERVICES, icon: 'briefcase' },
-  
-  // Healthcare Group
-  'Health Care': { group: INDUSTRY_GROUPS.HEALTHCARE, icon: 'heart-pulse' },
-  'Hospital': { group: INDUSTRY_GROUPS.HEALTHCARE, icon: 'building-2' },
-  
-  // Pharma Group
-  'Pharma': { group: INDUSTRY_GROUPS.PHARMA, icon: 'pill', showBatch: true, showExpiry: true },
-  
-  // Hospitality Group
-  'Hotel': { group: INDUSTRY_GROUPS.HOSPITALITY, icon: 'hotel' },
-  'Restaurants': { group: INDUSTRY_GROUPS.HOSPITALITY, icon: 'utensils', invoice: { template_id: 'thermal', paper: 'thermal', columns: { hsn: false } } },
-  
-  // Logistics Group
-  'Logistics': { group: INDUSTRY_GROUPS.LOGISTICS, icon: 'package' },
-  'Transport': { group: INDUSTRY_GROUPS.LOGISTICS, icon: 'truck' }
+  // Retail & shops
+  'General Store': { group: INDUSTRY_GROUPS.RETAIL, category: 'Retail & shops', icon: 'shopping-cart' },
+  'Supermarket / Kirana': { group: INDUSTRY_GROUPS.RETAIL, category: 'Retail & shops', icon: 'shopping-basket' },
+  'Retail Shop': { group: INDUSTRY_GROUPS.RETAIL, category: 'Retail & shops', icon: 'store' },
+  'Cloth Store': { group: INDUSTRY_GROUPS.RETAIL, category: 'Retail & shops', icon: 'shirt' },
+  'Footwear': { group: INDUSTRY_GROUPS.RETAIL, category: 'Retail & shops', icon: 'footprints' },
+  'Electronics': { group: INDUSTRY_GROUPS.RETAIL, category: 'Retail & shops', icon: 'tv' },
+  'Mobile & Accessories': { group: INDUSTRY_GROUPS.RETAIL, category: 'Retail & shops', icon: 'smartphone' },
+  'Hardware': { group: INDUSTRY_GROUPS.RETAIL, category: 'Retail & shops', icon: 'wrench' },
+  'Paints & Sanitary': { group: INDUSTRY_GROUPS.RETAIL, category: 'Retail & shops', icon: 'paint-bucket' },
+  'Jewellery': { group: INDUSTRY_GROUPS.RETAIL, category: 'Retail & shops', icon: 'gem' },
+  'Stationery & Books': { group: INDUSTRY_GROUPS.RETAIL, category: 'Retail & shops', icon: 'book-open' },
+  'Furniture': { group: INDUSTRY_GROUPS.RETAIL, category: 'Retail & shops', icon: 'armchair' },
+  'Optical Store': { group: INDUSTRY_GROUPS.RETAIL, category: 'Retail & shops', icon: 'glasses' },
+
+  // Wholesale & distribution
+  'Distribution': { group: INDUSTRY_GROUPS.RETAIL, category: 'Wholesale & distribution', icon: 'truck', invoice: { template_id: 'classic-gst', columns: { hsn: true, tax_split: true, free_qty: true } } },
+  'Wholesale Trader': { group: INDUSTRY_GROUPS.RETAIL, category: 'Wholesale & distribution', icon: 'warehouse', invoice: { template_id: 'classic-gst', columns: { hsn: true, tax_split: true, free_qty: true } } },
+  'FMCG Agency': { group: INDUSTRY_GROUPS.RETAIL, category: 'Wholesale & distribution', icon: 'boxes', invoice: { template_id: 'classic-gst', columns: { hsn: true, tax_split: true, free_qty: true } } },
+
+  // Manufacturing
+  'Manufacturing': { group: INDUSTRY_GROUPS.MANUFACTURING, category: 'Manufacturing', icon: 'factory' },
+  'Printing & Packaging': { group: INDUSTRY_GROUPS.MANUFACTURING, category: 'Manufacturing', icon: 'printer' },
+  'Textile & Garments': { group: INDUSTRY_GROUPS.MANUFACTURING, category: 'Manufacturing', icon: 'scissors' },
+
+  // Services
+  'IT and Consultant': { group: INDUSTRY_GROUPS.PROFESSIONAL_SERVICES, category: 'Services', icon: 'laptop' },
+  'Consultant': { group: INDUSTRY_GROUPS.PROFESSIONAL_SERVICES, category: 'Services', icon: 'briefcase' },
+  'Freelancer': { group: INDUSTRY_GROUPS.PROFESSIONAL_SERVICES, category: 'Services', icon: 'user-round' },
+  'Agency & Marketing': { group: INDUSTRY_GROUPS.PROFESSIONAL_SERVICES, category: 'Services', icon: 'megaphone' },
+  'Education & Coaching': { group: INDUSTRY_GROUPS.PROFESSIONAL_SERVICES, category: 'Services', icon: 'graduation-cap' },
+  'Salon & Spa': { group: INDUSTRY_GROUPS.PROFESSIONAL_SERVICES, category: 'Services', icon: 'scissors' },
+  'Events & Photography': { group: INDUSTRY_GROUPS.PROFESSIONAL_SERVICES, category: 'Services', icon: 'camera' },
+  'Repair & Maintenance': { group: INDUSTRY_GROUPS.PROFESSIONAL_SERVICES, category: 'Services', icon: 'wrench' },
+
+  // Healthcare
+  'Health Care': { group: INDUSTRY_GROUPS.HEALTHCARE, category: 'Healthcare', icon: 'heart-pulse' },
+  'Hospital': { group: INDUSTRY_GROUPS.HEALTHCARE, category: 'Healthcare', icon: 'building-2' },
+  'Diagnostic Lab': { group: INDUSTRY_GROUPS.HEALTHCARE, category: 'Healthcare', icon: 'microscope' },
+  'Pharma': { group: INDUSTRY_GROUPS.PHARMA, category: 'Healthcare', icon: 'pill', showBatch: true, showExpiry: true },
+  'Pharma Distributor': { group: INDUSTRY_GROUPS.PHARMA, category: 'Healthcare', icon: 'package', showBatch: true, showExpiry: true },
+
+  // Food & hospitality
+  'Restaurants': { group: INDUSTRY_GROUPS.HOSPITALITY, category: 'Food & hospitality', icon: 'utensils', invoice: { template_id: 'thermal', paper: 'thermal', columns: { hsn: false } } },
+  'Cafe & Bakery': { group: INDUSTRY_GROUPS.HOSPITALITY, category: 'Food & hospitality', icon: 'coffee', invoice: { template_id: 'thermal', paper: 'thermal', columns: { hsn: false } } },
+  'Sweet Shop': { group: INDUSTRY_GROUPS.HOSPITALITY, category: 'Food & hospitality', icon: 'cake', invoice: { template_id: 'thermal', paper: 'thermal', columns: { hsn: false } } },
+  'Hotel': { group: INDUSTRY_GROUPS.HOSPITALITY, category: 'Food & hospitality', icon: 'hotel' },
+
+  // Automobile
+  'Automobile': { group: INDUSTRY_GROUPS.AUTOMOBILE_SERVICE, category: 'Automobile', icon: 'car', hasServiceTable: true },
+  'Service Center': { group: INDUSTRY_GROUPS.AUTOMOBILE_SERVICE, category: 'Automobile', icon: 'settings', hasServiceTable: true },
+  'Spare Parts': { group: INDUSTRY_GROUPS.AUTOMOBILE_SERVICE, category: 'Automobile', icon: 'cog' },
+
+  // Transport & logistics
+  'Logistics': { group: INDUSTRY_GROUPS.LOGISTICS, category: 'Transport & logistics', icon: 'package' },
+  'Transport': { group: INDUSTRY_GROUPS.LOGISTICS, category: 'Transport & logistics', icon: 'truck' },
+  'Courier': { group: INDUSTRY_GROUPS.LOGISTICS, category: 'Transport & logistics', icon: 'send' },
+
+  // Construction & real estate
+  'Construction': { group: INDUSTRY_GROUPS.CONSTRUCTION, category: 'Construction & real estate', icon: 'hard-hat' },
+  'Contractor': { group: INDUSTRY_GROUPS.CONSTRUCTION, category: 'Construction & real estate', icon: 'hammer' },
+  'Real Estate': { group: INDUSTRY_GROUPS.CONSTRUCTION, category: 'Construction & real estate', icon: 'building' },
+
+  // Other
+  'Other': { group: INDUSTRY_GROUPS.RETAIL, category: 'Other', icon: 'briefcase' }
 };
 
 // Industry-specific field configurations
@@ -321,6 +353,12 @@ const invoiceDefaultsFor = (industryName) => {
   return { ...base, ...(industry.invoice || {}) };
 };
 
+/** The industry name when it is one Bill Easy knows (exact match), otherwise null. */
+const resolveIndustry = (name) => (typeof name === 'string' && Object.hasOwn(INDUSTRIES, name) ? name : null);
+
+/** company.settings for a new business: its industry and the matching starting invoice design. */
+const signupSettingsFor = (industryName) => ({ ...invoiceDefaultsFor(industryName), invoice_industry_type: industryName });
+
 // Get all industry names for dropdown
 const getAllIndustries = () => {
   return Object.keys(INDUSTRIES).map(name => ({
@@ -348,5 +386,7 @@ module.exports = {
   getIndustryConfig,
   getAllIndustries,
   getIndustriesByGroup,
-  invoiceDefaultsFor
+  invoiceDefaultsFor,
+  resolveIndustry,
+  signupSettingsFor
 };

@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { User, Company, UserCompany } = require('../models');
+const { resolveIndustry, signupSettingsFor } = require('../config/industries');
 const tokenService = require('../services/tokenService');
 const { incrementBruteForce, clearBruteForce } = require('../middleware/rateLimit');
 const { logSecurityEvent, EVENT_TYPES, SEVERITY } = require('../services/auditService');
@@ -30,13 +31,16 @@ const REFRESH_COOKIE_OPTIONS = {
 ================================ */
 const register = async (req, res) => {
   try {
-    const { companyName, email, password, name, mobileNumber, phone, gstNumber, address, city, state, pincode, countryCode, language } = req.body;
+    const { companyName, email, password, name, mobileNumber, phone, gstNumber, address, city, state, pincode, countryCode, language, businessCategory } = req.body;
     const normalizedEmail = String(email || '').trim().toLowerCase();
     const normalizedMobile = String(mobileNumber ?? phone ?? '').trim() || null;
 
     if (!companyName || !name || !normalizedEmail || !password) {
       return res.status(400).json({ error: 'Company name, name, email and password are required.' });
     }
+    // Business type picks the starting invoice design; older clients that send none get General Store.
+    const industry = businessCategory ? resolveIndustry(businessCategory) : 'General Store';
+    if (!industry) return res.status(400).json({ error: 'Please choose your business type from the list.' });
     const country = String(countryCode || 'IN').toUpperCase();
     const localeDefaults = countryDefaults(country);
     if (!localeDefaults) return res.status(400).json({ error: 'Unsupported registration country.' });
@@ -62,7 +66,9 @@ const register = async (req, res) => {
       pincode: pincode || null,
       country_code: country,
       currency: localeDefaults.currency,
-      language: language || localeDefaults.language
+      language: language || localeDefaults.language,
+      business_category: industry,
+      settings: signupSettingsFor(industry)
     });
 
     // Hash password

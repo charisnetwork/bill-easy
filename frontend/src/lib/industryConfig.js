@@ -16,39 +16,71 @@ export const INDUSTRY_GROUPS = {
 };
 
 export const INDUSTRIES = {
-  // Retail & Distribution Group
-  'General Store': { group: INDUSTRY_GROUPS.RETAIL, icon: 'ShoppingCart' },
-  'Retail Shop': { group: INDUSTRY_GROUPS.RETAIL, icon: 'Store' },
-  'Cloth Store': { group: INDUSTRY_GROUPS.RETAIL, icon: 'Shirt' },
-  'Distribution': { group: INDUSTRY_GROUPS.RETAIL, icon: 'Truck' },
-  'Electronics': { group: INDUSTRY_GROUPS.RETAIL, icon: 'Smartphone' },
-  'Hardware': { group: INDUSTRY_GROUPS.RETAIL, icon: 'Wrench' },
-  
-  // Automobile & Service Group (Dual table: Products + Services)
-  'Automobile': { group: INDUSTRY_GROUPS.AUTOMOBILE_SERVICE, icon: 'Car', hasServiceTable: true },
-  'Service Center': { group: INDUSTRY_GROUPS.AUTOMOBILE_SERVICE, icon: 'Settings', hasServiceTable: true },
-  
-  // Manufacturing Group
-  'Manufacturing': { group: INDUSTRY_GROUPS.MANUFACTURING, icon: 'Factory' },
-  
-  // Professional Services Group
-  'IT and Consultant': { group: INDUSTRY_GROUPS.PROFESSIONAL_SERVICES, icon: 'Laptop' },
-  'Consultant': { group: INDUSTRY_GROUPS.PROFESSIONAL_SERVICES, icon: 'Briefcase' },
-  
-  // Healthcare Group
-  'Health Care': { group: INDUSTRY_GROUPS.HEALTHCARE, icon: 'HeartPulse' },
-  'Hospital': { group: INDUSTRY_GROUPS.HEALTHCARE, icon: 'Building2' },
-  
-  // Pharma Group
-  'Pharma': { group: INDUSTRY_GROUPS.PHARMA, icon: 'Pill', showBatch: true, showExpiry: true },
-  
-  // Hospitality Group
-  'Hotel': { group: INDUSTRY_GROUPS.HOSPITALITY, icon: 'Hotel' },
-  'Restaurants': { group: INDUSTRY_GROUPS.HOSPITALITY, icon: 'Utensils' },
-  
-  // Logistics Group
-  'Logistics': { group: INDUSTRY_GROUPS.LOGISTICS, icon: 'Package' },
-  'Transport': { group: INDUSTRY_GROUPS.LOGISTICS, icon: 'Truck' }
+  // Retail & shops
+  'General Store': { group: INDUSTRY_GROUPS.RETAIL, category: 'Retail & shops', icon: 'ShoppingCart' },
+  'Supermarket / Kirana': { group: INDUSTRY_GROUPS.RETAIL, category: 'Retail & shops', icon: 'ShoppingBasket' },
+  'Retail Shop': { group: INDUSTRY_GROUPS.RETAIL, category: 'Retail & shops', icon: 'Store' },
+  'Cloth Store': { group: INDUSTRY_GROUPS.RETAIL, category: 'Retail & shops', icon: 'Shirt' },
+  'Footwear': { group: INDUSTRY_GROUPS.RETAIL, category: 'Retail & shops', icon: 'Footprints' },
+  'Electronics': { group: INDUSTRY_GROUPS.RETAIL, category: 'Retail & shops', icon: 'Tv' },
+  'Mobile & Accessories': { group: INDUSTRY_GROUPS.RETAIL, category: 'Retail & shops', icon: 'Smartphone' },
+  'Hardware': { group: INDUSTRY_GROUPS.RETAIL, category: 'Retail & shops', icon: 'Wrench' },
+  'Paints & Sanitary': { group: INDUSTRY_GROUPS.RETAIL, category: 'Retail & shops', icon: 'PaintBucket' },
+  'Jewellery': { group: INDUSTRY_GROUPS.RETAIL, category: 'Retail & shops', icon: 'Gem' },
+  'Stationery & Books': { group: INDUSTRY_GROUPS.RETAIL, category: 'Retail & shops', icon: 'BookOpen' },
+  'Furniture': { group: INDUSTRY_GROUPS.RETAIL, category: 'Retail & shops', icon: 'Armchair' },
+  'Optical Store': { group: INDUSTRY_GROUPS.RETAIL, category: 'Retail & shops', icon: 'Glasses' },
+
+  // Wholesale & distribution
+  'Distribution': { group: INDUSTRY_GROUPS.RETAIL, category: 'Wholesale & distribution', icon: 'Truck', invoice: { template_id: 'classic-gst', columns: { hsn: true, tax_split: true, free_qty: true } } },
+  'Wholesale Trader': { group: INDUSTRY_GROUPS.RETAIL, category: 'Wholesale & distribution', icon: 'Warehouse', invoice: { template_id: 'classic-gst', columns: { hsn: true, tax_split: true, free_qty: true } } },
+  'FMCG Agency': { group: INDUSTRY_GROUPS.RETAIL, category: 'Wholesale & distribution', icon: 'Boxes', invoice: { template_id: 'classic-gst', columns: { hsn: true, tax_split: true, free_qty: true } } },
+
+  // Manufacturing
+  'Manufacturing': { group: INDUSTRY_GROUPS.MANUFACTURING, category: 'Manufacturing', icon: 'Factory' },
+  'Printing & Packaging': { group: INDUSTRY_GROUPS.MANUFACTURING, category: 'Manufacturing', icon: 'Printer' },
+  'Textile & Garments': { group: INDUSTRY_GROUPS.MANUFACTURING, category: 'Manufacturing', icon: 'Scissors' },
+
+  // Services
+  'IT and Consultant': { group: INDUSTRY_GROUPS.PROFESSIONAL_SERVICES, category: 'Services', icon: 'Laptop' },
+  'Consultant': { group: INDUSTRY_GROUPS.PROFESSIONAL_SERVICES, category: 'Services', icon: 'Briefcase' },
+  'Freelancer': { group: INDUSTRY_GROUPS.PROFESSIONAL_SERVICES, category: 'Services', icon: 'UserRound' },
+  'Agency & Marketing': { group: INDUSTRY_GROUPS.PROFESSIONAL_SERVICES, category: 'Services', icon: 'Megaphone' },
+  'Education & Coaching': { group: INDUSTRY_GROUPS.PROFESSIONAL_SERVICES, category: 'Services', icon: 'GraduationCap' },
+  'Salon & Spa': { group: INDUSTRY_GROUPS.PROFESSIONAL_SERVICES, category: 'Services', icon: 'Scissors' },
+  'Events & Photography': { group: INDUSTRY_GROUPS.PROFESSIONAL_SERVICES, category: 'Services', icon: 'Camera' },
+  'Repair & Maintenance': { group: INDUSTRY_GROUPS.PROFESSIONAL_SERVICES, category: 'Services', icon: 'Wrench' },
+
+  // Healthcare
+  'Health Care': { group: INDUSTRY_GROUPS.HEALTHCARE, category: 'Healthcare', icon: 'HeartPulse' },
+  'Hospital': { group: INDUSTRY_GROUPS.HEALTHCARE, category: 'Healthcare', icon: 'Building2' },
+  'Diagnostic Lab': { group: INDUSTRY_GROUPS.HEALTHCARE, category: 'Healthcare', icon: 'Microscope' },
+  'Pharma': { group: INDUSTRY_GROUPS.PHARMA, category: 'Healthcare', icon: 'Pill', showBatch: true, showExpiry: true },
+  'Pharma Distributor': { group: INDUSTRY_GROUPS.PHARMA, category: 'Healthcare', icon: 'Package', showBatch: true, showExpiry: true },
+
+  // Food & hospitality
+  'Restaurants': { group: INDUSTRY_GROUPS.HOSPITALITY, category: 'Food & hospitality', icon: 'Utensils', invoice: { template_id: 'thermal', paper: 'thermal', columns: { hsn: false } } },
+  'Cafe & Bakery': { group: INDUSTRY_GROUPS.HOSPITALITY, category: 'Food & hospitality', icon: 'Coffee', invoice: { template_id: 'thermal', paper: 'thermal', columns: { hsn: false } } },
+  'Sweet Shop': { group: INDUSTRY_GROUPS.HOSPITALITY, category: 'Food & hospitality', icon: 'Cake', invoice: { template_id: 'thermal', paper: 'thermal', columns: { hsn: false } } },
+  'Hotel': { group: INDUSTRY_GROUPS.HOSPITALITY, category: 'Food & hospitality', icon: 'Hotel' },
+
+  // Automobile
+  'Automobile': { group: INDUSTRY_GROUPS.AUTOMOBILE_SERVICE, category: 'Automobile', icon: 'Car', hasServiceTable: true },
+  'Service Center': { group: INDUSTRY_GROUPS.AUTOMOBILE_SERVICE, category: 'Automobile', icon: 'Settings', hasServiceTable: true },
+  'Spare Parts': { group: INDUSTRY_GROUPS.AUTOMOBILE_SERVICE, category: 'Automobile', icon: 'Cog' },
+
+  // Transport & logistics
+  'Logistics': { group: INDUSTRY_GROUPS.LOGISTICS, category: 'Transport & logistics', icon: 'Package' },
+  'Transport': { group: INDUSTRY_GROUPS.LOGISTICS, category: 'Transport & logistics', icon: 'Truck' },
+  'Courier': { group: INDUSTRY_GROUPS.LOGISTICS, category: 'Transport & logistics', icon: 'Send' },
+
+  // Construction & real estate
+  'Construction': { group: INDUSTRY_GROUPS.CONSTRUCTION, category: 'Construction & real estate', icon: 'HardHat' },
+  'Contractor': { group: INDUSTRY_GROUPS.CONSTRUCTION, category: 'Construction & real estate', icon: 'Hammer' },
+  'Real Estate': { group: INDUSTRY_GROUPS.CONSTRUCTION, category: 'Construction & real estate', icon: 'Building' },
+
+  // Other
+  'Other': { group: INDUSTRY_GROUPS.RETAIL, category: 'Other', icon: 'Briefcase' }
 };
 
 export const getIndustryConfig = (industryName) => {
@@ -315,6 +347,16 @@ export const getIndustryGroups = () => {
     groups[industry.group].push({ value: name, label: name, icon: industry.icon });
   });
   return groups;
+};
+
+/** Industries grouped by picker category, in list order: [{ category, items: [{ value, label, icon }] }]. */
+export const industryCategories = () => {
+  const groups = new Map();
+  for (const [name, industry] of Object.entries(INDUSTRIES)) {
+    if (!groups.has(industry.category)) groups.set(industry.category, []);
+    groups.get(industry.category).push({ value: name, label: name, icon: industry.icon });
+  }
+  return [...groups.entries()].map(([category, items]) => ({ category, items }));
 };
 
 // List of all industries for dropdown
