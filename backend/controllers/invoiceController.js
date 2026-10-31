@@ -2,6 +2,7 @@ const { Invoice, InvoiceItem, Customer, Product, Company, Payment, User, StockLe
 const { generateInvoiceNumber, peekInvoiceNumber } = require('../services/invoiceNumberService');
 const { generateInvoicePdf } = require('../services/invoicePdf');
 const { Op } = require('sequelize');
+const { assertOwnedByCompany, itemProductIds } = require('../services/tenantRefs');
 
 const getInvoices = async (req, res) => {
   try {
@@ -92,6 +93,11 @@ const getNextInvoiceNumber = async (req, res) => {
 const createInvoice = async (req, res) => {
   const transaction = await sequelize.transaction();
   try {
+    await assertOwnedByCompany(req.companyId, {
+      customer: req.body.customer_id,
+      godown: req.body.godown_id,
+      product: itemProductIds(req.body.items)
+    }, transaction);
     const invoiceNumber = await generateInvoiceNumber(req.companyId, transaction);
     const items = req.body.items || [];
     
@@ -288,6 +294,7 @@ const createInvoice = async (req, res) => {
     });
   } catch (error) {
     if (transaction) await transaction.rollback();
+    if (error.status) return res.status(error.status).json({ error: error.message });
     console.error("Create invoice error:", error);
     res.status(500).json({
       error: process.env.NODE_ENV === 'production' ? "Failed to create invoice" : "Failed to create invoice: " + error.message
@@ -473,8 +480,15 @@ const updateInvoice = async (req, res) => {
     });
 
     if (!invoice) {
+      await transaction.rollback();
       return res.status(404).json({ error: "Invoice not found" });
     }
+
+    await assertOwnedByCompany(req.companyId, {
+      customer: req.body.customer_id,
+      godown: req.body.godown_id,
+      product: itemProductIds(req.body.items)
+    }, transaction);
 
     // Restore stock for old items
     for (const item of invoice.items) {
@@ -652,6 +666,7 @@ const updateInvoice = async (req, res) => {
     res.json({ message: "Invoice updated successfully", invoice });
   } catch (error) {
     if (transaction) await transaction.rollback();
+    if (error.status) return res.status(error.status).json({ error: error.message });
     console.error("Update invoice error:", error);
     res.status(500).json({ error: process.env.NODE_ENV === 'production' ? "Failed to update invoice" : "Failed to update invoice: " + error.message });
   }

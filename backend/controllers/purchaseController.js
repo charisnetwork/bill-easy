@@ -1,5 +1,6 @@
 const { Purchase, PurchaseItem, Supplier, Product, Payment, StockMovement, StockLevel, Godown, sequelize } = require('../models');
 const { Op } = require('sequelize');
+const { assertOwnedByCompany, itemProductIds } = require('../services/tenantRefs');
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
@@ -97,6 +98,7 @@ const createPurchase = async (req, res) => {
     const t = await sequelize.transaction();
 
     try {
+      await assertOwnedByCompany(req.companyId, { supplier: supplier_id, godown: godown_id, product: itemProductIds(items) }, t);
       let finalGodownId = godown_id;
       if (!finalGodownId) {
         const defaultGodown = await Godown.findOne({
@@ -270,6 +272,7 @@ const createPurchase = async (req, res) => {
       throw error;
     }
   } catch (error) {
+    if (error.status) return res.status(error.status).json({ error: error.message });
     // Error logged
     res.status(500).json({ error: 'Failed to create purchase' });
   }
@@ -399,6 +402,7 @@ const updatePurchase = async (req, res) => {
     const t = await sequelize.transaction();
 
     try {
+      await assertOwnedByCompany(req.companyId, { supplier: supplier_id, godown: godown_id, product: itemProductIds(items) }, t);
       let finalGodownId = godown_id || purchase.godown_id;
       if (!finalGodownId) {
         const defaultGodown = await Godown.findOne({
@@ -535,6 +539,7 @@ const updatePurchase = async (req, res) => {
       throw error;
     }
   } catch (error) {
+    if (error.status) return res.status(error.status).json({ error: error.message });
     // Error logged
     res.status(500).json({ error: 'Failed to update purchase' });
   }

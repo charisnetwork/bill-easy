@@ -1,4 +1,5 @@
 const { Godown, StockLevel, StockMovement, Product, Subscription, Plan, sequelize } = require('../models');
+const { assertOwnedByCompany } = require('../services/tenantRefs');
 
 const getGodowns = async (req, res) => {
   try {
@@ -37,6 +38,8 @@ const transferStock = async (req, res) => {
     if (from_godown_id === to_godown_id) {
       throw new Error("Source and destination godowns must be different");
     }
+
+    await assertOwnedByCompany(req.companyId, { product: product_id, godown: [from_godown_id, to_godown_id] }, transaction);
 
     // Check source stock
     const sourceStock = await StockLevel.findOne({
@@ -82,7 +85,7 @@ const transferStock = async (req, res) => {
     res.json({ message: "Stock transferred successfully" });
   } catch (error) {
     if (transaction) await transaction.rollback();
-    res.status(500).json({ error: error.message || "Failed to transfer stock" });
+    res.status(error.status || 500).json({ error: error.message || "Failed to transfer stock" });
   }
 };
 

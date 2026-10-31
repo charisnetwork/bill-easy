@@ -1,4 +1,5 @@
 const { RecurringSubscription, RecurringSubscriptionItem, Customer, Product, sequelize } = require('../models');
+const { assertOwnedByCompany, itemProductIds } = require('../services/tenantRefs');
 const { processSubscription } = require('../services/recurringInvoiceScheduler');
 const { Op } = require('sequelize');
 
@@ -81,6 +82,8 @@ const createRecurringSubscription = async (req, res) => {
       return res.status(400).json({ error: 'At least one line item is required' });
     }
 
+    await assertOwnedByCompany(req.companyId, { customer: customer_id, product: itemProductIds(items) }, transaction);
+
     const todayStr = new Date().toISOString().split('T')[0];
     const initialIssueDate = next_issue_date || start_date || todayStr;
 
@@ -124,6 +127,7 @@ const createRecurringSubscription = async (req, res) => {
     res.status(201).json(created);
   } catch (error) {
     await transaction.rollback();
+    if (error.status) return res.status(error.status).json({ error: error.message });
     console.error('Create recurring subscription error:', error);
     res.status(500).json({ error: 'Failed to create recurring subscription' });
   }
@@ -157,6 +161,8 @@ const updateRecurringSubscription = async (req, res) => {
       terms,
       items
     } = req.body;
+
+    await assertOwnedByCompany(req.companyId, { customer: customer_id, product: itemProductIds(items) }, transaction);
 
     await subscription.update({
       customer_id: customer_id || subscription.customer_id,
@@ -204,6 +210,7 @@ const updateRecurringSubscription = async (req, res) => {
     res.json(updated);
   } catch (error) {
     await transaction.rollback();
+    if (error.status) return res.status(error.status).json({ error: error.message });
     console.error('Update recurring subscription error:', error);
     res.status(500).json({ error: 'Failed to update recurring subscription' });
   }

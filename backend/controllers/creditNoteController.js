@@ -1,4 +1,5 @@
 const { CreditNote, CreditNoteItem, Invoice, InvoiceItem, Product, Customer, Company, sequelize } = require('../models');
+const { assertOwnedByCompany, itemProductIds } = require('../services/tenantRefs');
 const { generateCreditNotePdf } = require('../services/creditNotePdfService');
 
 const getCreditNotes = async (req, res) => {
@@ -41,6 +42,8 @@ const createCreditNote = async (req, res) => {
       reason,
       industry_metadata
     } = req.body;
+
+    await assertOwnedByCompany(req.companyId, { product: itemProductIds(items) }, transaction);
 
     const invoice = await Invoice.findOne({
       where: { id: invoice_id, company_id: req.companyId },
@@ -120,7 +123,7 @@ const createCreditNote = async (req, res) => {
     res.status(201).json(creditNote);
   } catch (error) {
     if (transaction) await transaction.rollback();
-    res.status(500).json({ error: error.message || "Failed to create credit note" });
+    res.status(error.status || 500).json({ error: error.message || "Failed to create credit note" });
   }
 };
 

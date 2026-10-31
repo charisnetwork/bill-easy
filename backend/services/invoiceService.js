@@ -1,4 +1,5 @@
 const { Invoice, InvoiceItem, Product, Customer, Company, StockMovement, sequelize } = require('../models');
+const { assertOwnedByCompany, itemProductIds } = require('./tenantRefs');
 
 class InvoiceService {
   static async generateInvoiceNumber(companyId) {
@@ -67,6 +68,7 @@ class InvoiceService {
     const t = await sequelize.transaction();
 
     try {
+      await assertOwnedByCompany(companyId, { customer: data.customer_id, product: itemProductIds(data.items) }, t);
       const invoiceNumber = await this.generateInvoiceNumber(companyId);
       const calculations = this.calculateTotals(data.items, data.discount, data.discount_type);
 
