@@ -1,19 +1,26 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
+import { formatINR } from './dashboardData';
 
 export const HeroSection = ({ data }) => {
   const { user } = useAuth();
 
-  // Helper for formatting
-  const format = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val || 0);
+  const greeting = (() => {
+    const hour = new Date(Date.now() + 330 * 60 * 1000).getUTCHours(); // India time
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
+  })();
 
   const stats = [
-    { label: "Today's Revenue", value: format(data?.todaySales) },
-    { label: "Today's Profit", value: format((data?.todaySales || 0) * 0.2) }, // Derived for UI sake if not in API
-    { label: "Monthly Growth", value: "+12.5%", isPositive: true },
-    { label: "Pending Collections", value: format(data?.pendingPayments) },
+    { label: "Today's Sales", value: formatINR(data?.todaySales) },
+    { label: 'Sales This Month', value: formatINR(data?.thisMonth?.sales ?? data?.monthlySales) },
+    { label: 'Pending Collections', value: formatINR(data?.receivables?.pendingAmount ?? data?.pendingPayments) },
+    { label: 'Overdue', value: formatINR(data?.receivables?.overdueAmount), isAlert: data?.receivables?.overdueAmount > 0 },
   ];
+
+  const hasActivity = (data?.monthly || []).some((m) => m.sales > 0) || data?.recentInvoices?.length > 0;
 
   return (
     <motion.div 
@@ -44,9 +51,9 @@ export const HeroSection = ({ data }) => {
             transition={{ delay: 0.3 }}
             className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-tight"
           >
-            Good Morning, <br className="hidden md:block lg:hidden" />
+            {greeting}, <br className="hidden md:block lg:hidden" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-200 to-purple-200">
-              {user?.name?.split(' ')[0] || 'Prashanth'} 👋
+              {user?.name?.split(' ')[0] || 'there'} 👋
             </span>
           </motion.h1>
           <motion.p 
@@ -55,7 +62,9 @@ export const HeroSection = ({ data }) => {
             transition={{ delay: 0.4 }}
             className="text-slate-300 font-medium text-sm md:text-base max-w-lg mt-2"
           >
-            Here's a quick overview of your business performance today. You're doing great!
+            {hasActivity
+              ? "Here's where your business stands today."
+              : 'Create your first invoice and your sales, collections and profit will show up here.'}
           </motion.p>
         </div>
 
@@ -70,8 +79,7 @@ export const HeroSection = ({ data }) => {
             <div key={idx} className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-4 min-w-[140px]">
               <p className="text-[10px] font-semibold text-indigo-200 uppercase tracking-wider mb-1">{stat.label}</p>
               <div className="flex items-end gap-2">
-                <p className="text-lg md:text-xl font-bold text-white">{stat.value}</p>
-                {stat.isPositive && <span className="text-emerald-400 text-xs font-bold mb-1">↑</span>}
+                <p className={`text-lg md:text-xl font-bold ${stat.isAlert ? 'text-rose-300' : 'text-white'}`}>{stat.value}</p>
               </div>
             </div>
           ))}

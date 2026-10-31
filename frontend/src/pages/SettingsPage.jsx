@@ -67,13 +67,11 @@ import {
   Building2,
   User,
   Users,
-  Shield,
   Plus,
   Trash2,
   Save,
   Mail,
   Phone,
-  ShieldCheck,
   Settings,
   Settings2,
   Warehouse,
@@ -745,19 +743,8 @@ export const SettingsPage = () => {
           </ul>
         </nav>
 
-        {/* Trust Badges */}
         <div className="px-4 py-3 border-t border-slate-200 space-y-2">
           <p className="text-[10px] font-semibold text-slate-400">App Version : 1.0.0</p>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 text-emerald-600">
-              <Shield className="w-3 h-3" />
-              <span className="text-[9px] font-bold">100% Secure</span>
-            </div>
-            <div className="flex items-center gap-1 text-slate-400">
-              <ShieldCheck className="w-3 h-3" />
-              <span className="text-[9px] font-bold">ISO Certified</span>
-            </div>
-          </div>
         </div>
       </aside>
 

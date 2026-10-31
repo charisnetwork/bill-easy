@@ -1,15 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Users, Phone, ArrowRight, AlertCircle } from 'lucide-react';
-import { formatCurrency } from '../../../utils/formatters';
+import { Link } from 'react-router-dom';
+import { Users, Phone, ArrowRight, AlertCircle, Clock } from 'lucide-react';
+import { formatINR, plural, daysFromToday } from '../dashboardData';
 
-const MOCK_RECEIVABLES = [
-  { id: 1, name: 'Apex Solutions', amount: 45000, daysOverdue: 15, contact: '+91 9876543210' },
-  { id: 2, name: 'Global Traders', amount: 28500, daysOverdue: 8, contact: '+91 9876543211' },
-  { id: 3, name: 'TechVision Inc', amount: 12000, daysOverdue: 3, contact: '+91 9876543212' },
-];
+export const ReceivablesWidget = ({ data }) => {
+  const customers = data?.receivables?.topCustomers || [];
 
-export const ReceivablesWidget = () => {
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}
@@ -23,36 +20,47 @@ export const ReceivablesWidget = () => {
           </div>
           <h3 className="text-sm font-bold text-slate-900 dark:text-white">Top Receivables</h3>
         </div>
-        <button className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 transition-colors flex items-center gap-1">
-          View Aging <ArrowRight className="w-3 h-3" />
-        </button>
+        <Link to="/reports" className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 transition-colors flex items-center gap-1">
+          Reports <ArrowRight className="w-3 h-3" />
+        </Link>
       </div>
 
       <div className="flex-1 space-y-3">
-        {MOCK_RECEIVABLES.map((item) => (
-          <div key={item.id} className="group flex items-center justify-between p-3 rounded-2xl border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-sm">
-                {item.name.charAt(0)}
+        {customers.map((item) => {
+          const days = item.oldestDue ? -daysFromToday(item.oldestDue) : null;
+          return (
+            <div key={item.id} className="group flex items-center justify-between p-3 rounded-2xl border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-sm shrink-0">
+                  {item.name.charAt(0)}
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">{item.name}</h4>
+                  {days !== null && days > 0 ? (
+                    <p className="text-[10px] text-rose-500 font-medium flex items-center gap-1 mt-0.5">
+                      <AlertCircle className="w-3 h-3" /> {plural(days, 'day')} overdue
+                    </p>
+                  ) : (
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1 mt-0.5">
+                      <Clock className="w-3 h-3" /> {plural(item.invoices, 'unpaid invoice')}
+                    </p>
+                  )}
+                </div>
               </div>
-              <div>
-                <h4 className="text-xs font-bold text-slate-900 dark:text-white">{item.name}</h4>
-                <p className="text-[10px] text-rose-500 font-medium flex items-center gap-1 mt-0.5">
-                  <AlertCircle className="w-3 h-3" /> {item.daysOverdue} days overdue
-                </p>
+              <div className="flex items-center gap-3">
+                <p className="text-xs font-black text-slate-900 dark:text-white">{formatINR(item.amount)}</p>
+                {item.phone && (
+                  <a href={`tel:${item.phone}`} className="p-1.5 bg-indigo-50 dark:bg-indigo-500/10 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-lg transition-colors" title={`Call ${item.phone}`}>
+                    <Phone className="w-3.5 h-3.5" />
+                  </a>
+                )}
               </div>
             </div>
-            
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <p className="text-xs font-black text-slate-900 dark:text-white">{formatCurrency(item.amount)}</p>
-              </div>
-              <button className="p-1.5 bg-indigo-50 dark:bg-indigo-500/10 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-lg transition-colors opacity-0 group-hover:opacity-100" title={`Call ${item.contact}`}>
-                <Phone className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
+        {customers.length === 0 && (
+          <p className="text-xs text-slate-500 dark:text-slate-400 py-6 text-center">No money waiting to be collected.</p>
+        )}
       </div>
     </motion.div>
   );

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Maximize2 } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 import {
   AreaChart,
   Area,
@@ -11,16 +11,6 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { formatCurrency } from '../../../utils/formatters';
-
-const MOCK_DATA = [
-  { name: 'Jan', in: 4000, out: 2400 },
-  { name: 'Feb', in: 3000, out: 1398 },
-  { name: 'Mar', in: 2000, out: 9800 },
-  { name: 'Apr', in: 2780, out: 3908 },
-  { name: 'May', in: 1890, out: 4800 },
-  { name: 'Jun', in: 2390, out: 3800 },
-  { name: 'Jul', in: 3490, out: 4300 },
-];
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -40,7 +30,11 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-export const CashFlowWidget = ({ data = MOCK_DATA }) => {
+// Money in (collections) and money out (supplier payments and expenses) for the last six months.
+export const CashFlowWidget = ({ data }) => {
+  const months = (data?.monthly || []).map((m) => ({ name: m.label.slice(0, 3), in: m.collections, out: m.moneyOut }));
+  const hasData = months.some((m) => m.in > 0 || m.out > 0);
+
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}
@@ -54,14 +48,17 @@ export const CashFlowWidget = ({ data = MOCK_DATA }) => {
           </div>
           <h3 className="text-sm font-bold text-slate-900 dark:text-white">Cash Flow</h3>
         </div>
-        <button className="text-slate-400 hover:text-indigo-600 transition-colors">
-          <Maximize2 className="w-4 h-4" />
-        </button>
+        <span className="text-[10px] font-medium text-slate-400">Last 6 months</span>
       </div>
 
+      {!hasData ? (
+        <div className="flex-1 min-h-[200px] flex items-center justify-center text-center text-xs text-slate-500 dark:text-slate-400">
+          Payments you receive and make will be charted here month by month.
+        </div>
+      ) : (
       <div className="flex-1 min-h-[200px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+          <AreaChart data={months} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id="colorIn" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
@@ -84,7 +81,7 @@ export const CashFlowWidget = ({ data = MOCK_DATA }) => {
               axisLine={false} 
               tickLine={false} 
               tick={{ fontSize: 10, fill: 'currentColor', className: 'text-slate-400' }}
-              tickFormatter={(value) => `₹${value / 1000}k`}
+              tickFormatter={(value) => (value >= 1000 ? `₹${Math.round(value / 1000)}k` : `₹${value}`)}
             />
             <Tooltip content={<CustomTooltip />} />
             <Area 
@@ -110,6 +107,7 @@ export const CashFlowWidget = ({ data = MOCK_DATA }) => {
           </AreaChart>
         </ResponsiveContainer>
       </div>
+      )}
     </motion.div>
   );
 };

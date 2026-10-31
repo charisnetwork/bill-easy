@@ -26,13 +26,13 @@ const features = [
   },
   {
     icon: BarChart3,
-    title: '25+ Reports',
-    description: 'Get insights with sales, purchase, P&L, GST, and stock reports with export options.'
+    title: 'Business Reports',
+    description: 'Sales, purchase, P&L, GST and stock reports, with export options.'
   },
   {
     icon: Shield,
-    title: 'Secure & Reliable',
-    description: 'Bank-grade security with encrypted data storage and automatic backups.'
+    title: 'Secure Sign-in',
+    description: 'Encrypted connections, secure sessions and staff roles that control who sees what.'
   },
   {
     icon: Smartphone,
@@ -97,7 +97,7 @@ export const LandingPage = () => {
             <div className="text-left animate-fade-in">
               <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-2 mb-6">
                 <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                <span className="text-sm text-slate-300">Trusted by 10,000+ businesses</span>
+                <span className="text-sm text-slate-300">GST billing with a built-in AI assistant</span>
               </div>
               
               <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
@@ -113,12 +113,12 @@ export const LandingPage = () => {
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link to="/register">
                   <Button size="lg" className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 w-full sm:w-auto" data-testid="hero-cta-btn">
-                    Start Free Trial
+                    Start Free
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </Button>
                 </Link>
                 <a href="/downloads.html" className="hidden sm:block">
-                  <Button size="lg" variant="outline" className="border-slate-500 text-white hover:bg-white/10 w-full sm:w-auto">
+                  <Button size="lg" variant="outline" className="bg-transparent border-slate-500 text-white hover:bg-white/10 hover:text-white w-full sm:w-auto">
                     ⬇️ Download for Windows
                   </Button>
                 </a>
@@ -127,11 +127,11 @@ export const LandingPage = () => {
               <div className="flex items-center gap-6 mt-8 text-sm text-slate-400">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-emerald-400" />
-                  <span>No credit card required</span>
+                  <span>Free plan, no card needed</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-emerald-400" />
-                  <span>14-day free trial</span>
+                  <span>GST-ready invoices</span>
                 </div>
               </div>
             </div>
@@ -141,7 +141,7 @@ export const LandingPage = () => {
                 <div className="bg-white rounded-2xl shadow-2xl p-6 transform rotate-2 hover:rotate-0 transition-transform duration-300">
                   <div className="flex items-center justify-between mb-4">
                     <span className="font-heading font-semibold text-slate-900">Dashboard Overview</span>
-                    <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded">Live</span>
+                    <span className="text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded">Sample figures</span>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-slate-50 rounded-lg p-4">
@@ -233,7 +233,12 @@ export const LandingPage = () => {
                   </span>
                 )}
                 <h3 className="font-heading text-xl font-semibold text-slate-900 mt-4">{plan.name}</h3>
-                <div className="flex items-baseline gap-1 mt-2 mb-6">
+                <div className="flex items-baseline flex-wrap gap-x-2 gap-y-1 mt-2 mb-6">
+                  {Number(plan.compare_at_price) > Number(amount) && (
+                    <span className="text-xl font-semibold text-slate-400 line-through" data-testid="plan-compare-price">
+                      {formatPlanPrice(plan.compare_at_price, plan.currency)}
+                    </span>
+                  )}
                   <span className="text-4xl font-bold text-slate-900">{formatPlanPrice(amount, plan.currency)}</span>
                   {amount > 0 && duration && <span className="text-slate-500 text-xs font-medium">{duration === 1 ? '/month' : `/${duration} months`}</span>}
                 </div>
@@ -267,11 +272,11 @@ export const LandingPage = () => {
             Ready to Simplify Your Business?
           </h2>
           <p className="text-lg text-slate-300 mb-8 max-w-2xl mx-auto">
-            Join thousands of businesses already using Bill Easy App to manage their billing and inventory.
+            Start on the Free plan and move to a paid plan only when your business needs more.
           </p>
           <Link to="/register">
             <Button size="lg" className="bg-emerald-500 hover:bg-emerald-600 text-white px-8">
-              Start Your Free Trial
+              Create Your Free Account
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </Link>

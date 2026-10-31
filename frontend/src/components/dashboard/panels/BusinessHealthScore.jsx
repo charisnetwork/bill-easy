@@ -1,18 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Activity, ArrowUpRight, ArrowDownRight, Minus, AlertTriangle } from 'lucide-react';
+import { Activity } from 'lucide-react';
 
 export const BusinessHealthScore = ({ data }) => {
-  // Simplified calculation for demo purposes
-  // A real app would weigh profitability, cash flow, overdue receivables, etc.
-  const calculateScore = () => {
-    let base = 75;
-    if (data?.grossProfit > 0) base += 10;
-    if (data?.pendingPayments > 50000) base -= 15;
-    return Math.max(0, Math.min(100, base)); // Clamp 0-100
-  };
-
-  const score = calculateScore();
+  // Score and its parts are worked out by the server from this and last month's figures.
+  const health = data?.health;
+  const score = health?.score ?? 0;
 
   const getHealthMeta = (s) => {
     if (s >= 85) return { label: 'Excellent', color: 'text-emerald-500', bg: 'bg-emerald-500', glow: 'shadow-emerald-500/20' };
@@ -42,6 +35,14 @@ export const BusinessHealthScore = ({ data }) => {
         </div>
       </div>
 
+      {!health ? (
+        <div className="flex-1 flex flex-col items-center justify-center text-center py-6">
+          <p className="text-sm font-bold text-slate-700 dark:text-slate-300">No score yet</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-[220px]">
+            Your score appears once you have sales this month or last. It is built from your profit margin, collections and overdue invoices.
+          </p>
+        </div>
+      ) : (
       <div className="flex-1 flex flex-col items-center justify-center">
         <div className="relative w-32 h-32 flex items-center justify-center">
           {/* Background Track */}
@@ -93,11 +94,17 @@ export const BusinessHealthScore = ({ data }) => {
           <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${meta.bg} text-white shadow-sm ${meta.glow}`}>
             {meta.label}
           </span>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 font-medium max-w-[200px] leading-relaxed">
-            {score < 50 ? 'Cash flow and receivables need urgent review.' : 'Your business is operating at optimal efficiency.'}
-          </p>
+          <ul className="mt-3 space-y-1 text-left">
+            {health.parts.map((part) => (
+              <li key={part.key} className="flex justify-between gap-4 text-[11px] text-slate-500 dark:text-slate-400">
+                <span>{part.label} <span className="font-semibold text-slate-700 dark:text-slate-300">{part.value}%</span></span>
+                <span className="font-bold text-slate-700 dark:text-slate-300">{part.points}/{part.max}</span>
+              </li>
+            ))}
+          </ul>
         </motion.div>
       </div>
+      )}
     </motion.div>
   );
 };

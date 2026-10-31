@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Shield } from 'lucide-react';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -21,11 +20,6 @@ const Footer = () => {
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1 text-emerald-500">
-            <Shield className="w-3.5 h-3.5" />
-            <span className="text-[10px] font-bold uppercase tracking-wider">100% Secure</span>
-          </div>
-          <span className="text-slate-700">|</span>
           <Link to="/privacy" className="hover:text-slate-200 transition-colors">Privacy</Link>
           <Link to="/terms" className="hover:text-slate-200 transition-colors">Terms</Link>
           <span className="text-slate-700">|</span>

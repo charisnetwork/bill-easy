@@ -3,51 +3,20 @@ import { motion } from 'framer-motion';
 import { CheckCircle2, AlertCircle, Clock, ChevronRight, PackageX } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '../../../lib/utils';
+import { buildAlerts } from '../dashboardData';
+
+const STYLE = {
+  overdue: { icon: Clock, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-500/10' },
+  stock: { icon: PackageX, color: 'text-rose-500', bg: 'bg-rose-50 dark:bg-rose-500/10' },
+  gst: { icon: AlertCircle, color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-500/10' },
+};
 
 export const TodaysTasks = ({ data }) => {
   const navigate = useNavigate();
-
-  // Generate tasks based on data
-  const tasks = [];
-
-  if (data?.pendingPayments > 10000) {
-    tasks.push({
-      id: 1,
-      title: 'Follow up on overdue invoices',
-      desc: `₹${data.pendingPayments.toLocaleString('en-IN')} outstanding`,
-      icon: Clock,
-      color: 'text-amber-500',
-      bg: 'bg-amber-50 dark:bg-amber-500/10',
-      route: '/invoices',
-      priority: 'high'
-    });
-  }
-
-  // Mocked for demo
-  tasks.push({
-    id: 2,
-    title: 'Low stock items require reorder',
-    desc: '3 items below minimum threshold',
-    icon: PackageX,
-    color: 'text-rose-500',
-    bg: 'bg-rose-50 dark:bg-rose-500/10',
-    route: '/products',
-    priority: 'high'
-  });
-
-  tasks.push({
-    id: 3,
-    title: 'GSTR-1 Filing approaching',
-    desc: 'Due in 4 days',
-    icon: AlertCircle,
-    color: 'text-indigo-500',
-    bg: 'bg-indigo-50 dark:bg-indigo-500/10',
-    route: '/reports',
-    priority: 'medium'
-  });
+  const tasks = buildAlerts(data).map((alert) => ({ ...alert, ...STYLE[alert.kind] }));
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none border border-slate-100 dark:border-slate-800 h-full flex flex-col"
@@ -66,7 +35,7 @@ export const TodaysTasks = ({ data }) => {
 
       <div className="flex-1 space-y-3">
         {tasks.map((task) => (
-          <div 
+          <div
             key={task.id}
             onClick={() => navigate(task.route)}
             className="group flex items-center justify-between p-3 rounded-2xl border border-slate-100 dark:border-slate-800/60 hover:border-indigo-100 dark:hover:border-indigo-500/30 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all cursor-pointer"
@@ -94,7 +63,7 @@ export const TodaysTasks = ({ data }) => {
               <CheckCircle2 className="w-6 h-6 text-emerald-500" />
             </div>
             <p className="text-sm font-bold text-slate-700 dark:text-slate-300">All caught up!</p>
-            <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">Enjoy the rest of your day.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">No overdue invoices, low stock or GST returns due this week.</p>
           </div>
         )}
       </div>

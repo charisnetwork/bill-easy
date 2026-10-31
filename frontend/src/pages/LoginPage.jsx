@@ -196,7 +196,7 @@ export const LoginPage = () => {
         <div className="max-w-lg relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-medium mb-6">
             <CheckCircle2 className="w-4 h-4" />
-            <span>Trusted by 10,000+ businesses</span>
+            <span>Free plan · no card needed</span>
           </div>
 
           <h2 className="font-heading text-5xl font-bold text-white mb-6 leading-tight">
@@ -208,12 +208,12 @@ export const LoginPage = () => {
 
           <div className="grid grid-cols-2 gap-6">
             <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-              <p className="text-3xl font-bold text-white font-mono mb-1">10K+</p>
-              <p className="text-slate-400 font-medium">Active Users</p>
+              <p className="text-3xl font-bold text-white font-mono mb-1">GST</p>
+              <p className="text-slate-400 font-medium">Invoices, e-way bills and GSTR reports</p>
             </div>
             <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-              <p className="text-3xl font-bold text-white font-mono mb-1">99.9%</p>
-              <p className="text-slate-400 font-medium">Uptime Guarantee</p>
+              <p className="text-3xl font-bold text-white font-mono mb-1">AI</p>
+              <p className="text-slate-400 font-medium">Assistant for questions about your business</p>
             </div>
           </div>
         </div>

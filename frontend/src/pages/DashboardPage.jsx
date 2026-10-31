@@ -71,13 +71,13 @@ export const DashboardPage = () => {
       case 'todays-tasks': return <TodaysTasks data={dashboardData} />;
       case 'smart-insights': return <AIInsights data={dashboardData} />;
       case 'action-center': return <ActionCenter />;
-      case 'recent-activity': return <RecentActivityFeed />;
-      case 'recent-invoices': return <DenseInvoiceTable />;
-      case 'cash-flow': return <CashFlowWidget data={dashboardData.salesChartData} />;
-      case 'receivables': return <ReceivablesWidget />;
-      case 'inventory-alerts': return <InventoryAlertPanel />;
-      case 'top-performers': return <TopPerformers />;
-      case 'business-calendar': return <BusinessCalendar />;
+      case 'recent-activity': return <RecentActivityFeed data={dashboardData} />;
+      case 'recent-invoices': return <DenseInvoiceTable data={dashboardData} />;
+      case 'cash-flow': return <CashFlowWidget data={dashboardData} />;
+      case 'receivables': return <ReceivablesWidget data={dashboardData} />;
+      case 'inventory-alerts': return <InventoryAlertPanel data={dashboardData} />;
+      case 'top-performers': return <TopPerformers data={dashboardData} />;
+      case 'business-calendar': return <BusinessCalendar data={dashboardData} />;
       default: return null; 
     }
   };
