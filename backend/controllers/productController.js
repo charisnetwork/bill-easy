@@ -502,25 +502,23 @@ const deleteCategory = async (req, res) => {
   }
 };
 
-const XLSX = require('xlsx');
+const { readSpreadsheetRows, SpreadsheetError } = require('../services/spreadsheetRows');
 
 const importProducts = async (req, res) => {
-  const transaction = await sequelize.transaction();
+  let transaction;
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Please upload a file' });
     }
 
-    const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
-    const sheetName = workbook.SheetNames[0];
-    const sheet = workbook.Sheets[sheetName];
-    
-    // Get data as array of arrays to handle headers and empty rows strictly
-    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, blankrows: false });
+    // First sheet as an array of rows (blank rows dropped); .xlsx or CSV.
+    const rows = await readSpreadsheetRows(req.file.buffer);
 
     if (rows.length <= 1) {
       return res.status(400).json({ error: 'File is empty or contains only headers' });
     }
+    // Opened only once the file is readable, so early answers never leave it open.
+    transaction = await sequelize.transaction();
 
     // Normalize headers: lowercase, trim, replace underscores/hyphens with spaces
     const rawHeaders = rows[0].map(h => String(h || '').toLowerCase().trim());
@@ -648,7 +646,7 @@ const importProducts = async (req, res) => {
 
   } catch (error) {
     if (transaction) await transaction.rollback();
-    // Error logged
+    if (error instanceof SpreadsheetError) return res.status(400).json({ error: error.message });
     res.status(500).json({ error: process.env.NODE_ENV === 'production' ? 'Failed to import products' : 'Failed to import products: ' + error.message });
   }
 };

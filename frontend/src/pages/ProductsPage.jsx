@@ -763,7 +763,7 @@ export const ProductsPage = () => {
               type="file"
               id="import-items"
               className="hidden"
-              accept=".xlsx, .xls, .csv"
+              accept=".xlsx,.csv"
               onChange={handleImport}
               disabled={importing}
             />
