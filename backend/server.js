@@ -165,25 +165,28 @@ app.get('/health', (req, res) => {
 ========================================= */
 
 // Standard /api/* routes (for Vercel proxy)
+// Every record id is a UUID. Anything else can match no record, so answer 404 before it reaches the database.
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const uuidIds = (router) => router.param('id', (req, res, next, id) => (UUID.test(id) ? next() : res.status(404).json({ error: 'Not found' })));
 app.use('/api/auth', authRoutes);
-app.use('/api/company', companyRoutes);
-app.use('/api/customers', customerRoutes);
-app.use('/api/suppliers', supplierRoutes);
-app.use("/api/products", productRoutes);
-app.use("/api/invoices", invoiceRoutes);
-app.use("/api/quotations", quotationRoutes);
-app.use("/api/purchases", purchaseRoutes);
-app.use("/api/purchase-orders", purchaseOrderRoutes);
-app.use("/api/expenses", expenseRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/reports', reportRoutes);
-app.use('/api/subscription', subscriptionRoutes);
-app.use('/api/eway-bills', ewayBillRoutes);
-app.use('/api/credit-notes', creditNoteRoutes);
-app.use('/api/ai', aiRoutes);
-app.use('/api/recurring', require('./routes/recurring'));
-app.use('/api/enquiries', enquiryRoutes);
-app.use('/api/staff', require('./routes/staff'));
+app.use('/api/company', uuidIds(companyRoutes));
+app.use('/api/customers', uuidIds(customerRoutes));
+app.use('/api/suppliers', uuidIds(supplierRoutes));
+app.use("/api/products", uuidIds(productRoutes));
+app.use("/api/invoices", uuidIds(invoiceRoutes));
+app.use("/api/quotations", uuidIds(quotationRoutes));
+app.use("/api/purchases", uuidIds(purchaseRoutes));
+app.use("/api/purchase-orders", uuidIds(purchaseOrderRoutes));
+app.use("/api/expenses", uuidIds(expenseRoutes));
+app.use('/api/payments', uuidIds(paymentRoutes));
+app.use('/api/reports', uuidIds(reportRoutes));
+app.use('/api/subscription', uuidIds(subscriptionRoutes));
+app.use('/api/eway-bills', uuidIds(ewayBillRoutes));
+app.use('/api/credit-notes', uuidIds(creditNoteRoutes));
+app.use('/api/ai', uuidIds(aiRoutes));
+app.use('/api/recurring', uuidIds(require('./routes/recurring')));
+app.use('/api/enquiries', uuidIds(enquiryRoutes));
+app.use('/api/staff', uuidIds(require('./routes/staff')));
 app.use("/api/utilities", require("./routes/utilities"));
 // Server-to-server Control Centre integration. Every endpoint enforces its own API key.
 

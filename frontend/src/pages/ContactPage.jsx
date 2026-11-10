@@ -107,7 +107,7 @@ const ContactPage = () => {
                   </div>
                   <div>
                     <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Email Support</p>
-                    <p className="text-lg font-bold text-slate-900">support@billeasy.com</p>
+                    <p className="text-lg font-bold text-slate-900">support@charisbilleasy.store</p>
                   </div>
                 </div>
               </div>

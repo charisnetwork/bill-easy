@@ -1178,7 +1178,7 @@ export const SettingsPage = () => {
                   <div className="p-6 bg-white rounded-xl border border-slate-200 hover:shadow-md transition-shadow cursor-pointer space-y-3">
                     <Mail className="w-8 h-8 text-[#4F46E5]" />
                     <h4 className="font-bold text-slate-900">Email Support</h4>
-                    <p className="text-sm text-slate-500">Write to us at support@billeasy.com for any queries or issues.</p>
+                    <p className="text-sm text-slate-500">Write to us at support@charisbilleasy.store for any queries or issues.</p>
                   </div>
                   <div className="p-6 bg-white rounded-xl border border-slate-200 hover:shadow-md transition-shadow cursor-pointer space-y-3">
                     <Phone className="w-8 h-8 text-emerald-600" />
