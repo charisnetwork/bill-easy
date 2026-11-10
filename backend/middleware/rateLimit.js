@@ -1,19 +1,26 @@
 /**
- * Rate Limiting Middleware
- * 
- * - General API: 100 requests per 15 minutes
- * - Auth endpoints: 5 attempts per 15 minutes (stricter)
- * - Brute force protection: Account-level tracking
+ * Rate limiting.
+ *
+ * Many customers reach us through one shared address (mobile carriers, an office router), so
+ * limits that count failures are kept per email as well as per address: one person mistyping a
+ * password must not lock out everyone else behind the same address.
  */
 
 const rateLimit = require('express-rate-limit');
+const { ipKeyGenerator } = rateLimit;
 const { logSecurityEvent } = require('../services/auditService');
 
-// General API rate limiting
-// 300/15min = ~20 req/min per IP — sufficient for a SaaS dashboard that fires 5-8 calls on page load
+const FIFTEEN_MINUTES = 15 * 60 * 1000;
+const fromEnv = (name, fallback) => {
+  const value = Number(process.env[name]);
+  return Number.isInteger(value) && value > 0 ? value : fallback;
+};
+
+// General API limit per address: a dashboard fires 5-8 calls per page and a shop may have
+// several counters behind one address. Login, sign-up and password reset have their own limits.
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 300, // Raised from 100 — normal users won't hit this; abusers will
+  windowMs: FIFTEEN_MINUTES,
+  max: fromEnv('API_RATE_LIMIT', 2000),
   message: {
     error: 'Too many requests, please try again later.',
     code: 'RATE_LIMITED',
@@ -28,39 +35,64 @@ const apiLimiter = rateLimit({
   }
 });
 
-// Strict rate limiting for authentication endpoints
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 attempts per window
-  skipSuccessfulRequests: true, // Don't count successful logins
-  message: {
-    error: 'Too many login attempts. Please try again after 15 minutes.',
-    code: 'AUTH_RATE_LIMITED',
-    retryAfter: 900
-  },
+const authMessage = {
+  error: 'Too many login attempts. Please try again after 15 minutes.',
+  code: 'AUTH_RATE_LIMITED',
+  retryAfter: 900
+};
+const authHandler = (req, res, next, options) => {
+  console.warn(`[Auth Rate Limit] Exceeded for ${req.ip}`);
+  res.status(options.statusCode).json(options.message);
+};
+const emailOf = (req) => String(req.body?.email || '').trim().toLowerCase();
+
+// 5 failed attempts per email from one address...
+const authPerEmail = rateLimit({
+  windowMs: FIFTEEN_MINUTES,
+  max: 5,
+  skipSuccessfulRequests: true,
+  keyGenerator: (req) => `${ipKeyGenerator(req.ip)}|${emailOf(req)}`,
+  message: authMessage,
   standardHeaders: true,
   legacyHeaders: false,
-  // Use default keyGenerator which handles IPv6 properly
-  handler: (req, res, next, options) => {
-    const email = req.body?.email;
-    console.warn(`[Auth Rate Limit] Exceeded for ${email || req.ip}`);
-    res.status(options.statusCode).json(options.message);
-  }
+  handler: authHandler
 });
+// ...and 50 failed attempts per address whatever the email, against guessing across accounts.
+const authPerAddress = rateLimit({
+  windowMs: FIFTEEN_MINUTES,
+  max: 50,
+  skipSuccessfulRequests: true,
+  message: authMessage,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: authHandler
+});
+const authLimiter = [authPerAddress, authPerEmail];
 
-// Stricter rate limiting for password reset
-const passwordResetLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3, // 3 attempts per hour
-  message: {
-    error: 'Too many password reset attempts. Please try again later.',
-    code: 'RESET_RATE_LIMITED',
-    retryAfter: 3600
-  },
+// New accounts per address per hour (only successful sign-ups count).
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: fromEnv('REGISTER_RATE_LIMIT', 10),
+  skipFailedRequests: true,
+  message: { error: 'Too many new accounts from this network. Please try again later.', code: 'REGISTER_RATE_LIMITED', retryAfter: 3600 },
   standardHeaders: true,
   legacyHeaders: false
-  // Removed invalid 'keyHeaders' option
 });
+
+// Emails we send on request (password reset, verification): these always answer 200, so every
+// request counts. 3 per email and 30 per address per hour.
+const emailMessage = { error: 'Too many requests. Please try again later.', code: 'RESET_RATE_LIMITED', retryAfter: 3600 };
+const passwordResetLimiter = [
+  rateLimit({ windowMs: 60 * 60 * 1000, max: 30, message: emailMessage, standardHeaders: true, legacyHeaders: false }),
+  rateLimit({
+    windowMs: 60 * 60 * 1000,
+    max: 3,
+    keyGenerator: (req) => `${ipKeyGenerator(req.ip)}|${emailOf(req)}`,
+    message: emailMessage,
+    standardHeaders: true,
+    legacyHeaders: false
+  })
+];
 
 // Account-level brute force protection
 // Tracks failed attempts per account (stored temporarily in memory)
@@ -69,7 +101,8 @@ const bruteForceAttempts = new Map();
 
 const bruteForceProtection = async (req, res, next) => {
   const email = req.body?.email;
-  if (!email) return next();
+  // Anything but a string is rejected by validation next; it must not crash here.
+  if (!email || typeof email !== 'string') return next();
   
   const key = email.toLowerCase();
   const attempts = bruteForceAttempts.get(key) || { count: 0, firstAttempt: Date.now() };
@@ -135,6 +168,7 @@ const clearBruteForce = (email) => {
 module.exports = {
   apiLimiter,
   authLimiter,
+  registerLimiter,
   passwordResetLimiter,
   bruteForceProtection,
   incrementBruteForce,

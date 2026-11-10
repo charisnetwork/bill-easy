@@ -25,6 +25,8 @@ const {
 } = require('../middleware/validation');
 const { 
   authLimiter, 
+  registerLimiter,
+  passwordResetLimiter,
   bruteForceProtection 
 } = require('../middleware/rateLimit');
 
@@ -35,12 +37,12 @@ router.use(cookieParser());
    PUBLIC ROUTES
 ================================ */
 
-// Register - general rate limit
-router.post('/register', registerValidation, register);
+// Register - limited number of new accounts per address
+router.post('/register', registerLimiter, registerValidation, register);
 
 // Login - strict rate limit + brute force protection
 router.post('/login', 
-  authLimiter,         // 5 attempts per 15 min per email
+  authLimiter,         // 5 failed attempts per email, 50 per address, per 15 min
   bruteForceProtection, // Account-level lockout after 10 failures
   loginValidation, 
   login
@@ -51,10 +53,10 @@ router.post('/refresh', refreshToken);
 
 // Email Verification
 router.get('/verify-email/:token', verifyEmail);
-router.post('/resend-verification', authLimiter, resendVerification);
+router.post('/resend-verification', passwordResetLimiter, resendVerification);
 
 // Password Reset
-router.post('/forgot-password', authLimiter, forgotPassword);
+router.post('/forgot-password', passwordResetLimiter, forgotPassword);
 router.post('/reset-password/:token', authLimiter, resetPassword);
 
 /* ===============================

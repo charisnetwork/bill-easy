@@ -58,7 +58,6 @@ const ALLOWED_ORIGINS = [
   // Production custom domain
   'https://charisbilleasy.store',
   'https://www.charisbilleasy.store',
-  'https://admin.charisbilleasy.store',
   // Local development
   'http://localhost:3000',
   'http://localhost:5173',
@@ -105,7 +104,7 @@ app.use(
       }
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-company-id', 'x-admin-secret', 'x-admin-token'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-company-id'],
     credentials: true
   })
 );
@@ -190,106 +189,6 @@ app.use("/api/utilities", require("./routes/utilities"));
 
 // NOTE: Bare-path duplicate routes removed — Railway now correctly preserves /api/ prefix.
 // All API calls must go through /api/* routes above.
-
-/* =========================================
-   ADMIN PORTAL ROUTES
-   Mounted at /api/admin/* so Express can see them
-   regardless of Railway proxy/path stripping.
-========================================= */
-
-const jwt = require('jsonwebtoken');
-const ADMIN_EMAIL = 'pachu.mgd@gmail.com';
-const ADMIN_SECRET_PIN = process.env.ADMIN_SECRET_PIN || process.env.ADMIN_SECRET;
-const ADMIN_JWT_SECRET = process.env.JWT_SECRET || process.env.ADMIN_SECRET;
-if (!ADMIN_JWT_SECRET) {
-  console.warn('WARNING: JWT_SECRET or ADMIN_SECRET must be set');
-}
-
-// Build a single admin router with auth + data routes
-const adminRouter = express.Router();
-
-// Rate limiter for admin login — 5 attempts per 15 minutes
-const { rateLimit: _rl } = require('express-rate-limit');
-const adminAuthLimiter = _rl({
-  windowMs: 15 * 60 * 1000,
-  max: 5,
-  message: { error: 'Too many admin login attempts. Try again in 15 minutes.', code: 'ADMIN_RATE_LIMITED' },
-  standardHeaders: true,
-  legacyHeaders: false
-});
-
-// --- Public: Admin Login (rate limited) ---
-adminRouter.post('/auth/login', adminAuthLimiter, (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required.' });
-  }
-
-  if (email.toLowerCase().trim() !== ADMIN_EMAIL) {
-    return res.status(401).json({ error: 'Invalid credentials. Only authorized admin can login.' });
-  }
-
-  if (!ADMIN_SECRET_PIN) {
-    return res.status(500).json({ error: 'Server config error: ADMIN_SECRET_PIN not set.' });
-  }
-
-  const crypto = require('crypto');
-  const digest = (value) => crypto.createHash('sha256').update(String(value)).digest();
-  if (!crypto.timingSafeEqual(digest(password), digest(ADMIN_SECRET_PIN))) {
-    return res.status(401).json({ error: 'Wrong password.' });
-  }
-
-  const token = jwt.sign(
-    { email: ADMIN_EMAIL, role: 'superadmin', iat: Math.floor(Date.now() / 1000) },
-    ADMIN_JWT_SECRET,
-    // Own issuer/audience: a customer token signed with the same secret can never pass as admin.
-    { expiresIn: '24h', issuer: 'bill-easy-admin', audience: 'bill-easy-admin' }
-  );
-
-  res.json({
-    success: true,
-    message: 'Login successful',
-    token,
-    user: { email: ADMIN_EMAIL, name: 'Platform Administrator', role: 'superadmin' }
-  });
-});
-
-// --- Admin JWT Auth Middleware ---
-const adminAuth = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'No token provided.' });
-  try {
-    req.user = jwt.verify(token, ADMIN_JWT_SECRET, { issuer: 'bill-easy-admin', audience: 'bill-easy-admin' });
-    if (req.user.email !== ADMIN_EMAIL) throw new Error('Not admin');
-    next();
-  } catch (err) {
-    return res.status(403).json({ error: 'Invalid or expired token.' });
-  }
-};
-
-// --- Protected: Admin Me & Logout ---
-adminRouter.get('/auth/me', adminAuth, (req, res) => {
-  res.json({ email: ADMIN_EMAIL, name: 'Platform Administrator', role: 'superadmin' });
-});
-
-adminRouter.post('/auth/logout', adminAuth, (req, res) => {
-  res.json({ success: true, message: 'Logged out successfully' });
-});
-
-// --- Protected: Admin Data Routes (dashboard, coupons, etc.) ---
-try {
-  const adminDataRoutes = require('../admin/backend/routes/adminRoutes');
-  adminRouter.use('/', adminAuth, adminDataRoutes);
-} catch (e) {
-  console.log('ℹ️ Admin data routes not available (standalone mode)');
-}
-
-// Mount at ALL possible paths so it works regardless of Railway proxy config
-app.use('/api/admin', adminRouter);     // Standard: frontend calls /api/admin/auth/login
-app.use('/admin/api', adminRouter);     // Gateway: frontend calls /admin/api/auth/login
-app.use('/admin', adminRouter);         // Fallback: if Railway strips /api prefix
 
 // Only company assets (logo, signature, QR) are web-reachable, by unguessable name.
 // Everything else under UPLOAD_ROOT (e.g. temp files) is never served.

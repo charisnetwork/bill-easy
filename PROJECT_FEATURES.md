@@ -347,12 +347,9 @@ FRONTEND_URL=https://your-domain.com
 PORT=8080
 ```
 
-### Required for Admin
-```env
-# Same as main PLUS:
-ADMIN_SECRET=admin-api-secret-key
-ALLOWED_ORIGINS=https://your-admin-domain.com
-```
+### Admin
+Bill Easy has no admin login of its own. Plans, coupons, subscribers and feature
+access are managed in Charis OS (Control Centre).
 
 ---
 

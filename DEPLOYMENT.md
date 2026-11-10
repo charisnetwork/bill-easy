@@ -53,7 +53,6 @@ Build `frontend/` with `npm ci && npm run build`; publish `frontend/dist`.
 
 ```env
 VITE_BACKEND_URL=https://<backend domain>     # no trailing slash
-VITE_ADMIN_PORTAL_URL=https://<admin portal>
 VITE_GA_MEASUREMENT_ID=                        # optional
 ```
 
