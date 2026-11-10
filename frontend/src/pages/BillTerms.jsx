@@ -38,7 +38,7 @@ const BillTerms = () => {
                 Agreement to Terms
               </h2>
               <p className="text-slate-600 leading-relaxed">
-                By accessing or using <strong>Bill Easy</strong> (operated by <strong>Charis Network</strong>), you agree
+                By accessing or using <strong>Bill Easy</strong> (operated by <strong>Charis AI Technologies LLP</strong>), you agree
                 to be bound by these Terms of Service. If you disagree with any part of these terms, you may not access our
                 services. These terms apply to all visitors, users, and others who access or use the Service.
               </p>
@@ -149,7 +149,7 @@ const BillTerms = () => {
               </h2>
               <p className="text-slate-600 leading-relaxed">
                 Bill Easy is provided "as is" without warranty of any kind. To the maximum extent permitted by Indian law,
-                Charis Network shall not be liable for any indirect, incidental, or consequential damages arising from
+                Charis AI Technologies LLP shall not be liable for any indirect, incidental, or consequential damages arising from
                 your use of the service, including data loss. Our total liability is limited to the amount you paid in the
                 3 months preceding the claim.
               </p>
@@ -179,7 +179,7 @@ const BillTerms = () => {
             {/* Footer */}
             <section className="pt-8 border-t border-slate-100 text-center">
               <p className="text-sm text-slate-500 italic">
-                Copyright © 2026 Charis Network. All rights reserved. · Bill Easy is a product of Charis Network.
+                Copyright © 2026 Charis AI Technologies LLP. All rights reserved. · Bill Easy is a product of Charis AI Technologies LLP.
               </p>
             </section>
 

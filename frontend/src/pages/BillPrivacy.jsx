@@ -38,7 +38,7 @@ const BillPrivacy = () => {
                 Introduction
               </h2>
               <p className="text-slate-600 leading-relaxed">
-                At <strong>Bill Easy</strong> (operated by <strong>Charis Network</strong>), we take your privacy seriously.
+                At <strong>Bill Easy</strong> (operated by <strong>Charis AI Technologies LLP</strong>), we take your privacy seriously.
                 This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our
                 SaaS billing and inventory management platform. By using our service, you agree to the collection and use of
                 information in accordance with this policy.
