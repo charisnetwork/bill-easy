@@ -176,9 +176,9 @@ export const SalesReturnPage = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => navigate(-1)}><ArrowLeft className="w-4 h-4 mr-2" />Back</Button>
-          <h1 className="text-2xl font-bold">Sales Return (Credit Note)</h1>
+        <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-4">
+          <Button variant="ghost" className="-ml-3 sm:ml-0" onClick={() => navigate(-1)}><ArrowLeft className="w-4 h-4 mr-2" />Back</Button>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Sales Return (Credit Note)</h1>
         </div>
       </div>
 

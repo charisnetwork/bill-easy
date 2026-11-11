@@ -37,7 +37,7 @@ export const DashboardLayout = ({ children }) => {
         
         <Header setSidebarOpen={setSidebarOpen} setCmdkOpen={setCmdkOpen} />
 
-        <main className="flex-1 overflow-y-auto flex flex-col relative pb-20 md:pb-0 scrollbar-thin scrollbar-thumb-slate-200">
+        <main className="flex-1 overflow-y-auto flex flex-col relative pb-28 md:pb-0 scrollbar-thin scrollbar-thumb-slate-200">
           {/* Animated Page Transitions wrapper */}
           <motion.div
             key={location.pathname}

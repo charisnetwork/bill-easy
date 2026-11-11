@@ -85,9 +85,9 @@ export const StockTransferPage = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" onClick={() => navigate(-1)}><ArrowLeft className="w-4 h-4 mr-2" />Back</Button>
-        <h1 className="text-2xl font-bold flex items-center gap-2"><ArrowRightLeft className="w-6 h-6 text-emerald-600" /> Internal Stock Transfer</h1>
+      <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-4">
+        <Button variant="ghost" className="-ml-3 sm:ml-0" onClick={() => navigate(-1)}><ArrowLeft className="w-4 h-4 mr-2" />Back</Button>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2"><ArrowRightLeft className="w-6 h-6 text-emerald-600" /> Internal Stock Transfer</h1>
       </div>
 
       <div className="max-w-2xl mx-auto">

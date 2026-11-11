@@ -179,8 +179,9 @@ function AppRoutes() {
 }
 
 function App() {
+  // Light only: dark styles were never finished, and phones in dark mode showed black boxes.
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="light" forcedTheme="light" enableSystem={false}>
       <AuthProvider>
         <BrowserRouter>
           <Suspense fallback={<PageLoader />}>

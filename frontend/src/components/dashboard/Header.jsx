@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getAssetUrl } from '../../config/api';
 import { 
-  Search, Bell, Sparkles, Moon, Sun, 
+  Search, Bell, Sparkles, 
   HelpCircle, ChevronDown, Menu,
   LogOut, Settings, Calendar
 } from 'lucide-react';
@@ -20,12 +20,10 @@ import { cn } from '../../lib/utils';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 
-import { useTheme } from 'next-themes';
 import { NotificationCenter } from './NotificationCenter';
 
 export const Header = ({ setSidebarOpen, setCmdkOpen }) => {
   const { user, company, logout } = useAuth();
-  const { theme, setTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -101,13 +99,6 @@ export const Header = ({ setSidebarOpen, setCmdkOpen }) => {
           <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-indigo-500 rounded-full border-2 border-white scale-0 group-hover:scale-100 transition-transform"></span>
         </button>
         
-        <button 
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          className="p-2 text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors hidden sm:block" 
-          title="Toggle Theme"
-        >
-          {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-        </button>
 
         <button className="p-2 text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors hidden sm:block" title="Help Center">
           <HelpCircle className="w-5 h-5" />
