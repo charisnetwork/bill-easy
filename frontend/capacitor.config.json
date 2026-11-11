@@ -1,5 +1,5 @@
 {
-  "appId": "com.charisnetwork.billeasy",
+  "appId": "in.ietech.billeasy",
   "appName": "Bill Easy",
   "webDir": "dist",
   "bundledWebRuntime": false,

@@ -7,7 +7,7 @@
     "@capacitor/android": "^8.4.0",
     "@capacitor/app": "^8.1.0",
     "@capacitor/browser": "^8.0.3",
-    "@capacitor/core": "^8.4.0",
+    "@capacitor/core": "^8.6.0",
     "@capacitor/filesystem": "^8.1.2",
     "@capacitor/haptics": "^8.0.2",
     "@capacitor/share": "^8.0.1",
@@ -92,7 +92,7 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "@capacitor/cli": "^4.8.2",
+    "@capacitor/cli": "^8.6.0",
     "@emergentbase/visual-edits": "https://assets.emergent.sh/npm/emergentbase-visual-edits-1.0.8.tgz",
     "@eslint/js": "9.23.0",
     "@vitejs/plugin-react": "^6.0.1",

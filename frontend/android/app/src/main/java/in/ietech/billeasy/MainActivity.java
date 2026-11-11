@@ -1,4 +1,4 @@
-package com.charisnetwork.billeasy;
+package in.ietech.billeasy;
 
 import com.getcapacitor.BridgeActivity;
 
