@@ -128,7 +128,7 @@ async function billingTenantId(companyId) {
   return tenantId;
 }
 
-async function getSnapshot(companyId) {
+async function fetchSnapshot(companyId) {
   const config = charisOsConfig();
   const tenantId = await billingTenantId(companyId);
   const entry = snapshotCache.get(tenantId);
@@ -138,6 +138,26 @@ async function getSnapshot(companyId) {
   const endsAt = snapshot.status === 'active' && snapshot.ends_at ? Date.parse(snapshot.ends_at) : Infinity;
   snapshotCache.set(tenantId, { snapshot, until: Math.min(Date.now() + SNAPSHOT_TTL_MS, endsAt) });
   return snapshot;
+}
+
+const NO_TERM = new Set(['unassigned', 'expired', 'cancelled']);
+const FREE_PLAN_RETRY_MS = 10 * 60 * 1000;
+const freePlanTriedAt = new Map();
+
+/**
+ * The business's current term. A business with no current term (new, or its plan ended) is put
+ * on the catalog's free plan first, so nobody is locked out; tried at most every 10 minutes.
+ */
+async function getSnapshot(companyId) {
+  const snapshot = await fetchSnapshot(companyId);
+  if (!NO_TERM.has(snapshot.status) || Date.now() - (freePlanTriedAt.get(companyId) || 0) < FREE_PLAN_RETRY_MS) return snapshot;
+  if (freePlanTriedAt.size >= 5000) freePlanTriedAt.clear();
+  freePlanTriedAt.set(companyId, Date.now());
+  try {
+    return (await claimFreePlan(companyId, 'system')) || snapshot;
+  } catch {
+    return snapshot;
+  }
 }
 
 const entitlement = (snapshot, code) => snapshot.entitlements.find(e => e.feature_code === code);
@@ -269,7 +289,7 @@ async function claimFreePlan(companyId, actorId) {
   if (!enabled()) return null;
   const { synced } = await syncCompany(companyId);
   if (!synced) return null;
-  const snapshot = await getSnapshot(companyId);
+  const snapshot = await fetchSnapshot(companyId);
   if (snapshot.status !== 'unassigned' && snapshot.status !== 'expired' && snapshot.status !== 'cancelled') return snapshot;
   const free = (await getCatalog()).plans.find(p => Number(p.price) === 0);
   if (!free) return snapshot;
@@ -278,7 +298,8 @@ async function claimFreePlan(companyId, actorId) {
   } catch (error) {
     if (!(error instanceof CharisOsError && error.status === 409)) throw error; // 409: a term already exists.
   }
-  return getSnapshot(companyId);
+  clearCache(await billingTenantId(companyId));
+  return fetchSnapshot(companyId);
 }
 
 /**

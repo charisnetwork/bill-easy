@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard, Users, Package, FileText, ShoppingCart,
   Wallet, BarChart3, Settings, Truck, ChevronDown, 
-  TrendingUp, Lock
+  TrendingUp, Lock, Crown
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { BusinessSwitcher } from './BusinessSwitcher';
@@ -88,6 +88,7 @@ export const Sidebar = ({ open, setOpen }) => {
           locked: !hasFeature('eway_bills')
         },
         { path: '/reports', icon: BarChart3, label: 'Reports' },
+        { path: '/subscription', icon: Crown, label: 'Plan & Usage' },
         { path: '/settings', icon: Settings, label: 'Settings' },
       ]
     }
