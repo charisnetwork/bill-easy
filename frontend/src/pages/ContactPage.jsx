@@ -7,6 +7,7 @@ import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { useToast } from '../hooks/use-toast';
 import { API_BASE_URL } from '../config/api';
+import { COMPANY } from '../config/company';
 
 const ContactPage = () => {
   const { toast } = useToast();
@@ -108,6 +109,17 @@ const ContactPage = () => {
                   <div>
                     <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Email Support</p>
                     <p className="text-lg font-bold text-slate-900">support@charisbilleasy.store</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center shrink-0">
+                    <MapPin className="w-6 h-6 text-slate-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Registered Address</p>
+                    <p className="text-sm font-semibold text-slate-900">{COMPANY.operator}</p>
+                    <p className="text-sm text-slate-600">{COMPANY.address}</p>
                   </div>
                 </div>
               </div>

@@ -99,6 +99,7 @@ import { toast } from 'sonner';
 import { cn } from '../lib/utils';
 import { IndustryPicker } from "../components/IndustryPicker";
 import { InvoiceDesignSettings } from "../components/settings/InvoiceDesignSettings";
+import { DeleteAccount } from "../components/settings/DeleteAccount";
 import { COUNTRIES, countryByCode, regionsForCountry } from '../lib/localization';
 
 // --- Schemas ---
@@ -825,6 +826,7 @@ export const SettingsPage = () => {
                 </form>
               </Form>
             )}
+            {activeSection === 'account-profile' && <DeleteAccount />}
 
             {activeSection === 'account-security' && (
               <Form {...passwordForm}>

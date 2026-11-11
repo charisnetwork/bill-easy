@@ -1,8 +1,9 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { ArrowLeft, Shield, Lock, Eye, Bell, UserCheck, Cookie, Database, Globe } from 'lucide-react';
 import Footer from '../components/Footer';
+import { COMPANY } from '../config/company';
 
 const BillPrivacy = () => {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ const BillPrivacy = () => {
               Privacy Policy
             </h1>
           </div>
-          <span className="text-xs text-slate-500 font-medium">Last Updated: June 2026</span>
+          <span className="text-xs text-slate-500 font-medium">Last Updated: November 2026</span>
         </div>
       </div>
 
@@ -38,7 +39,7 @@ const BillPrivacy = () => {
                 Introduction
               </h2>
               <p className="text-slate-600 leading-relaxed">
-                At <strong>Bill Easy</strong> (operated by <strong>Charis AI Technologies LLP</strong>), we take your privacy seriously.
+                At <strong>Bill Easy</strong> (operated by <strong>{COMPANY.operator}</strong>, {COMPANY.address}), we take your privacy seriously.
                 This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our
                 SaaS billing and inventory management platform. By using our service, you agree to the collection and use of
                 information in accordance with this policy.
@@ -147,7 +148,7 @@ const BillPrivacy = () => {
               <p className="text-slate-600 leading-relaxed">
                 We retain your business data for the duration of your active subscription plus 90 days after account
                 closure, to allow data export. After this period, your data is permanently deleted from our servers.
-                You can request immediate deletion by contacting us.
+                You can also delete your account and data yourself at any time, as described below.
               </p>
             </section>
 
@@ -165,14 +166,19 @@ const BillPrivacy = () => {
               <ul className="list-disc pl-6 space-y-2 text-slate-600 text-sm">
                 <li>Export all your business data as PDF or Excel through the Reports section.</li>
                 <li>Update personal details from the Settings page.</li>
-                <li>Request full account deletion by emailing us.</li>
+                <li>
+                  Delete your account yourself from <strong>Settings → Profile → Delete account</strong>. Deleting is immediate and
+                  permanent: the account owner's businesses and all their records are removed.{' '}
+                  <Link to="/delete-account" className="text-blue-600 underline">How to delete your account</Link>.
+                </li>
+                <li>Or ask us to delete your account by emailing us from your registered email address.</li>
               </ul>
             </section>
 
             {/* Contact */}
             <section className="pt-8 border-t border-slate-100">
               <p className="text-sm text-slate-500 italic">
-                For any questions about this Privacy Policy, contact us at{' '}
+                For any questions about this Privacy Policy, contact {COMPANY.operator}, {COMPANY.address}, at{' '}
                 <a href="mailto:support@charisbilleasy.store" className="text-blue-600 underline">
                   support@charisbilleasy.store
                 </a>

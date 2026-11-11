@@ -16,7 +16,8 @@ const {
   verifyEmail,
   forgotPassword,
   resetPassword,
-  resendVerification
+  resendVerification,
+  deleteAccount,
 } = require('../controllers/authController');
 const { authenticateToken } = require('../middleware/auth');
 const { 
@@ -77,6 +78,10 @@ router.put('/profile', authenticateToken, updateProfile);
 
 // Change password
 router.post('/change-password', authenticateToken, changePassword);
+
+// Delete the account and every business it owns (Google Play and DPDP requirement)
+const deletionLimiter = require('express-rate-limit').rateLimit({ windowMs: 15 * 60 * 1000, max: 5, standardHeaders: true, legacyHeaders: false, message: { error: 'Too many attempts. Please wait 15 minutes.' } });
+router.post('/delete-account', deletionLimiter, authenticateToken, deleteAccount);
 
 // Switch company
 router.post('/switch-company/:companyId', authenticateToken, switchCompany);

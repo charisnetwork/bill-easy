@@ -1,7 +1,7 @@
 # Bill Easy
 
 AI-powered GST billing, inventory and business insights for Indian small businesses, by
-Charis AI Technology LLP.
+IE Tech (a brand of Immanuel Enterprises).
 
 - `backend/` — Node/Express API on PostgreSQL
 - `frontend/` — React (Vite) web app; `frontend/android/` wraps it as the Android app

@@ -80,6 +80,7 @@ export const authAPI = {
   getProfile: () => api.get('/auth/profile'),
   updateProfile: (data) => api.put('/auth/profile', data),
   changePassword: (data) => api.post('/auth/change-password', data),
+  deleteAccount: (data) => api.post('/auth/delete-account', data),
   switchCompany: (companyId) => api.post(`/auth/switch-company/${companyId}`),
   getSessions: () => api.get('/auth/sessions'),
   revokeSession: (sessionId) => api.post(`/auth/sessions/${sessionId}/revoke`),

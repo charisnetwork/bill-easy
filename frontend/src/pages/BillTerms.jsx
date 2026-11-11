@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { ArrowLeft, FileText, Scale, Zap, Ban, Globe, AlertTriangle, Gavel } from 'lucide-react';
 import Footer from '../components/Footer';
+import { COMPANY } from '../config/company';
 
 const BillTerms = () => {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ const BillTerms = () => {
                 Agreement to Terms
               </h2>
               <p className="text-slate-600 leading-relaxed">
-                By accessing or using <strong>Bill Easy</strong> (operated by <strong>Charis AI Technologies LLP</strong>), you agree
+                By accessing or using <strong>Bill Easy</strong> (operated by <strong>{COMPANY.operator}</strong>, {COMPANY.address}), you agree
                 to be bound by these Terms of Service. If you disagree with any part of these terms, you may not access our
                 services. These terms apply to all visitors, users, and others who access or use the Service.
               </p>
@@ -149,7 +150,7 @@ const BillTerms = () => {
               </h2>
               <p className="text-slate-600 leading-relaxed">
                 Bill Easy is provided "as is" without warranty of any kind. To the maximum extent permitted by Indian law,
-                Charis AI Technologies LLP shall not be liable for any indirect, incidental, or consequential damages arising from
+                {COMPANY.operator} shall not be liable for any indirect, incidental, or consequential damages arising from
                 your use of the service, including data loss. Our total liability is limited to the amount you paid in the
                 3 months preceding the claim.
               </p>
@@ -166,7 +167,7 @@ const BillTerms = () => {
               <p className="text-slate-600 leading-relaxed">
                 These Terms are governed by the laws of <strong>India</strong>. Any disputes arising out of or relating to
                 these Terms or the use of Bill Easy shall be subject to the exclusive jurisdiction of the courts in
-                <strong> Tamil Nadu, India</strong>.
+                <strong> Karnataka, India</strong>.
               </p>
               <p className="text-slate-600 leading-relaxed">
                 Before filing any legal action, both parties agree to attempt resolution by email within 30 days. Contact:{' '}
@@ -179,7 +180,7 @@ const BillTerms = () => {
             {/* Footer */}
             <section className="pt-8 border-t border-slate-100 text-center">
               <p className="text-sm text-slate-500 italic">
-                Copyright © 2026 Charis AI Technologies LLP. All rights reserved. · Bill Easy is a product of Charis AI Technologies LLP.
+                Copyright © 2026 {COMPANY.legalName}. All rights reserved. · Bill Easy is a product of {COMPANY.operator}.
               </p>
             </section>
 

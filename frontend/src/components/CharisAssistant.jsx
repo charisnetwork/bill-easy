@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 const CharisAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'Hello! I am Charis, your billing expert. How can I help you with your business today?' }
+    { role: 'assistant', content: 'Hello! I am your Bill Easy assistant. How can I help you with your business today?' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -77,7 +77,7 @@ const CharisAssistant = () => {
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h3 className="font-bold text-sm tracking-tight">Charis</h3>
+                <h3 className="font-bold text-sm tracking-tight">Bill Easy assistant</h3>
                 <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest">Billing Expert</p>
               </div>
             </div>
@@ -141,7 +141,7 @@ const CharisAssistant = () => {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask Charis anything..."
+              placeholder="Ask about your sales, stock or dues..."
               className="flex-1 bg-slate-50 border-none rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none"
             />
             <button 

@@ -29,6 +29,7 @@ const ResendVerificationPage = lazy(() => import('./pages/ResendVerificationPage
 const BillPrivacy          = lazy(() => import('./pages/BillPrivacy'));
 const BillTerms            = lazy(() => import('./pages/BillTerms'));
 const ContactPage          = lazy(() => import('./pages/ContactPage'));
+const DeleteAccountInfo    = lazy(() => import('./pages/DeleteAccountInfo'));
 
 // App pages (loaded only when user is logged in)
 const DashboardPage        = lazy(() => import('./pages/DashboardPage'));
@@ -127,6 +128,7 @@ function AppRoutes() {
       <Route path="/privacy"              element={<BillPrivacy />} />
       <Route path="/terms"                element={<BillTerms />} />
       <Route path="/contact"              element={<ContactPage />} />
+      <Route path="/delete-account"       element={<DeleteAccountInfo />} />
 
       {/* ── Protected Routes ── */}
       <Route path="/dashboard"      element={<ProtectedRoute><DashboardLayout><DashboardPage /></DashboardLayout></ProtectedRoute>} />

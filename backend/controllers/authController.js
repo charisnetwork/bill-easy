@@ -761,7 +761,31 @@ const resetPassword = async (req, res) => {
   }
 };
 
+/* ===============================
+   DELETE ACCOUNT
+   The user and every business they own are deleted for good. Someone who only works in
+   another person's business loses their login; that business keeps its records.
+================================ */
+const deleteAccount = async (req, res) => {
+  try {
+    const { password, confirmation } = req.body || {};
+    if (confirmation !== 'DELETE') return res.status(400).json({ error: 'Type DELETE to confirm' });
+    if (!req.user.password || typeof password !== 'string' || !(await bcrypt.compare(password, req.user.password))) {
+      return res.status(400).json({ error: 'Password is incorrect' });
+    }
+    const { deleteUserAndOwnedCompanies } = require('../services/accountDeletion');
+    const result = await deleteUserAndOwnedCompanies(req.user);
+    res.clearCookie(REFRESH_COOKIE_NAME, { path: '/' });
+    console.info('Account deleted', { businesses: result.companies.length, users: result.users });
+    res.json({ deleted: true, businesses: result.companies });
+  } catch (error) {
+    console.error('Account deletion failed:', error.message);
+    res.status(500).json({ error: 'We could not delete the account. Please contact support and we will do it for you.' });
+  }
+};
+
 module.exports = {
+  deleteAccount,
   register,
   login,
   refreshToken,

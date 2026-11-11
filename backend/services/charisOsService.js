@@ -304,7 +304,7 @@ const BILLEASY_FEATURES = [
   { code: 'premium_templates', name: 'Premium invoice templates', group: 'Invoice design', description: 'Bold and Elegant templates' },
   { code: 'pro_templates', name: 'Pro invoice templates', group: 'Invoice design', description: 'Corporate and Creative templates' },
   { code: 'ai_invoice_design', name: 'AI invoice design', group: 'Invoice design', description: 'AI suggests a template and colours from your business and logo' },
-  { code: 'ai_assistant', name: 'Charis AI assistant', group: 'AI tools', description: 'Ask questions about your sales, stock and dues' },
+  { code: 'ai_assistant', name: 'AI assistant', group: 'AI tools', description: 'Ask questions about your sales, stock and dues' },
   { code: 'ai_messages', name: 'AI messages per month', group: 'AI tools', kind: 'limit', unit: 'messages', reset_periods: ['monthly'], description: 'AI answers each month; quick searches are free' },
   { code: 'staff_attendance_payroll', name: 'Staff attendance & payroll', group: 'Team', description: 'Attendance, salary and payroll' },
   { code: 'businesses', name: 'Businesses', group: 'Team', kind: 'limit', unit: 'businesses', reset_periods: ['total'], description: 'Businesses one owner can manage' },

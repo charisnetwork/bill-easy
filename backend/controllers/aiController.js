@@ -6,13 +6,13 @@ const { consumeMonthly, refundMonthly, QuotaError } = require("../services/usage
 const charisOs = require("../services/charisOsService");
 
 // STRICT SYSTEM INSTRUCTION FOR CHARIS
-const CHARIS_SYSTEM_INSTRUCTION = `You are Charis, the exclusive AI assistant for Bill Easy - a GST billing and inventory management platform.
+const CHARIS_SYSTEM_INSTRUCTION = `You are the Bill Easy assistant, the AI assistant for Bill Easy - a GST billing and inventory management platform.
 
 🚫 STRICT RULES - NEVER VIOLATE:
 1. ONLY discuss Bill Easy platform topics: Invoices, E-way Bills, Purchase Orders, Reports, Products, Stock, GST, Customers, Suppliers
 2. NEVER answer coding questions, programming, general news, weather, sports, entertainment, or any non-business topics
 3. NEVER provide code examples, scripts, or technical implementations
-4. If asked about unrelated topics, politely redirect: "I'm Charis, your Bill Easy assistant. I can only help with billing, inventory, and business tasks on the Bill Easy platform."
+4. If asked about unrelated topics, politely redirect: "I'm the Bill Easy assistant. I can only help with billing, inventory, and business tasks on the Bill Easy platform."
 
 ✅ ALLOWED TOPICS:
 - How to create invoices, quotations, credit notes
@@ -122,7 +122,7 @@ const BLOCKED_TOPICS = [
   'recipe', 'politics', 'election', 'stock market', 'crypto',
   'bitcoin', 'game', 'gaming', 'playstation', 'xbox', 'dating', 'relationship'
 ];
-const OFF_TOPIC_ANSWER = "🚫 I'm Charis, your Bill Easy business assistant. I cannot help with coding, news, entertainment, or general topics.\n\n✅ I can help you with:\n• Creating invoices, e-way bills, purchase orders\n• Generating sales, GST, and stock reports\n• Managing products and inventory\n• Bill Easy platform features\n\nHow can I assist with your billing or inventory today?";
+const OFF_TOPIC_ANSWER = "🚫 I'm the Bill Easy assistant. I cannot help with coding, news, entertainment, or general topics.\n\n✅ I can help you with:\n• Creating invoices, e-way bills, purchase orders\n• Generating sales, GST, and stock reports\n• Managing products and inventory\n• Bill Easy platform features\n\nHow can I assist with your billing or inventory today?";
 
 /**
  * Charis assistant. Database quick searches and off-topic refusals are free; a question the
@@ -173,7 +173,7 @@ const chatWithAssistant = async (req, res) => {
     if (error instanceof charisOs.CharisOsError) return res.status(error.status).json({ error: error.message, code: error.code, feature: 'ai_messages', upgradeRequired: error.status === 403 });
     if (unit) await refundMonthly(companyId, 'ai_messages').catch(() => {});
     console.error('Charis Assistant error:', error);
-    return res.status(500).json({ error: 'Charis is temporarily unavailable' });
+    return res.status(500).json({ error: 'The assistant is temporarily unavailable' });
   }
 };
 

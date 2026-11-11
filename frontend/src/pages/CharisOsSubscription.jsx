@@ -1,11 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { subscriptionAPI } from '../services/api';
-import { getErrorMessage } from '../config/api';
+import { getErrorMessage, IS_NATIVE } from '../config/api';
 import { Card, CardContent } from '../components/ui/card';
 import { Check, ChevronDown, Crown, Loader2, Sparkles, Tag, X } from 'lucide-react';
 import PlanArtwork from '../components/PlanArtwork';
 import { accentFor, artworkFor } from '../lib/planVisuals';
 import { toast } from 'sonner';
+
+// Google Play allows digital subscriptions to be sold only through Play Billing, so the
+// Android app shows plans and usage but sells nothing; the website keeps Razorpay checkout.
+const IN_STORE_APP = IS_NATIVE;
 
 // Plans, prices, coupons and payment verification come from Charis OS.
 // The browser only chooses a plan/coupon; the server derives amount and customer.
@@ -207,7 +211,7 @@ export const CharisOsSubscription = ({ current: initialCurrent }) => {
         {usage && <UsageCard title="Products" entry={usage.products} unit="products" />}
       </div>
 
-      {pending && <Card className="mb-8 border-amber-200 bg-amber-50"><CardContent className="p-5 flex flex-wrap items-center justify-between gap-3">
+      {pending && !IN_STORE_APP && <Card className="mb-8 border-amber-200 bg-amber-50"><CardContent className="p-5 flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-amber-900">You have an unfinished payment of {money(pending.amount_minor / 100)}. Resume it instead of starting a new one.</p>
         <button onClick={() => openPayment(pending, null)} className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700">Resume payment</button>
       </CardContent></Card>}
@@ -218,7 +222,9 @@ export const CharisOsSubscription = ({ current: initialCurrent }) => {
         {periods.length > 1 && <div className="mt-6 inline-flex rounded-xl bg-indigo-600 p-1">
           {periods.map((p) => <button key={p} onClick={() => setPeriod(p)} className={`px-6 py-2 rounded-lg text-sm font-semibold transition ${period === p ? 'bg-white text-indigo-700 shadow' : 'text-white'}`}>{PERIODS[p]}</button>)}
         </div>}
-        {!catalog.checkout_enabled && <p className="mt-3 text-xs text-orange-600">Online payment is not enabled yet. Free plans can still be activated.</p>}
+        {IN_STORE_APP
+          ? <p className="mt-3 text-sm text-slate-600">Paid plans can't be bought in the Android app. Your plan, limits and features are shown here.</p>
+          : !catalog.checkout_enabled && <p className="mt-3 text-xs text-orange-600">Online payment is not enabled yet. Free plans can still be activated.</p>}
       </div>
 
       <div className={`grid gap-6 ${cards.length >= 3 ? 'lg:grid-cols-3' : 'md:grid-cols-2'} max-w-6xl mx-auto`}>
@@ -243,12 +249,12 @@ export const CharisOsSubscription = ({ current: initialCurrent }) => {
               </div>
               <div className="mt-5 min-h-[5.5rem]"><PriceBlock plan={plan} quote={planQuote} /></div>
               {plan.highlights.length > 0 && <ul className="mb-4 space-y-2">{plan.highlights.map((line) => <li key={line} className="flex gap-2 text-sm font-semibold text-slate-800"><Sparkles className="mt-0.5 h-4 w-4 shrink-0" style={{ color: accent.to }} />{line}</li>)}</ul>}
-              <button disabled={isCurrent || freeLocked || (plan.price > 0 && !catalog.checkout_enabled) || Boolean(busyPlan) || Boolean(pending)} onClick={() => choose(plan)}
+              {IN_STORE_APP && plan.price > 0 && !isCurrent ? <p className="mt-2 w-full rounded-xl border border-dashed border-slate-300 py-3 text-center text-sm font-semibold text-slate-500">Not sold in the app</p> : <button disabled={isCurrent || freeLocked || (plan.price > 0 && !catalog.checkout_enabled) || Boolean(busyPlan) || Boolean(pending)} onClick={() => choose(plan)}
                 className={`mt-2 w-full rounded-xl py-3 text-sm font-bold transition disabled:opacity-50 ${highlight ? 'text-white shadow-lg hover:brightness-110' : 'border border-slate-300 hover:bg-slate-50'}`}
                 style={highlight ? { background: `linear-gradient(135deg, ${accent.from}, ${accent.to})`, boxShadow: `0 12px 28px -10px ${accent.glow}` } : { color: accent.text }}>
                 {busyPlan === plan.id ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : isCurrent ? 'Current plan' : freeLocked ? 'Available after your plan ends' : plan.price === 0 ? 'Start free' : 'Subscribe now'}
-              </button>
-              {plan.price > 0 && plan.coupons_allowed && <div className="mt-3">
+              </button>}
+              {plan.price > 0 && plan.coupons_allowed && !IN_STORE_APP && <div className="mt-3">
                 {couponFor === plan.id ? <div className="flex gap-2">
                   <input value={couponCode} onChange={(e) => { setCouponCode(e.target.value); dropQuote(plan.id); }} placeholder="Coupon or partner code" aria-label="Coupon code" className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm uppercase" />
                   <button onClick={() => applyCoupon(plan)} disabled={!couponCode.trim() || Boolean(busyPlan)} className="rounded-lg bg-slate-800 px-3 text-sm font-semibold text-white disabled:opacity-40">Apply</button>
@@ -279,7 +285,7 @@ export const CharisOsSubscription = ({ current: initialCurrent }) => {
           </table>
         </div>}
       </div>}
-      <p className="text-xs text-slate-400 mt-8 text-center">Plan changes start a new full term immediately; unused time is not credited. Payments are processed securely by Razorpay.</p>
+      <p className="text-xs text-slate-400 mt-8 text-center">{IN_STORE_APP ? 'Plan changes start a new full term immediately; unused time is not credited.' : 'Plan changes start a new full term immediately; unused time is not credited. Payments are processed securely by Razorpay.'}</p>
     </div>
   );
 };

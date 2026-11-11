@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { COMPANY } from '../config/company';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -16,15 +17,16 @@ const Footer = () => {
           </div>
           <span className="text-slate-300 font-semibold">Bill Easy</span>
           <span className="text-slate-600">|</span>
-          <span>© {currentYear} Charis AI Technologies LLP</span>
+          <span>© {currentYear} {COMPANY.brand} · {COMPANY.legalName}</span>
         </div>
 
         <div className="flex items-center gap-4">
           <Link to="/privacy" className="hover:text-slate-200 transition-colors">Privacy</Link>
           <Link to="/terms" className="hover:text-slate-200 transition-colors">Terms</Link>
+          <Link to="/delete-account" className="hover:text-slate-200 transition-colors">Delete account</Link>
           <Link to="/contact" className="hover:text-slate-200 transition-colors">Contact</Link>
           <span className="text-slate-700">|</span>
-          <span>Powered by <span className="text-slate-300 font-semibold">Charis AI Technologies LLP</span></span>
+          <span>Powered by <span className="text-slate-300 font-semibold">{COMPANY.brand}</span></span>
         </div>
 
       </div>
