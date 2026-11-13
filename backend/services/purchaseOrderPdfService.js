@@ -1,7 +1,9 @@
 const PDFDocument = require('pdfkit');
 const path = require('path');
+const { UPLOAD_ROOT, ensureCompanyAssets } = require('../utils/fileStore');
 
 const generatePurchaseOrderPdf = async (po, company) => {
+  await ensureCompanyAssets(company);
   const doc = new PDFDocument({ 
     margin: 40,
     size: 'A4'
@@ -17,7 +19,7 @@ const generatePurchaseOrderPdf = async (po, company) => {
     });
 
     // --- Header Section ---
-    const uploadsPath = path.join(__dirname, '../uploads');
+    const uploadsPath = UPLOAD_ROOT;
     
     // Logo
     if (company.logo) {

@@ -1,7 +1,9 @@
 const PDFDocument = require('pdfkit');
 const path = require('path');
+const { UPLOAD_ROOT, ensureCompanyAssets } = require('../utils/fileStore');
 
 const generateQuotationPdf = async (quotation, company) => {
+  await ensureCompanyAssets(company);
   const industry = company.business_category || 'General Store';
   
   const industryConfigs = {
@@ -42,7 +44,7 @@ const generateQuotationPdf = async (quotation, company) => {
     });
 
     // --- Header Section ---
-    const uploadsPath = path.join(__dirname, '../uploads');
+    const uploadsPath = UPLOAD_ROOT;
     
     // Logo
     if (company.logo) {

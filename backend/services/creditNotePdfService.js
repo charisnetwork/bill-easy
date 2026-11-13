@@ -1,7 +1,9 @@
 const PDFDocument = require('pdfkit');
 const path = require('path');
+const { UPLOAD_ROOT, ensureCompanyAssets } = require('../utils/fileStore');
 
 const generateCreditNotePdf = async (creditNote, company) => {
+  await ensureCompanyAssets(company);
   const doc = new PDFDocument({ margin: 40, size: 'A4' });
   let buffers = [];
   doc.on("data", buffers.push.bind(buffers));
@@ -11,7 +13,7 @@ const generateCreditNotePdf = async (creditNote, company) => {
       resolve(Buffer.concat(buffers));
     });
 
-    const uploadsPath = path.join(__dirname, '../uploads');
+    const uploadsPath = UPLOAD_ROOT;
     
     // Header
     if (company.logo) {

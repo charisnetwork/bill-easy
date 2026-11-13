@@ -195,11 +195,13 @@ app.use("/api/utilities", require("./routes/utilities"));
 
 // Only company assets (logo, signature, QR) are web-reachable, by unguessable name.
 // Everything else under UPLOAD_ROOT (e.g. temp files) is never served.
-const { PUBLIC_DIR, UPLOAD_ROOT, storageConfig } = require('./utils/fileStore');
+const { PUBLIC_DIR, UPLOAD_ROOT, ensureLocalAsset, storageConfig } = require('./utils/fileStore');
 storageConfig();
-app.use(`/uploads/${PUBLIC_DIR}`, (req, res, next) => {
+app.use(`/uploads/${PUBLIC_DIR}`, async (req, res, next) => {
   res.set('X-Content-Type-Options', 'nosniff');
   res.set('Content-Security-Policy', "default-src 'none'");
+  // With R2, a file missing after a redeploy is fetched back from the bucket first.
+  try { await ensureLocalAsset(`${PUBLIC_DIR}${decodeURIComponent(req.path)}`); } catch { /* the static handler answers 404 */ }
   next();
 }, express.static(path.join(UPLOAD_ROOT, PUBLIC_DIR), { index: false, dotfiles: 'deny', fallthrough: false, redirect: false }));
 

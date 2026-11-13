@@ -38,3 +38,29 @@ test('removal never leaves the company asset folder', async () => {
   await removeCompanyAsset('https://storage.googleapis.com/x/y.png');
   assert.equal(fs.readFileSync(outside, 'utf8'), 'keep');
 });
+
+test('R2 settings must be complete', () => {
+  const { r2Config } = require('../utils/fileStore');
+  assert.throws(() => r2Config({ R2_BUCKET: 'qa-bucket' }), /R2_ACCOUNT_ID/);
+  assert.throws(() => r2Config({ R2_ACCOUNT_ID: 'a', R2_ACCESS_KEY_ID: 'b', R2_SECRET_ACCESS_KEY: 'c', R2_BUCKET: 'Bad_Name' }), /bucket/);
+  assert.throws(() => r2Config({ R2_ACCOUNT_ID: 'a', R2_ACCESS_KEY_ID: 'b', R2_SECRET_ACCESS_KEY: 'c', R2_BUCKET: 'qa-bucket', R2_ENDPOINT: 'http://example.com' }), /HTTPS/);
+  assert.equal(r2Config({ R2_ACCOUNT_ID: 'abc', R2_ACCESS_KEY_ID: 'b', R2_SECRET_ACCESS_KEY: 'c', R2_BUCKET: 'qa-bucket' }).endpoint, 'https://abc.r2.cloudflarestorage.com');
+});
+
+// Only against a local S3-compatible server: R2_QA_ENDPOINT=http://127.0.0.1:9100 (bucket qa-bucket).
+test('with R2, assets live in the bucket and come back after the disk is wiped', { skip: !process.env.R2_QA_ENDPOINT && 'R2_QA_ENDPOINT not set' }, async (t) => {
+  const saved = { ...process.env };
+  t.after(() => { for (const key of ['STORAGE_DRIVER', 'R2_ACCOUNT_ID', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY', 'R2_BUCKET', 'R2_ENDPOINT']) { if (saved[key] === undefined) delete process.env[key]; else process.env[key] = saved[key]; } });
+  Object.assign(process.env, { STORAGE_DRIVER: 'r2', R2_ACCOUNT_ID: 'qa', R2_ACCESS_KEY_ID: 'qa-only', R2_SECRET_ACCESS_KEY: 'qa-only', R2_BUCKET: 'qa-bucket', R2_ENDPOINT: process.env.R2_QA_ENDPOINT });
+  const { ensureCompanyAssets } = require('../utils/fileStore');
+  assert.equal(storageConfig().driver, 'r2');
+  const logo = await saveCompanyAsset(png, 'logo', 'image/png');
+  const inBucket = `${process.env.R2_QA_ENDPOINT}/qa-bucket/${logo}`;
+  assert.equal((await fetch(inBucket)).status, 200);
+  fs.rmSync(path.join(root, logo)); // a redeploy wipes the server disk
+  await ensureCompanyAssets({ logo, signature: null, qr_code: 'https://example.com/old.png' });
+  assert.deepEqual(fs.readFileSync(path.join(root, logo)), png);
+  await removeCompanyAsset(logo);
+  assert.equal((await fetch(inBucket)).status, 404);
+  assert.ok(!fs.existsSync(path.join(root, logo)));
+});

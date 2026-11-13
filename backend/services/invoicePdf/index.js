@@ -22,7 +22,8 @@ function draw(model, paper, uploadRoot, pageHeight) {
 /** @returns {Promise<Buffer>} */
 async function generateInvoicePdf(invoice, company) {
   const { buildInvoiceDocument, PAPERS } = await corePromise;
-  const uploadRoot = require('../../utils/fileStore').UPLOAD_ROOT;
+  const { UPLOAD_ROOT: uploadRoot, ensureCompanyAssets } = require('../../utils/fileStore');
+  await ensureCompanyAssets(company);
   const plain = (value) => (value && typeof value.toJSON === 'function' ? value.toJSON() : value);
   const model = buildInvoiceDocument(plain(invoice), plain(company));
   const paper = PAPERS[model.settings.paper] || PAPERS.A4;
