@@ -31,6 +31,7 @@ const apiLimiter = rateLimit({
   skip: (req) => req.path === '/health' || req.path === '/api/health', // Don't rate-limit health checks
   handler: (req, res, next, options) => {
     console.warn(`[Rate Limit] Exceeded for ${req.ip} on ${req.path}`);
+    require('../services/securityReporter').reportSecurityEvent('rate_limited', { ip: req.ip, path: req.path });
     res.status(options.statusCode).json(options.message);
   }
 });
@@ -42,6 +43,7 @@ const authMessage = {
 };
 const authHandler = (req, res, next, options) => {
   console.warn(`[Auth Rate Limit] Exceeded for ${req.ip}`);
+  require('../services/securityReporter').reportSecurityEvent('rate_limited', { severity: 'medium', ip: req.ip, path: req.path, detail: { limiter: 'login' } });
   res.status(options.statusCode).json(options.message);
 };
 const emailOf = (req) => String(req.body?.email || '').trim().toLowerCase();

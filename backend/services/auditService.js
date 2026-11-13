@@ -46,6 +46,9 @@ const logSecurityEvent = async (eventType, details) => {
       severity = SEVERITY.INFO
     } = details;
     
+    const forwarded = { TOKEN_REUSE_DETECTED: ['token_reuse', 'high'], SUSPICIOUS_ACTIVITY: ['suspicious_activity', 'high'], BRUTE_FORCE_DETECTED: ['brute_force_detected', 'high'], PERMISSION_DENIED: ['permission_denied', 'low'], UNAUTHORIZED_ACCESS: ['permission_denied', 'medium'] }[eventType];
+    if (forwarded) require('./securityReporter').reportSecurityEvent(forwarded[0], { severity: forwarded[1], tenantId: companyId, actorRef: userId || email, ip });
+
     // Log to console for immediate visibility
     console.log(`[Security] ${eventType}:`, {
       userId: userId || email || 'unknown',

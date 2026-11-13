@@ -49,6 +49,11 @@ function osConnection(source = process.env) {
 /** True when OS is configured. Only unit tests run without it; the server refuses to start. */
 const enabled = () => osConnection() !== null;
 
+/** Plans could not be checked: Control Centre raises an alert when this keeps happening. */
+function planCheckFailed(resource, reason) {
+  require('./securityReporter').reportSecurityEvent('subscription_check_failed', { severity: 'high', path: resource.split('/')[0], detail: { reason } });
+}
+
 async function osRequest(resource, { method = 'GET', body, checkout = false } = {}) {
   const config = charisOsConfig();
   let response;
@@ -63,6 +68,7 @@ async function osRequest(resource, { method = 'GET', body, checkout = false } = 
     });
     text = await response.text();
   } catch {
+    planCheckFailed(resource, 'unreachable');
     throw new CharisOsError(503, 'SUBSCRIPTION_UNAVAILABLE', 'Subscription service is temporarily unavailable. Please retry.');
   }
   if (Buffer.byteLength(text) > 256 * 1024) throw new CharisOsError(503, 'SUBSCRIPTION_UNAVAILABLE', 'Subscription service returned an invalid response');
@@ -73,6 +79,7 @@ async function osRequest(resource, { method = 'GET', body, checkout = false } = 
       const detail = data?.detail;
       throw new CharisOsError(response.status, 'CHECKOUT_REJECTED', typeof detail === 'string' ? detail.slice(0, 300) : 'Checkout request could not be processed');
     }
+    planCheckFailed(resource, `HTTP ${response.status}`);
     throw new CharisOsError(503, 'SUBSCRIPTION_UNAVAILABLE', 'Subscription service is temporarily unavailable. Please retry.');
   }
   if (!data || typeof data !== 'object' || Array.isArray(data)) throw new CharisOsError(503, 'SUBSCRIPTION_UNAVAILABLE', 'Subscription service returned an invalid response');

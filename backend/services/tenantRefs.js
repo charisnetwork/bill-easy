@@ -20,7 +20,11 @@ const assertOwnedByCompany = async (companyId, refs, transaction) => {
     if (!ids.length) continue;
     if (ids.some((id) => typeof id !== 'string' || !UUID.test(id))) throw new ForeignRefError(kind);
     const found = await models[MODELS[kind]].count({ where: { id: ids, company_id: companyId }, transaction });
-    if (found !== ids.length) throw new ForeignRefError(kind);
+    if (found !== ids.length) {
+      // Usually a stale screen; repeated misses from one business look like probing other businesses' ids.
+      require('./securityReporter').reportSecurityEvent('tenant_access_denied', { severity: 'medium', tenantId: companyId, detail: { kind } });
+      throw new ForeignRefError(kind);
+    }
   }
 };
 

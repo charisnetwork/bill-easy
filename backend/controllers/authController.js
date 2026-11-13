@@ -10,6 +10,7 @@ const { Op } = require('sequelize');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/mailer');
 const { Country } = require('country-state-city');
 const charisOs = require('../services/charisOsService');
+const { reportSecurityEvent } = require('../services/securityReporter');
 
 const countryDefaults = (code) => {
   const country = Country.getCountryByCode(code);
@@ -158,6 +159,12 @@ const register = async (req, res) => {
 /* ===============================
    LOGIN
 ================================ */
+/** A failed sign-in: counts toward the per-email lock and is reported to Control Centre. */
+const loginFailed = (req, email) => {
+  incrementBruteForce(email);
+  reportSecurityEvent('login_failed', { ip: req.ip, actorRef: email, path: '/api/auth/login' });
+};
+
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -170,24 +177,24 @@ const login = async (req, res) => {
     });
 
     if (!user) {
-      incrementBruteForce(email);
+      loginFailed(req, email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     if (!user.is_active) {
-      incrementBruteForce(email);
+      loginFailed(req, email);
       return res.status(401).json({ error: 'Account is deactivated' });
     }
 
     if (!user.password) {
-      incrementBruteForce(email);
+      loginFailed(req, email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const validPassword = await bcrypt.compare(password, user.password);
 
     if (!validPassword) {
-      incrementBruteForce(email);
+      loginFailed(req, email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 

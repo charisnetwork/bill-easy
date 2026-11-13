@@ -39,6 +39,7 @@ function periodOf(now = new Date()) {
 /** Express response for a gate error; anything else goes to the error handler. */
 function sendGateError(res, next, error, feature) {
   if (error instanceof QuotaError) {
+    require('./securityReporter').reportSecurityEvent('plan_limit_reached', { severity: 'info', tenantId: res.req?.companyId, detail: { feature, limit: error.limit } });
     return res.status(403).json({ error: error.message, code: error.code, feature: error.feature, limit: error.limit, used: error.used, upgradeRequired: true });
   }
   if (error instanceof charisOs.CharisOsError) {
