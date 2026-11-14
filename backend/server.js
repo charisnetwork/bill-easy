@@ -168,6 +168,8 @@ app.get('/health', (req, res) => {
 // Every record id is a UUID. Anything else can match no record, so answer 404 before it reaches the database.
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const uuidIds = (router) => router.param('id', (req, res, next, id) => (UUID.test(id) ? next() : res.status(404).json({ error: 'Not found' })));
+// Charis OS reporting (read-only, bearer token); not under the per-user API routes.
+app.use('/api/control', require('./routes/control'));
 app.use('/api/auth', authRoutes);
 app.use('/api/company', uuidIds(companyRoutes));
 app.use('/api/customers', uuidIds(customerRoutes));
@@ -197,6 +199,7 @@ app.use("/api/utilities", require("./routes/utilities"));
 // Everything else under UPLOAD_ROOT (e.g. temp files) is never served.
 const { PUBLIC_DIR, UPLOAD_ROOT, ensureLocalAsset, storageConfig } = require('./utils/fileStore');
 storageConfig();
+require('./services/controlSummary').controlSummaryConfig(); // fail fast on a short reporting token
 app.use(`/uploads/${PUBLIC_DIR}`, async (req, res, next) => {
   res.set('X-Content-Type-Options', 'nosniff');
   res.set('Content-Security-Policy', "default-src 'none'");
