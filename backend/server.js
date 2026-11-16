@@ -254,6 +254,9 @@ try {
 ========================================= */
 
 app.use((err, req, res, next) => {
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({ error: 'File is too large. Images and PDFs can be at most 2 MB.', code: 'FILE_TOO_LARGE' });
+  }
   // Return proper 403 for CORS violations — do NOT bypass them
   if (err.message === 'Not allowed by CORS') {
     return res.status(403).json({

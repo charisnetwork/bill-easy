@@ -18,6 +18,10 @@ const fileFilter = (req, file, cb) => {
 
 /* ---------- EXPORT MULTER ---------- */
 
+// Logos, signatures, QR codes and purchase bills (images or PDF): 2 MB is plenty.
+const MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
+exports.MAX_UPLOAD_BYTES = MAX_UPLOAD_BYTES;
+
 exports.uploadImportFile = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
@@ -37,24 +41,24 @@ exports.uploadImportFile = multer({
 
 exports.uploadLogo = multer({
   storage: gcsStorage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: MAX_UPLOAD_BYTES },
   fileFilter
 });
 
 exports.uploadSignature = multer({
   storage: gcsStorage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: MAX_UPLOAD_BYTES },
   fileFilter
 });
 
 exports.uploadQRCode = multer({
   storage: gcsStorage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: MAX_UPLOAD_BYTES },
   fileFilter
 });
 
 exports.uploadPurchaseFile = multer({
   storage: gcsStorage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: MAX_UPLOAD_BYTES },
   fileFilter
 });

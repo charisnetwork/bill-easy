@@ -518,7 +518,7 @@ export const SettingsPage = () => {
   };
 
   const onFileUpload = async (type, file) => {
-    if (file.size > 5 * 1024 * 1024) return toast.error("Maximum file size is 5MB");
+    if (file.size > 2 * 1024 * 1024) return toast.error("Maximum file size is 2 MB");
     const formData = new FormData();
     formData.append(type, file);
     try {
