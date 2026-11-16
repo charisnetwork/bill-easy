@@ -64,3 +64,14 @@ test('with R2, assets live in the bucket and come back after the disk is wiped',
   assert.equal((await fetch(inBucket)).status, 404);
   assert.ok(!fs.existsSync(path.join(root, logo)));
 });
+
+test('with R2, an unwritable server disk does not fail the upload', { skip: !process.env.R2_QA_ENDPOINT && 'R2_QA_ENDPOINT not set' }, async (t) => {
+  const saved = { ...process.env };
+  t.after(() => { fs.chmodSync(root, 0o700); for (const key of ['STORAGE_DRIVER', 'R2_ACCOUNT_ID', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY', 'R2_BUCKET', 'R2_ENDPOINT']) { if (saved[key] === undefined) delete process.env[key]; else process.env[key] = saved[key]; } });
+  Object.assign(process.env, { STORAGE_DRIVER: 'r2', R2_ACCOUNT_ID: 'qa', R2_ACCESS_KEY_ID: 'qa-only', R2_SECRET_ACCESS_KEY: 'qa-only', R2_BUCKET: 'qa-bucket', R2_ENDPOINT: process.env.R2_QA_ENDPOINT });
+  fs.rmSync(path.join(root, 'company'), { recursive: true, force: true });
+  fs.chmodSync(root, 0o500); // like /app/backend owned by root while the app runs as "node"
+  const logo = await saveCompanyAsset(png, 'logo', 'image/png');
+  assert.equal((await fetch(`${process.env.R2_QA_ENDPOINT}/qa-bucket/${logo}`)).status, 200);
+  await removeCompanyAsset(logo);
+});

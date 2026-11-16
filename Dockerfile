@@ -27,6 +27,9 @@ COPY . .
 
 EXPOSE 3000
 
+# Uploads (company logos etc. and their local copies) must be writable by the app user.
+RUN mkdir -p /app/backend/uploads && chown -R node:node /app/backend/uploads
+
 # Security: run as non-root user
 USER node
 

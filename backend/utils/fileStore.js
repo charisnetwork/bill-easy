@@ -97,7 +97,9 @@ async function saveCompanyAsset(buffer, kind, mimetype) {
   }
   if (driver() === 'r2') {
     await r2Request('PUT', relative, { body: buffer, headers: { 'Content-Type': ext === '.png' ? 'image/png' : 'image/jpeg', 'Cache-Control': 'private, max-age=300' } });
-    await writeLocal(relative, buffer);
+    // The bucket holds the file; the local copy only speeds up pages and PDFs and is fetched
+    // back from R2 when missing, so a disk problem must not fail the upload.
+    await writeLocal(relative, buffer).catch((error) => console.warn('Local copy of R2 asset not written:', error.message));
     return relative;
   }
   const target = path.join(UPLOAD_ROOT, relative);
@@ -110,7 +112,7 @@ async function saveCompanyAsset(buffer, kind, mimetype) {
 async function removeCompanyAsset(stored) {
   if (!isCompanyPath(stored)) return;
   if (driver() === 'r2') await r2Request('DELETE', stored);
-  await fs.rm(path.resolve(UPLOAD_ROOT, stored), { force: true });
+  await fs.rm(path.resolve(UPLOAD_ROOT, stored), { force: true }).catch(() => {});
 }
 
 /** Before drawing a PDF: the company's logo, signature and payment QR are on this server. */
