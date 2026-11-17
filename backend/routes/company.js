@@ -6,6 +6,7 @@ const { authenticateToken, requireRole } = require('../middleware/auth');
 const { requireFeature, requireRecordLimit } = require('../services/usageLimits');
 const companyContext = require('../middleware/companyContext');
 const { uploadLogo, uploadSignature, uploadQRCode } = require('../services/uploadService');
+const { memberValidation } = require('../middleware/validation');
 
 router.use(authenticateToken);
 router.use(companyContext);
@@ -25,7 +26,7 @@ router.post('/upload-qr', uploadQRCode.single('qr_code'), companyController.uplo
 
 // User Management
 router.get('/users', companyController.getUsers);
-router.post('/users', requireRole('owner', 'admin'), companyController.addUser);
+router.post('/users', requireRole('owner', 'admin'), memberValidation, companyController.addUser);
 router.put('/users/:id', requireRole('owner', 'admin'), companyController.updateUser);
 router.delete('/users/:id', requireRole('owner', 'admin'), companyController.deleteUser);
 

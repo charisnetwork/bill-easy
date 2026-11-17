@@ -285,8 +285,9 @@ const addUser = async (req, res) => {
       email,
       password: hashedPassword,
       mobile_number: mobileNum,
-      role: role || "staff",
-      permissions: permissions || {}
+      // Only Admin or Staff can be added here; the role check also runs in memberValidation.
+      role: role === "admin" ? "admin" : "staff",
+      permissions: permissions && typeof permissions === "object" ? permissions : {}
     });
 
     res.status(201).json({
@@ -338,11 +339,22 @@ const updateUser = async (req, res) => {
       });
     }
 
+    // The owner account is managed only by the owner, and nobody can be made an owner here.
+    if (user.role === "owner" && (role !== undefined || is_active !== undefined)) {
+      return res.status(403).json({ error: "The owner's role and status cannot be changed" });
+    }
+    if (role !== undefined && !["admin", "staff"].includes(role)) {
+      return res.status(400).json({ error: "Role must be Admin or Staff" });
+    }
+    if (user.role === "owner" && req.user?.role !== "owner") {
+      return res.status(403).json({ error: "Only the owner can edit the owner account" });
+    }
+
     await user.update({
       name,
       mobile_number: mobileNum,
       role,
-      permissions,
+      permissions: permissions && typeof permissions === "object" ? permissions : undefined,
       is_active
     });
 

@@ -3,7 +3,9 @@ const { body, validationResult } = require('express-validator');
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    // Never echo submitted values (passwords included): field names and messages only.
+    const list = errors.array().map((e) => ({ field: e.path, msg: e.msg }));
+    return res.status(400).json({ error: list[0].msg, errors: list });
   }
   next();
 };
@@ -24,6 +26,18 @@ const registerValidation = [
   body('name').trim().notEmpty().withMessage('Name is required'),
   body('countryCode').optional().matches(/^[A-Za-z]{2}$/).withMessage('Country code must be ISO alpha-2'),
   body('pincode').optional({ checkFalsy: true }).isString().matches(/^[A-Za-z0-9 -]{3,12}$/).withMessage('Invalid postal code'),
+  handleValidationErrors
+];
+
+// Owner/admin adding a team member: same password rule as sign-up; never an owner account.
+const memberValidation = [
+  body('name').trim().isLength({ min: 2 }).withMessage('Name is required'),
+  body('email').trim().isEmail().withMessage('Valid email is required'),
+  body('password')
+    .isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
+    .matches(/[A-Z]/).withMessage('Password must contain at least one uppercase letter')
+    .matches(/[\W_]/).withMessage('Password must contain at least one special character'),
+  body('role').optional().isIn(['admin', 'staff']).withMessage('Role must be Admin or Staff'),
   handleValidationErrors
 ];
 
@@ -54,6 +68,7 @@ const invoiceValidation = [
 ];
 
 module.exports = {
+  memberValidation,
   handleValidationErrors,
   registerValidation,
   loginValidation,

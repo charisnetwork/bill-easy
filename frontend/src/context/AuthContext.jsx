@@ -58,6 +58,23 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
   }, []);
 
+  // A different person signing in on this browser must never see the previous one's
+  // businesses, plan or saved preferences (shared shop computers).
+  const startNewSession = useCallback((data) => {
+    setCompany(null);
+    setCompanies([]);
+    setSubscription(null);
+    setMaxBusinesses(1);
+    try {
+      sessionStorage.removeItem('seen_alerts');
+      const keep = `dashboard_layout_${data?.user?.id}`;
+      Object.keys(localStorage)
+        .filter((key) => key.startsWith('dashboard_layout_') && key !== keep)
+        .forEach((key) => localStorage.removeItem(key));
+    } catch { /* storage unavailable: nothing to clear */ }
+    populateState(data);
+  }, [populateState]);
+
   // Register auth handlers with API service
   useEffect(() => {
     setAuthHandlers(
@@ -194,11 +211,11 @@ export const AuthProvider = ({ children }) => {
     refreshAttempts.current = 0;
     
     // Populate all state from login response
-    populateState(response.data);
+    startNewSession(response.data);
     setIsAuthenticated(true);
     
     return response.data;
-  }, [populateState]);
+  }, [startNewSession]);
 
   // Register
   const register = useCallback(async (userData) => {
@@ -210,11 +227,11 @@ export const AuthProvider = ({ children }) => {
     refreshAttempts.current = 0;
     
     // Populate all state from register response
-    populateState(response.data);
+    startNewSession(response.data);
     setIsAuthenticated(true);
     
     return response.data;
-  }, [populateState]);
+  }, [startNewSession]);
 
   // Logout
   const logout = useCallback(async () => {
