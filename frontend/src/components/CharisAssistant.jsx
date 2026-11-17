@@ -63,7 +63,7 @@ const CharisAssistant = () => {
   if (!isAuthenticated || !hasFeature('ai_assistant')) return null;
 
   return (
-    <div className="fixed bottom-24 right-6 z-[9999] flex flex-col items-end pointer-events-none">
+    <div className="fixed bottom-24 right-6 z-[9999] flex flex-col items-end pointer-events-none print:hidden">
       {/* Chat Window */}
       {isOpen && (
         <div 

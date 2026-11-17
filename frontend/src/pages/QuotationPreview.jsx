@@ -56,7 +56,7 @@ const QuotationPreview = () => {
     try {
       toast.info('Generating PDF...');
       const response = await quotationAPI.downloadPdf(id);
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `quotation_${quotation.quotation_number}.pdf`);

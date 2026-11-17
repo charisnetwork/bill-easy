@@ -11,7 +11,9 @@ import { BusinessSwitcher } from './BusinessSwitcher';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const Sidebar = ({ open, setOpen }) => {
-  const { user, hasFeature } = useAuth();
+  const { user, hasFeature, subscription } = useAuth();
+  // Lock only once the plan has loaded, so paid menus never flash as locked.
+  const locked = (code) => Boolean(subscription) && !hasFeature(code);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -42,7 +44,7 @@ export const Sidebar = ({ open, setOpen }) => {
           key: 'sales',
           subItems: [
             { path: '/invoices', label: 'Invoices' },
-            { path: '/recurring', label: 'Recurring Invoices', locked: !hasFeature('recurring_invoices') },
+            { path: '/recurring', label: 'Recurring Invoices', locked: locked('recurring_invoices') },
             { path: '/quotations', label: 'Estimates' },
             { path: '/payments-in', label: 'Payment In' },
             { path: '/sales-return', label: 'Sales Return' },
@@ -55,7 +57,7 @@ export const Sidebar = ({ open, setOpen }) => {
           key: 'purchases',
           subItems: [
             { path: '/purchases', label: 'Purchase Entry' },
-            { path: '/purchase/po-list', label: 'Purchase Orders', locked: !hasFeature('purchase_orders') },
+            { path: '/purchase/po-list', label: 'Purchase Orders', locked: locked('purchase_orders') },
           ]
         },
         { path: '/expenses', icon: Wallet, label: 'Expenses' },
@@ -85,7 +87,7 @@ export const Sidebar = ({ open, setOpen }) => {
           path: '/eway-bills', 
           icon: Truck, 
           label: 'E-Way Bills',
-          locked: !hasFeature('eway_bills')
+          locked: locked('eway_bills')
         },
         { path: '/reports', icon: BarChart3, label: 'Reports' },
         { path: '/subscription', icon: Crown, label: 'Plan & Usage' },

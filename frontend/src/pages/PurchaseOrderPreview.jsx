@@ -49,7 +49,7 @@ const PurchaseOrderPreview = () => {
     try {
       toast.info('Generating PDF...');
       const response = await purchaseOrderAPI.downloadPdf(id);
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `PO_${po.po_number}_${new Date(po.po_date).toISOString().split('T')[0]}.pdf`);

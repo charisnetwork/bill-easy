@@ -176,7 +176,7 @@ export const ReportsPage = () => {
       toast.info('Preparing GSTR-1 Excel file...');
       const response = await reportAPI.downloadGSTR1(dateRange);
       
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: response.headers?.['content-type'] || 'application/octet-stream' }));
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `GSTR1_${dateRange.startDate}_to_${dateRange.endDate}.xlsx`);

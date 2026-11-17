@@ -33,7 +33,7 @@ const isNative = Capacitor.isNativePlatform();
 // Fallback logic for Native
 if (isNative && (!envBackendUrl || envBackendUrl.includes('localhost'))) {
   // If no valid URL is found in .env, fallback to production
-  envBackendUrl = 'https://bill-easy-production-v4.up.railway.app';
+  envBackendUrl = 'https://bill-easy-production.up.railway.app';
 }
 
 export const IS_NATIVE = isNative;
@@ -51,9 +51,7 @@ export const getErrorMessage = (error, defaultMessage = 'An error occurred') => 
   if (typeof error === 'string') return error;
 
   if (error?.code === 'ERR_NETWORK' || error?.message?.includes('Network Error')) {
-    return isNative
-      ? `Cannot connect to server at ${BACKEND_URL}. Check your internet connection or IP address.`
-      : 'Cannot connect to server. Please make sure the backend is running.';
+    return 'Could not reach Bill Easy. Check your internet connection and try again.';
   }
 
   if (error?.response?.data) {

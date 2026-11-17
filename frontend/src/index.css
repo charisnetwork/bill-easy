@@ -415,3 +415,11 @@
   .plan-float, .plan-swing { animation: none; }
   .plan-card:hover { transform: none; }
 }
+
+/* Printing an invoice, quotation or report: A4 paper, document only (no app sidebar or widgets). */
+@media print {
+  @page { size: A4; margin: 10mm; }
+  aside { display: none !important; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+}

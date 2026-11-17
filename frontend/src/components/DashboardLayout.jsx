@@ -25,7 +25,7 @@ export const DashboardLayout = ({ children }) => {
 
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#F8FAFC]">
+    <div className="flex h-screen overflow-hidden bg-[#F8FAFC] print:block print:h-auto print:overflow-visible print:bg-white">
       <CommandPalette open={cmdkOpen} setOpen={setCmdkOpen} />
       
       <UpgradeDialog />
@@ -33,11 +33,11 @@ export const DashboardLayout = ({ children }) => {
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden relative w-full min-w-0">
+      <div className="flex-1 flex flex-col overflow-hidden relative w-full min-w-0 print:block print:overflow-visible">
         
-        <Header setSidebarOpen={setSidebarOpen} setCmdkOpen={setCmdkOpen} />
+        <div className="contents print:hidden"><Header setSidebarOpen={setSidebarOpen} setCmdkOpen={setCmdkOpen} /></div>
 
-        <main className="flex-1 overflow-y-auto flex flex-col relative pb-28 md:pb-0 scrollbar-thin scrollbar-thumb-slate-200">
+        <main className="flex-1 overflow-y-auto flex flex-col relative pb-28 md:pb-24 scrollbar-thin scrollbar-thumb-slate-200 print:block print:overflow-visible print:p-0">
           {/* Animated Page Transitions wrapper */}
           <motion.div
             key={location.pathname}
@@ -45,19 +45,19 @@ export const DashboardLayout = ({ children }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="p-4 md:p-6 lg:p-8 flex-1"
+            className="p-4 md:p-6 lg:p-8 flex-1 print:p-0"
           >
             {children}
           </motion.div>
 
-          <div className="mt-auto shrink-0 px-4 md:px-8 pb-4">
+          <div className="mt-auto shrink-0 px-4 md:px-8 pb-4 print:hidden">
             <Footer />
           </div>
         </main>
       </div>
 
       {/* Mobile Bottom Navigation Bar - keeping it but restyling slightly for premium feel */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-slate-200/60 z-50 pb-safe shadow-[0_-8px_30px_-15px_rgba(0,0,0,0.1)]">
+      <div className="md:hidden print:hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-slate-200/60 z-50 pb-safe shadow-[0_-8px_30px_-15px_rgba(0,0,0,0.1)]">
         <div className="flex items-center justify-around h-16 px-2">
           <Link to="/dashboard" className={cn("flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors", location.pathname === '/dashboard' ? "text-indigo-600" : "text-slate-500 hover:text-slate-900")}>
             <div className={cn("p-1.5 rounded-lg", location.pathname === '/dashboard' && "bg-indigo-50")}>
