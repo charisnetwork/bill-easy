@@ -121,7 +121,10 @@ const passwordSchema = z.object({
 const userSchema = z.object({
   name: z.string().min(2, "Name is required"),
   email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Add at least one uppercase letter")
+    .regex(/[\W_]/, "Add at least one special character"),
   phone: z.string().optional(),
   role: z.enum(["admin", "staff"]).default("staff"),
 });
@@ -519,6 +522,11 @@ export const SettingsPage = () => {
 
   const onFileUpload = async (type, file) => {
     if (file.size > 2 * 1024 * 1024) return toast.error("Maximum file size is 2 MB");
+    // Check the file's own bytes: a renamed SVG or other file is refused with a clear message.
+    const head = new Uint8Array(await file.slice(0, 8).arrayBuffer());
+    const isPng = head[0] === 0x89 && head[1] === 0x50 && head[2] === 0x4e && head[3] === 0x47;
+    const isJpeg = head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff;
+    if (!isPng && !isJpeg) return toast.error("Please choose a PNG or JPG image");
     const formData = new FormData();
     formData.append(type, file);
     try {
@@ -536,9 +544,10 @@ export const SettingsPage = () => {
       else if (type === 'qr_code') setQrPreview(previewUrl);
 
       refreshProfile();
-      toast.success(`${type.split('_').join(' ').toUpperCase()} uploaded`);
-    } catch {
-      toast.error(`Failed to upload ${type}`);
+      const label = { logo: 'Logo', signature: 'Signature', qr_code: 'QR code' }[type];
+      toast.success(`${label} saved`); // Saved straight away; Discard does not undo it.
+    } catch (error) {
+      toast.error(getErrorMessage(error, `Could not upload the ${type === 'qr_code' ? 'QR code' : type}`));
     }
   };
 
@@ -890,7 +899,7 @@ export const SettingsPage = () => {
                           {logoPreview ? <img src={logoPreview} className="w-full h-full object-contain p-2" alt="Logo" /> : <ImageIcon className="w-8 h-8 text-slate-300" />}
                           <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Upload className="w-6 h-6 text-white" /></div>
                         </div>
-                        <input id="logo-in" type="file" className="hidden" accept="image/*" onChange={(e) => e.target.files[0] && onFileUpload('logo', e.target.files[0])} />
+                        <input id="logo-in" type="file" className="hidden" accept="image/png,image/jpeg" onChange={(e) => { const f = e.target.files[0]; e.target.value = ""; if (f) onFileUpload('logo', f); }} />
                       </div>
                       <FormField control={businessForm.control} name="name" render={({ field }) => (
                         <FormItem><FormLabel>Business Name *</FormLabel><FormControl><Input className="h-11" {...field} /></FormControl><FormMessage /></FormItem>
@@ -963,7 +972,7 @@ export const SettingsPage = () => {
                           {signaturePreview ? <img src={signaturePreview} className="h-full object-contain p-4" alt="Signature" /> : <div className="flex flex-col items-center gap-2"><Plus className="w-6 h-6 text-indigo-600" /><span className="text-sm font-medium text-slate-500">Add Signature</span></div>}
                           <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Upload className="w-6 h-6 text-white" /></div>
                         </div>
-                        <input id="sig-in" type="file" className="hidden" accept="image/*" onChange={(e) => e.target.files[0] && onFileUpload('signature', e.target.files[0])} />
+                        <input id="sig-in" type="file" className="hidden" accept="image/png,image/jpeg" onChange={(e) => { const f = e.target.files[0]; e.target.value = ""; if (f) onFileUpload('signature', f); }} />
                       </div>
                       <div className="space-y-4">
                         <div className="flex justify-between"><Label>Custom Fields</Label><Button type="button" variant="ghost" size="sm" className="text-indigo-600 h-8 px-2" onClick={() => append({ label: "", value: "" })}><Plus className="w-4 h-4 mr-1" />Add</Button></div>
@@ -1065,10 +1074,10 @@ export const SettingsPage = () => {
                   <Dialog open={userDialogOpen} onOpenChange={setUserDialogOpen}>
                     <DialogTrigger asChild><Button className="bg-indigo-600 hover:bg-indigo-700"><Plus className="w-4 h-4 mr-2" />Add Member</Button></DialogTrigger>
                     <DialogContent><DialogHeader><DialogTitle>Add Team Member</DialogTitle></DialogHeader>
-                      <Form {...newUserForm}><form onSubmit={newUserForm.handleSubmit(onAddUser)} className="space-y-4 pt-4">
-                        <FormField control={newUserForm.control} name="name" render={({ field }) => (<FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                        <FormField control={newUserForm.control} name="email" render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                        <FormField control={newUserForm.control} name="password" render={({ field }) => (<FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                      <Form {...newUserForm}><form onSubmit={newUserForm.handleSubmit(onAddUser)} className="space-y-4 pt-4" autoComplete="off">
+                        <FormField control={newUserForm.control} name="name" render={({ field }) => (<FormItem><FormLabel>Full Name</FormLabel><FormControl><Input autoComplete="off" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                        <FormField control={newUserForm.control} name="email" render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" autoComplete="off" placeholder="member@business.com" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                        <FormField control={newUserForm.control} name="password" render={({ field }) => (<FormItem><FormLabel>Password for this member</FormLabel><FormControl><Input type="password" autoComplete="new-password" {...field} /></FormControl><p className="text-xs text-slate-500">8+ characters with an uppercase letter and a symbol. Do not reuse your own password.</p><FormMessage /></FormItem>)} />
                         <FormField control={newUserForm.control} name="role" render={({ field }) => (<FormItem><FormLabel>Role</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="admin">Admin</SelectItem><SelectItem value="staff">Staff</SelectItem></SelectContent></Select></FormItem>)} />
                         <DialogFooter><Button type="submit" disabled={submitting} className="w-full bg-indigo-600">{submitting ? '...' : 'Create'}</Button></DialogFooter>
                       </form></Form></DialogContent></Dialog>
@@ -1131,7 +1140,7 @@ export const SettingsPage = () => {
                         )}
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Upload className="w-6 h-6 text-white" /></div>
                       </div>
-                      <input id="qr-in" type="file" className="hidden" accept="image/*" onChange={(e) => e.target.files[0] && onFileUpload('qr_code', e.target.files[0])} />
+                      <input id="qr-in" type="file" className="hidden" accept="image/png,image/jpeg" onChange={(e) => { const f = e.target.files[0]; e.target.value = ""; if (f) onFileUpload('qr_code', f); }} />
 
                       <FormField control={bankForm.control} name="terms_conditions" render={({ field }) => (
                         <FormItem><FormLabel>Terms & Conditions (Footer)</FormLabel><FormControl><Textarea className="min-h-[120px] resize-none" placeholder="e.g. 1. Goods once sold will not be taken back..." {...field} /></FormControl><FormDescription>This text appears at the bottom of every invoice.</FormDescription><FormMessage /></FormItem>

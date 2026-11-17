@@ -12,6 +12,7 @@
  * and the invoice PDF service reads it from UPLOAD_ROOT.
  */
 const crypto = require('crypto');
+const { stripImageMetadata } = require('./stripImageMetadata');
 const fs = require('fs/promises');
 const path = require('path');
 
@@ -90,6 +91,7 @@ async function saveCompanyAsset(buffer, kind, mimetype) {
     error.status = 400;
     throw error;
   }
+  buffer = stripImageMetadata(buffer, ext);
   const relative = `${PUBLIC_DIR}/${folder}/${crypto.randomUUID()}${ext}`;
   if (driver() === 'gcs') {
     const { uploadToGCS } = require('./gcs');
