@@ -1,4 +1,5 @@
 const { RecurringSubscription, RecurringSubscriptionItem, Invoice, InvoiceItem, Customer, Product, Godown, sequelize } = require('../models');
+const { sellerChargesGst } = require('./gstPolicy');
 const { generateInvoiceNumber } = require('./invoiceNumberService');
 const { sendEmailViaAPI } = require('../utils/mailer');
 const { Op } = require('sequelize');
@@ -58,11 +59,12 @@ async function processSubscription(subscription, transaction = null) {
     let totalAmount = 0;
     const invoiceItemsData = [];
 
+    const chargesGst = await sellerChargesGst(sub.company_id, tx);
     for (const item of sub.items) {
       const qty = parseFloat(item.quantity) || 0;
       const price = parseFloat(item.unit_price) || 0;
       const discount = parseFloat(item.discount) || 0;
-      const taxRate = parseFloat(item.tax_rate) || 0;
+      const taxRate = chargesGst ? parseFloat(item.tax_rate) || 0 : 0;
 
       const itemSubtotal = (qty * price) - discount;
       const tax = (itemSubtotal * taxRate) / 100;

@@ -29,6 +29,7 @@ export const CreateQuotationPage = ({ isEdit = false }) => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [loading, setLoading] = useState(false);
+  const [chargesGst, setChargesGst] = useState(true); // false: Bill of Supply, no GST
   const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
   const [industryConfig, setIndustryConfig] = useState(getIndustryConfig('General Store'));
@@ -57,6 +58,7 @@ export const CreateQuotationPage = ({ isEdit = false }) => {
         
         const selectedIndustry = companyRes.data.business_category || 'General Store';
         setIndustryConfig(getIndustryConfig(selectedIndustry));
+        setChargesGst(Boolean(companyRes.data.gst_registered || companyRes.data.gst_number));
 
         if (companyRes.data.terms_conditions) {
           setFormData(prev => ({ ...prev, terms: companyRes.data.terms_conditions }));
@@ -150,7 +152,7 @@ export const CreateQuotationPage = ({ isEdit = false }) => {
     items.forEach(item => {
       const qty = parseFloat(item.quantity) || 0;
       const price = parseFloat(item.unit_price) || 0;
-      const taxRate = parseFloat(item.tax_rate) || 0;
+      const taxRate = chargesGst ? parseFloat(item.tax_rate) || 0 : 0;
       
       const itemSubtotal = (qty * price);
       const itemTax = (itemSubtotal * taxRate) / 100;
@@ -235,7 +237,7 @@ export const CreateQuotationPage = ({ isEdit = false }) => {
             <CardHeader><CardTitle>Summary</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               <div className="flex justify-between"><span>Subtotal</span><span className="font-mono">{formatCurrency(totals.subtotal)}</span></div>
-              <div className="flex justify-between"><span>Tax</span><span className="font-mono">{formatCurrency(totals.taxAmount)}</span></div>
+              {chargesGst && <div className="flex justify-between"><span>Tax</span><span className="font-mono">{formatCurrency(totals.taxAmount)}</span></div>}
               <div className="border-t pt-3 flex justify-between font-bold"><span>Total</span><span className="text-xl font-mono">{formatCurrency(totals.total)}</span></div>
             </CardContent>
           </Card>
@@ -287,7 +289,7 @@ export const CreateQuotationPage = ({ isEdit = false }) => {
                   <TableHead>{industryConfig.labels.itemName}</TableHead>
                   <TableHead>{industryConfig.labels.qty}</TableHead>
                   <TableHead>{industryConfig.labels.price}</TableHead>
-                  <TableHead>Tax%</TableHead>
+                  {chargesGst && <TableHead>Tax%</TableHead>}
                   <TableHead className="text-right">Total</TableHead>
                   <TableHead className="w-12"></TableHead>
                 </TableRow>
@@ -305,13 +307,13 @@ export const CreateQuotationPage = ({ isEdit = false }) => {
                     </TableCell>
                     <TableCell><Input type="number" value={item.quantity} onChange={(e) => updateItem(index, 'quantity', e.target.value)} className="w-20" /></TableCell>
                     <TableCell><Input type="number" value={item.unit_price} onChange={(e) => updateItem(index, 'unit_price', e.target.value)} className="w-24" /></TableCell>
-                    <TableCell>
+                    {chargesGst && <TableCell>
                       <Select value={String(item.tax_rate)} onValueChange={(v) => updateItem(index, 'tax_rate', v)}>
                         <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
                         <SelectContent><SelectItem value="0">0%</SelectItem><SelectItem value="5">5%</SelectItem><SelectItem value="12">12%</SelectItem><SelectItem value="18">18%</SelectItem><SelectItem value="28">28%</SelectItem></SelectContent>
                       </Select>
-                    </TableCell>
-                    <TableCell className="text-right font-mono">{formatCurrency((parseFloat(item.quantity || 0) * parseFloat(item.unit_price || 0)) * (1 + parseFloat(item.tax_rate || 0)/100))}</TableCell>
+                    </TableCell>}
+                    <TableCell className="text-right font-mono">{formatCurrency((parseFloat(item.quantity || 0) * parseFloat(item.unit_price || 0)) * (1 + (chargesGst ? parseFloat(item.tax_rate || 0) : 0)/100))}</TableCell>
                     <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => removeItem(index)}><Trash2 className="w-4 h-4 text-red-500" /></Button></TableCell>
                   </TableRow>
                 ))}

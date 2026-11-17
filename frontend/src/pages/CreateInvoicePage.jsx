@@ -38,6 +38,8 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
   const { id } = useParams();
   const location = useLocation();
   const [loading, setLoading] = useState(false);
+  // Unregistered businesses issue a Bill of Supply: no GST (the server enforces this too).
+  const [chargesGst, setChargesGst] = useState(true);
 
   // Quick-create customer dialog
   const [showNewCustomer, setShowNewCustomer] = useState(false);
@@ -94,6 +96,7 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
         const selectedIndustry = companyRes.data.business_category || 'General Store';
         setIndustry(selectedIndustry);
         setIndustryConfig(getIndustryConfig(selectedIndustry));
+        setChargesGst(Boolean(companyRes.data.gst_registered || companyRes.data.gst_number));
 
         if (companyRes.data.terms_conditions) {
           setFormData(prev => ({ ...prev, terms: companyRes.data.terms_conditions }));
@@ -230,7 +233,7 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
     const qty = parseFloat(item.quantity) || 0;
     const price = parseFloat(item.unit_price) || 0;
     const discount = parseFloat(item.discount) || 0;
-    const taxRate = parseFloat(item.tax_rate) || 0;
+    const taxRate = chargesGst ? parseFloat(item.tax_rate) || 0 : 0;
     
     const subtotal = qty * price;
     const afterDiscount = subtotal - discount;
@@ -247,7 +250,7 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
       const qty = parseFloat(item.quantity) || 0;
       const price = parseFloat(item.unit_price) || 0;
       const itemDiscount = parseFloat(item.discount) || 0;
-      const taxRate = parseFloat(item.tax_rate) || 0;
+      const taxRate = chargesGst ? parseFloat(item.tax_rate) || 0 : 0;
       
       const itemSubtotal = (qty * price) - itemDiscount;
       const itemTax = (itemSubtotal * taxRate) / 100;
@@ -534,10 +537,14 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                 <span className="text-slate-600">Subtotal</span>
                 <span className="font-mono">{formatCurrency(totals.subtotal)}</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-600">Tax</span>
-                <span className="font-mono">{formatCurrency(totals.taxAmount)}</span>
-              </div>
+              {chargesGst ? (
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Tax</span>
+                  <span className="font-mono">{formatCurrency(totals.taxAmount)}</span>
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500">Bill of Supply: GST is not charged because this business is not GST registered (Settings → Tax &amp; GST).</p>
+              )}
               {totals.walletUsed > 0 && (
                 <div className="flex justify-between text-sm text-emerald-600 font-bold">
                   <span>Wallet Used</span>
@@ -601,7 +608,7 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                       <TableHead className="w-1/3">{industryConfig.labels.itemName}</TableHead>
                       {industryConfig.fields.showQty && <TableHead>{industryConfig.labels.qty}</TableHead>}
                       <TableHead>{industryConfig.labels.price}</TableHead>
-                      <TableHead>GST%</TableHead>
+                      {chargesGst && <TableHead>GST%</TableHead>}
                       {industryConfig.fields.showDiscount && <TableHead>Discount</TableHead>}
                       <TableHead className="text-right">Total</TableHead>
                       <TableHead className="w-12"></TableHead>
@@ -711,6 +718,7 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                             data-testid={`item-price-${index}`}
                           />
                         </TableCell>
+                        {chargesGst && (
                         <TableCell>
                           <Select
                             value={String(item.tax_rate)}
@@ -728,6 +736,7 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                             </SelectContent>
                           </Select>
                         </TableCell>
+                        )}
                         {industryConfig.fields.showDiscount && (
                           <TableCell>
                             <Input

@@ -188,6 +188,7 @@ export function buildInvoiceDocument(invoice = {}, company = {}, storedSettings 
   }
   const taxSummary = [...byRate.values()].sort((a, b) => a.rate - b.rate);
 
+  const gstRegistered = Boolean(company.gst_registered || company.gst_number);
   const taxable = round2(lines.reduce((sum, l) => sum + l.taxable, 0));
   const tax = round2(lines.reduce((sum, l) => sum + l.tax, 0));
   const discount = num(invoice.discount_amount);
@@ -206,13 +207,14 @@ export function buildInvoiceDocument(invoice = {}, company = {}, storedSettings 
 
   return {
     settings, style, columns, interState,
-    title: company.gst_number ? 'TAX INVOICE' : 'INVOICE',
+    // A GST-registered seller issues a Tax Invoice; an unregistered one a Bill of Supply (no GST).
+    title: gstRegistered ? 'TAX INVOICE' : tax > 0 ? 'INVOICE' : 'BILL OF SUPPLY',
     seller: {
       name: company.name || '',
       tagline: company.tagline || '',
       address: joinAddress(company.address, company.city, company.state && company.pincode ? `${company.state} - ${company.pincode}` : company.state || company.pincode),
       phone: company.phone || '', email: company.email || '',
-      gstin: company.gst_number || '', state: company.state || '',
+      gstin: gstRegistered ? company.gst_number || '' : '', state: company.state || '',
       logo: company.logo || null, signature: company.signature || null,
     },
     buyer: {

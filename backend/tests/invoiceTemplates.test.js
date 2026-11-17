@@ -95,3 +95,13 @@ test('the PDF prints the rupee sign', async () => {
   const buffer = await generateInvoicePdf(invoice('Karnataka'), company);
   assert.match(buffer.toString('latin1'), /DejaVu/);
 });
+
+test('a GST-registered seller issues a Tax Invoice; an unregistered one a Bill of Supply without GSTIN', async () => {
+  const { buildInvoiceDocument } = await core();
+  assert.equal(buildInvoiceDocument(invoice('Karnataka'), company).title, 'TAX INVOICE');
+  const unregistered = { ...company, gst_number: '', gst_registered: false };
+  const untaxed = invoice('Karnataka', [item('Rice 25kg', 2, 1200, 0)]);
+  const doc = buildInvoiceDocument(untaxed, unregistered);
+  assert.equal(doc.title, 'BILL OF SUPPLY');
+  assert.equal(doc.seller.gstin, '');
+});

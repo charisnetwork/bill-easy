@@ -1,4 +1,5 @@
 const { Invoice, InvoiceItem, Customer, Product, Company, Payment, User, StockLevel, StockMovement, Godown, sequelize } = require('../models');
+const { sellerChargesGst } = require('../services/gstPolicy');
 const { generateInvoiceNumber, peekInvoiceNumber } = require('../services/invoiceNumberService');
 const { generateInvoicePdf } = require('../services/invoicePdf');
 const { Op } = require('sequelize');
@@ -99,6 +100,7 @@ const createInvoice = async (req, res) => {
       product: itemProductIds(req.body.items)
     }, transaction);
     const invoiceNumber = await generateInvoiceNumber(req.companyId, transaction);
+    const chargesGst = await sellerChargesGst(req.companyId, transaction);
     const items = req.body.items || [];
     
     let totalTax = 0;
@@ -108,7 +110,7 @@ const createInvoice = async (req, res) => {
       const qty = parseFloat(item.quantity) || 0;
       const price = parseFloat(item.unit_price) || 0;
       const discount = parseFloat(item.discount) || 0;
-      const taxRate = parseFloat(item.tax_rate) || 0;
+      const taxRate = chargesGst ? parseFloat(item.tax_rate) || 0 : 0;
       
       const itemSubtotal = (qty * price) - discount;
       const tax = (itemSubtotal * taxRate) / 100;
@@ -527,6 +529,7 @@ const updateInvoice = async (req, res) => {
     await InvoiceItem.destroy({ where: { invoice_id: id }, transaction });
 
     // Process new items and calculate totals
+    const chargesGst = await sellerChargesGst(req.companyId, transaction);
     const items = req.body.items || [];
     let totalTax = 0;
     let totalAmount = 0;
@@ -535,7 +538,7 @@ const updateInvoice = async (req, res) => {
       const qty = parseFloat(item.quantity) || 0;
       const price = parseFloat(item.unit_price) || 0;
       const discount = parseFloat(item.discount) || 0;
-      const taxRate = parseFloat(item.tax_rate) || 0;
+      const taxRate = chargesGst ? parseFloat(item.tax_rate) || 0 : 0;
       
       const itemSubtotal = (qty * price) - discount;
       const tax = (itemSubtotal * taxRate) / 100;

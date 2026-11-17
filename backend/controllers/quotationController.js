@@ -1,4 +1,5 @@
 const { Quotation, QuotationItem, Product, Customer, Godown, Company, sequelize } = require("../models");
+const { sellerChargesGst } = require("../services/gstPolicy");
 const { assertOwnedByCompany, itemProductIds } = require("../services/tenantRefs");
 const { generateQuotationPdf } = require("../services/quotationPdfService");
 const { generateQuotationNumber, peekQuotationNumber } = require("../services/invoiceNumberService");
@@ -94,10 +95,11 @@ const createQuotation = async (req, res) => {
     let total_amount = 0;
 
     // Calculate totals first
+    const chargesGst = await sellerChargesGst(req.companyId, transaction);
     const processedItems = items.map(item => {
       const qty = parseFloat(item.quantity) || 0;
       const price = parseFloat(item.unit_price) || 0;
-      const taxRate = parseFloat(item.tax_rate) || 0;
+      const taxRate = chargesGst ? parseFloat(item.tax_rate) || 0 : 0;
       
       const itemSubtotal = qty * price;
       const itemTax = (itemSubtotal * taxRate) / 100;
@@ -177,6 +179,7 @@ const updateQuotation = async (req, res) => {
     await assertOwnedByCompany(req.companyId, { customer: customer_id, godown: godown_id, product: itemProductIds(items) }, transaction);
 
     await QuotationItem.destroy({ where: { quotation_id: id }, transaction });
+    const chargesGst = await sellerChargesGst(req.companyId, transaction);
 
     let subtotal = 0;
     let tax_amount = 0;
@@ -185,7 +188,7 @@ const updateQuotation = async (req, res) => {
     const processedItems = items.map(item => {
       const qty = parseFloat(item.quantity) || 0;
       const price = parseFloat(item.unit_price) || 0;
-      const taxRate = parseFloat(item.tax_rate) || 0;
+      const taxRate = chargesGst ? parseFloat(item.tax_rate) || 0 : 0;
 
       const itemSubtotal = qty * price;
       const itemTax = (itemSubtotal * taxRate) / 100;
