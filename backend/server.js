@@ -190,6 +190,7 @@ app.use('/api/recurring', uuidIds(require('./routes/recurring')));
 app.use('/api/enquiries', uuidIds(enquiryRoutes));
 app.use('/api/staff', uuidIds(require('./routes/staff')));
 app.use("/api/utilities", require("./routes/utilities"));
+app.use("/api/search", require("./routes/search"));
 // Server-to-server Control Centre integration. Every endpoint enforces its own API key.
 
 // NOTE: Bare-path duplicate routes removed — Railway now correctly preserves /api/ prefix.

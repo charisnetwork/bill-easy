@@ -1,4 +1,5 @@
 const { Supplier, Purchase, Payment } = require('../models');
+const { partyFields } = require('../utils/partyFields');
 const { Op } = require('sequelize');
 
 const getSuppliers = async (req, res) => {
@@ -53,7 +54,8 @@ const getSupplier = async (req, res) => {
 
 const createSupplier = async (req, res) => {
   try {
-    const { name, phone, email, gst_number, address, city, state, pincode } = req.body;
+    const { name, address, city, state, pincode } = req.body;
+    const { phone, email, gst_number } = partyFields(req.body);
 
     const supplier = await Supplier.create({
       company_id: req.companyId,
@@ -70,13 +72,15 @@ const createSupplier = async (req, res) => {
     res.status(201).json({ message: 'Supplier created successfully', supplier });
   } catch (error) {
     // Error logged
+    if (error.status === 400) return res.status(400).json({ error: error.message });
     res.status(500).json({ error: 'Failed to create supplier' });
   }
 };
 
 const updateSupplier = async (req, res) => {
   try {
-    const { name, phone, email, gst_number, address, city, state, pincode } = req.body;
+    const { name, address, city, state, pincode } = req.body;
+    const { phone, email, gst_number } = partyFields(req.body);
 
     const supplier = await Supplier.findOne({
       where: { id: req.params.id, company_id: req.companyId }
@@ -90,6 +94,7 @@ const updateSupplier = async (req, res) => {
     res.json({ message: 'Supplier updated successfully', supplier });
   } catch (error) {
     // Error logged
+    if (error.status === 400) return res.status(400).json({ error: error.message });
     res.status(500).json({ error: 'Failed to update supplier' });
   }
 };

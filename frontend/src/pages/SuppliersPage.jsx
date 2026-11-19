@@ -127,7 +127,8 @@ const SupplierForm = ({ supplier, onSave, onClose }) => {
 export const SuppliersPage = () => {
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  // Opened from global search (?search=…): start filtered.
+  const [search, setSearch] = useState(() => new URLSearchParams(window.location.search).get('search') || '');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [page, setPage] = useState(1);

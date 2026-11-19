@@ -101,9 +101,9 @@ test('dashboard summary', { skip: !dbUrl && 'TEST_DATABASE_URL not set' }, async
     const c = company.id;
     const customer = await Customer.create({ company_id: c, name: 'Asha Traders' });
     const supplier = await Supplier.create({ company_id: c, name: 'Ravi Wholesale' });
-    const p1 = await Product.create({ company_id: c, name: 'Rice 25kg', stock_quantity: 2, low_stock_alert: 5 });
+    const p1 = await Product.create({ company_id: c, name: 'Rice 25kg', stock_quantity: 2, low_stock_alert: 5, purchase_price: 400 });
     await Product.create({ company_id: c, name: 'Dal 1kg', stock_quantity: 5, low_stock_alert: 5 });
-    const p3 = await Product.create({ company_id: c, name: 'Oil 1L', stock_quantity: 50, low_stock_alert: 10 });
+    const p3 = await Product.create({ company_id: c, name: 'Oil 1L', stock_quantity: 50, low_stock_alert: 10, purchase_price: 300 });
     await Product.create({ company_id: c, name: 'Delivery', type: 'service', stock_quantity: 0, low_stock_alert: 10 });
 
     const inv = (number, date, total, paid, status, extra = {}) => Invoice.create({
@@ -129,7 +129,10 @@ test('dashboard summary', { skip: !dbUrl && 'TEST_DATABASE_URL not set' }, async
 
     assert.deepEqual(data.comparison.sales, { current: 1600, previous: 800, change: 100 });
     assert.deepEqual(data.comparison.expenses, { current: 100, previous: 50, change: 100 });
-    assert.deepEqual(data.comparison.profit, { current: 1200, previous: 750, change: 60 });
+    // Profit = sales without GST - cost of what was sold (2 x 300 + 1 x 400) - expenses. The
+    // ₹300 purchase is stock, not a loss.
+    assert.deepEqual(data.comparison.profit, { current: 500, previous: 750, change: -33.3 });
+    assert.equal(data.thisMonth.cogs, 1000);
     // Oct: 1000 + 100 paid on the invoice, 200 recorded as a payment (not counted twice). Sep: 400.
     assert.deepEqual(data.comparison.collections, { current: 1300, previous: 400, change: 225 });
     assert.equal(data.thisMonth.moneyOut, 400); // purchase paid 300 + expense 100
@@ -156,6 +159,7 @@ test('dashboard summary', { skip: !dbUrl && 'TEST_DATABASE_URL not set' }, async
     assert.equal(data.recentInvoices[0].number, 'INV-2');
     assert.ok(data.recentActivity.length > 0 && data.recentActivity.length <= 8);
     assert.equal(data.gst.registered, true);
-    assert.ok(data.health && data.health.score >= 0 && data.health.score <= 100);
+    // Only 4 invoices over two months: too early for a health score.
+    assert.equal(data.health, null);
   });
 });

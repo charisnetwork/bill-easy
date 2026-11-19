@@ -86,9 +86,11 @@ function gstDueDates(now = new Date()) {
 
 // A 0-100 score from the business's own numbers, with the parts shown to the user.
 // null until there are sales in this or last month to judge.
+// Needs at least 5 invoices over the two months: a new business is not "Critical" on day one.
 function healthScore({ thisMonth, lastMonth, pendingAmount, overdueAmount }) {
   const sales = (thisMonth?.sales || 0) + (lastMonth?.sales || 0);
   if (sales <= 0) return null;
+  if ((thisMonth?.invoices ?? Infinity) + (lastMonth?.invoices ?? 0) < 5) return null;
   const profit = (thisMonth?.profit || 0) + (lastMonth?.profit || 0);
   const collections = (thisMonth?.collections || 0) + (lastMonth?.collections || 0);
 

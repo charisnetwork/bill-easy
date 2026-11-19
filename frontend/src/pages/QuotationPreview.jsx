@@ -76,6 +76,7 @@ const QuotationPreview = () => {
       state: { 
         fromQuotation: true,
         quotationData: {
+          quotation_id: quotation.id,
           customer_id: quotation.customer_id,
           items: quotation.items.map(item => ({
             product_id: item.product_id,
@@ -127,13 +128,20 @@ const QuotationPreview = () => {
         </div>
         
         <div className="flex flex-wrap items-center gap-2">
-          <Button 
-            onClick={convertToSale} 
-            className="h-10 gap-2 bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-100 font-bold px-5"
-          >
-            <ShoppingCart className="w-4 h-4" />
-            Convert to Sale
-          </Button>
+          {quotation?.converted_invoice_id ? (
+            <Button variant="outline" onClick={() => navigate(`/invoices/${quotation.converted_invoice_id}`)} className="h-10 gap-2 font-bold px-5">
+              <ShoppingCart className="w-4 h-4" />
+              Converted · open invoice
+            </Button>
+          ) : (
+            <Button 
+              onClick={convertToSale} 
+              className="h-10 gap-2 bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-100 font-bold px-5"
+            >
+              <ShoppingCart className="w-4 h-4" />
+              Convert to Sale
+            </Button>
+          )}
 
           <div className="h-8 w-px bg-slate-200 mx-1 hidden md:block"></div>
 

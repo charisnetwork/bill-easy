@@ -22,7 +22,7 @@ fake('middleware/auth', { ...realAuth, authenticateToken: (req, _res, next) => {
 fake('middleware/companyContext', (req, _res, next) => { req.companyId = actingCompany; next(); });
 
 const unlimited = (code) => ({ feature_code: code, enabled: true, limit_type: 'unlimited', limit_value: null });
-charisOs.getSnapshot = async () => ({ status: 'active', entitlements: ['invoices', 'purchase_bills', 'purchase_orders', 'recurring_invoices', 'godowns'].map(unlimited) });
+charisOs.getSnapshot = async () => ({ status: 'active', entitlements: ['invoices', 'purchase_bills', 'purchase_orders', 'recurring_invoices', 'godowns', 'quotations', 'inventory_management'].map(unlimited) });
 charisOs.usageFor = async () => ({});
 
 test('ids are checked against the acting business', async () => {

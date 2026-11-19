@@ -45,7 +45,7 @@ export const Sidebar = ({ open, setOpen }) => {
           subItems: [
             { path: '/invoices', label: 'Invoices' },
             { path: '/recurring', label: 'Recurring Invoices', locked: locked('recurring_invoices') },
-            { path: '/quotations', label: 'Estimates' },
+            { path: '/quotations', label: 'Quotations', locked: locked('quotations') },
             { path: '/payments-in', label: 'Payment In' },
             { path: '/sales-return', label: 'Sales Return' },
           ]
@@ -75,7 +75,7 @@ export const Sidebar = ({ open, setOpen }) => {
           subItems: [
             { path: '/products', label: 'All Items' },
             // Always reachable: after a downgrade, stock must still be movable out of extra godowns.
-            { path: '/stock-transfer', label: 'Stock Transfer' },
+            { path: '/stock-transfer', label: 'Stock Transfer', locked: locked('inventory_management') },
           ]
         },
       ]

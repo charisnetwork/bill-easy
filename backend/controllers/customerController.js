@@ -1,4 +1,5 @@
 const { Customer, Invoice, Payment, sequelize } = require('../models');
+const { partyFields } = require('../utils/partyFields');
 const { Op } = require('sequelize');
 
 const getCustomers = async (req, res) => {
@@ -53,7 +54,8 @@ const getCustomer = async (req, res) => {
 
 const createCustomer = async (req, res) => {
   try {
-    const { name, phone, email, gst_number, address, city, state, pincode } = req.body;
+    const { name, address, city, state, pincode } = req.body;
+    const { phone, email, gst_number } = partyFields(req.body);
 
     const customer = await Customer.create({
       company_id: req.companyId,
@@ -70,13 +72,15 @@ const createCustomer = async (req, res) => {
     res.status(201).json({ message: 'Customer created successfully', customer });
   } catch (error) {
     // Error logged
+    if (error.status === 400) return res.status(400).json({ error: error.message });
     res.status(500).json({ error: 'Failed to create customer' });
   }
 };
 
 const updateCustomer = async (req, res) => {
   try {
-    const { name, phone, email, gst_number, address, city, state, pincode } = req.body;
+    const { name, address, city, state, pincode } = req.body;
+    const { phone, email, gst_number } = partyFields(req.body);
 
     const customer = await Customer.findOne({
       where: { id: req.params.id, company_id: req.companyId }
@@ -90,6 +94,7 @@ const updateCustomer = async (req, res) => {
     res.json({ message: 'Customer updated successfully', customer });
   } catch (error) {
     // Error logged
+    if (error.status === 400) return res.status(400).json({ error: error.message });
     res.status(500).json({ error: 'Failed to update customer' });
   }
 };

@@ -22,6 +22,7 @@ fake('middleware/companyContext', (req, _res, next) => { req.companyId = company
 const ok = (_req, res) => res.json({ reached: true });
 fake('controllers/godownController', { getGodowns: ok, createGodown: ok, updateGodown: ok, deleteGodown: ok, transferStock: ok });
 fake('controllers/purchaseOrderController', { getPurchaseOrders: ok, getPurchaseOrder: ok, downloadPdf: ok, createPurchaseOrder: ok, updatePurchaseOrder: ok, deletePurchaseOrder: ok });
+fake('controllers/quotationController', { getQuotations: ok, getQuotation: ok, createQuotation: ok, updateQuotation: ok, deleteQuotation: ok, downloadQuotationPdf: ok, getNextQuotationNumber: ok });
 fake('controllers/purchaseController', { getPurchases: ok, getPurchase: ok, createPurchase: ok, updatePurchase: ok, deletePurchase: ok, recordPayment: ok, parsePurchasePDF: ok });
 
 const app = express();
@@ -30,6 +31,7 @@ app.use('/api/company', require('../routes/company'));
 app.use('/api/purchase-orders', require('../routes/purchaseOrders'));
 app.use('/api/purchases', require('../routes/purchases'));
 app.use('/api/reports', require('../routes/reports'));
+app.use('/api/quotations', require('../routes/quotations'));
 
 const limit = (code, value) => ({ feature_code: code, enabled: true, limit_type: value === null ? 'unlimited' : 'limited', limit_value: value });
 const off = (code) => ({ feature_code: code, enabled: false, limit_type: 'unlimited', limit_value: null });
@@ -65,7 +67,7 @@ test('purchase orders are locked when the plan does not include them', async () 
 });
 
 test('a business at its godown limit cannot add one but can still edit, delete and transfer', async () => {
-  entitlements = [limit('godowns', 2)];
+  entitlements = [limit('godowns', 2), limit('inventory_management', null)];
   usage = { godowns: 2 };
   const created = await call('POST', '/api/company/godowns');
   assert.equal(created.status, 403);
@@ -178,4 +180,11 @@ test('a locked design sent with business details is refused with 403, not a serv
     assert.equal(res.status, 403);
     assert.equal((await res.json()).feature, 'pro_templates');
   } finally { Company.findByPk = originalFind; }
+});
+
+test('quotations and stock transfer need their plan features; old quotations stay viewable', async () => {
+  entitlements = [off('quotations'), off('inventory_management')];
+  assert.equal((await call('POST', '/api/quotations')).status, 403);
+  assert.notEqual((await call('GET', '/api/quotations')).status, 403);
+  assert.equal((await call('POST', '/api/company/stock-transfer')).status, 403);
 });

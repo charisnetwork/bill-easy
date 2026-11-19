@@ -33,9 +33,9 @@ router.delete('/users/:id', requireRole('owner', 'admin'), companyController.del
 // Godowns
 router.get('/godowns', godownController.getGodowns);
 // Creating is limited by the plan's godown count; existing godowns can always be edited or removed.
-router.post('/godowns', requireRecordLimit('godowns'), godownController.createGodown);
+router.post('/godowns', requireFeature('godowns'), requireRecordLimit('godowns'), godownController.createGodown);
 router.put('/godowns/:id', godownController.updateGodown);
 router.delete('/godowns/:id', godownController.deleteGodown);
-router.post('/stock-transfer', godownController.transferStock);
+router.post('/stock-transfer', requireFeature('inventory_management'), godownController.transferStock);
 
 module.exports = router;

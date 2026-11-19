@@ -23,7 +23,7 @@ import { motion } from 'framer-motion';
 import { NotificationCenter } from './NotificationCenter';
 
 export const Header = ({ setSidebarOpen, setCmdkOpen }) => {
-  const { user, company, logout } = useAuth();
+  const { user, company, logout, hasFeature } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -94,7 +94,14 @@ export const Header = ({ setSidebarOpen, setCmdkOpen }) => {
         </div>
 
         {/* Action Icons */}
-        <button className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors hidden sm:block relative group" title="AI Assistant">
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(hasFeature('ai_assistant')
+            ? new Event('OPEN_ASSISTANT')
+            : new CustomEvent('UPGRADE_REQUIRED', { detail: { message: 'The AI Assistant is included in Pro and Enterprises plans.' } }))}
+          className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors hidden sm:block relative group"
+          title="AI Assistant"
+        >
           <Sparkles className="w-5 h-5" />
           <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-indigo-500 rounded-full border-2 border-white scale-0 group-hover:scale-100 transition-transform"></span>
         </button>

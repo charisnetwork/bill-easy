@@ -337,7 +337,9 @@ const Quotation = sequelize.define('Quotation',{
   status:{ type:DataTypes.ENUM('draft','sent','accepted','rejected','expired'), defaultValue:'draft' },
   notes:{ type:DataTypes.TEXT },
   terms:{ type:DataTypes.TEXT },
-  industry_metadata:{ type:DataTypes.JSONB, defaultValue:{} }
+  industry_metadata:{ type:DataTypes.JSONB, defaultValue:{} },
+  // Set when converted to a sale: a quotation becomes at most one invoice.
+  converted_invoice_id: { type: DataTypes.UUID }
 }, { tableName: 'quotations' });
 
 const QuotationItem = sequelize.define('QuotationItem',{

@@ -1,4 +1,5 @@
 const { Company, User, UserCompany, Godown } = require("../models");
+const { gstin } = require('../utils/partyFields');
 const invoiceDesign = require("../services/invoiceDesign");
 const { resolveIndustry, signupSettingsFor } = require("../config/industries");
 const { ensureDefaultGodown } = require("../services/companySetup");
@@ -157,7 +158,8 @@ const updateSettings = async (req, res) => {
     if (gst_registered === false) {
       updateData.gst_number = "";
     } else if (gst_number !== undefined) {
-      updateData.gst_number = gst_number;
+      try { updateData.gst_number = gstin(gst_number) || ""; }
+      catch (error) { return res.status(400).json({ error: error.message }); }
     }
 
     await company.update(updateData);

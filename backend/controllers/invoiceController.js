@@ -1,4 +1,4 @@
-const { Invoice, InvoiceItem, Customer, Product, Company, Payment, User, StockLevel, StockMovement, Godown, sequelize } = require('../models');
+const { Invoice, InvoiceItem, Customer, Product, Company, Payment, User, StockLevel, StockMovement, Godown, Quotation, sequelize } = require('../models');
 const { sellerChargesGst } = require('../services/gstPolicy');
 const { generateInvoiceNumber, peekInvoiceNumber } = require('../services/invoiceNumberService');
 const { generateInvoicePdf } = require('../services/invoicePdf');
@@ -99,6 +99,17 @@ const createInvoice = async (req, res) => {
       godown: req.body.godown_id,
       product: itemProductIds(req.body.items)
     }, transaction);
+    // Converting a quotation: lock it so it can become at most one invoice (no double billing).
+    let quotation = null;
+    if (req.body.quotation_id) {
+      quotation = await Quotation.findOne({ where: { id: req.body.quotation_id, company_id: req.companyId }, transaction, lock: transaction.LOCK.UPDATE });
+      if (!quotation) { await transaction.rollback(); return res.status(404).json({ error: "Quotation not found" }); }
+      if (quotation.converted_invoice_id) {
+        const earlier = await Invoice.findOne({ where: { id: quotation.converted_invoice_id, company_id: req.companyId }, attributes: ['invoice_number'], transaction });
+        await transaction.rollback();
+        return res.status(409).json({ error: `This quotation was already converted${earlier ? ` to ${earlier.invoice_number}` : ''}. Open that invoice instead of creating another.` });
+      }
+    }
     const invoiceNumber = await generateInvoiceNumber(req.companyId, transaction);
     const chargesGst = await sellerChargesGst(req.companyId, transaction);
     const items = req.body.items || [];
@@ -241,19 +252,21 @@ const createInvoice = async (req, res) => {
       wallet_amount: walletUsed
     }, { transaction });
 
-    for (const item of processedItems) {
-      await InvoiceItem.create({
-        invoice_id: invoice.id,
-        product_id: item.product_id,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        discount: item.discount,
-        tax_rate: item.tax_rate,
-        tax_amount: item.tax_amount,
-        total: item.total,
-        description: item.description || ''
-      }, { transaction });
+    // One insert for all items and one for all stock movements: each database round trip adds
+    // latency to every save.
+    await InvoiceItem.bulkCreate(processedItems.map((item) => ({
+      invoice_id: invoice.id,
+      product_id: item.product_id,
+      quantity: item.quantity,
+      unit_price: item.unit_price,
+      discount: item.discount,
+      tax_rate: item.tax_rate,
+      tax_amount: item.tax_amount,
+      total: item.total,
+      description: item.description || ''
+    })), { transaction });
 
+    for (const item of processedItems) {
       await Product.decrement("stock_quantity", {
         by: item.quantity,
         where: { id: item.product_id },
@@ -267,19 +280,20 @@ const createInvoice = async (req, res) => {
           where: { product_id: item.product_id, godown_id: invoice.godown_id },
           transaction
         });
-
-        // Record movement
-        await StockMovement.create({
-          company_id: req.companyId,
-          product_id: item.product_id,
-          godown_id: invoice.godown_id,
-          type: 'out',
-          quantity: item.quantity,
-          reference_type: 'invoice',
-          reference_id: invoice.id,
-          notes: `Invoice #${invoice.invoice_number || invoiceNumber}`
-        }, { transaction });
       }
+    }
+
+    if (invoice.godown_id) {
+      await StockMovement.bulkCreate(processedItems.map((item) => ({
+        company_id: req.companyId,
+        product_id: item.product_id,
+        godown_id: invoice.godown_id,
+        type: 'out',
+        quantity: item.quantity,
+        reference_type: 'invoice',
+        reference_id: invoice.id,
+        notes: `Invoice #${invoice.invoice_number || invoiceNumber}`
+      })), { transaction });
     }
 
     await Customer.increment("outstanding_balance", {
@@ -287,6 +301,8 @@ const createInvoice = async (req, res) => {
       where: { id: req.body.customer_id },
       transaction
     });
+
+    if (quotation) await quotation.update({ status: 'accepted', converted_invoice_id: invoice.id }, { transaction });
 
     await transaction.commit();
     res.status(201).json({

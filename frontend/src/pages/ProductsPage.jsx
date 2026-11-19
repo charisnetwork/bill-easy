@@ -613,7 +613,8 @@ export const ProductsPage = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
-  const [search, setSearch] = useState('');
+  // Opened from global search (?search=…): start filtered.
+  const [search, setSearch] = useState(() => new URLSearchParams(window.location.search).get('search') || '');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showLowStock, setShowLowStock] = useState(false);

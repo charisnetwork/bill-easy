@@ -55,3 +55,18 @@ test('a login whose email is not text is passed on to validation instead of cras
   assert.equal(await post({ email: { $ne: null }, password: 'x' }), 400);
   assert.equal(await post({ email: ['a@example.com'] }), 400);
 });
+
+test('failed logins for one email are limited even when each request arrives from a different address', async (t) => {
+  const { authLimiter } = require('../middleware/rateLimit');
+  const express = require('express');
+  const app = express();
+  app.set('trust proxy', true);
+  app.use(express.json());
+  app.post('/login', authLimiter, (_req, res) => res.status(401).json({ error: 'Invalid credentials' }));
+  const server = app.listen(0);
+  t.after(() => server.close());
+  const url = `http://127.0.0.1:${server.address().port}/login`;
+  const attempt = (n) => fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'x-forwarded-for': `100.64.0.${n}` }, body: JSON.stringify({ email: 'rotating@example.com' }) }).then((r) => r.status);
+  for (let i = 1; i <= 5; i++) assert.equal(await attempt(i), 401);
+  assert.equal(await attempt(6), 429);
+});

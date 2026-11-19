@@ -225,9 +225,10 @@ class ReportService {
       sales, purchases, expenses, received, upfrontReceived, made, upfrontPaid,
       daily, todayRow, pendingRow, overdueRow, lowStockRows, lowStockCount,
       receivables, recentInvoices, topProducts, dueSoon, activity, invoicesCount, productsCount,
-      company, activeBusinessesCount,
+      company, activeBusinessesCount, cogs,
     ] = await Promise.all([
-      q(`SELECT ${monthOf('invoice_date')} AS month, SUM(total_amount) AS total, COUNT(*) AS count FROM invoices
+      // Sales without GST: tax collected belongs to the government, not to revenue.
+      q(`SELECT ${monthOf('invoice_date')} AS month, SUM(total_amount - COALESCE(tax_amount, 0)) AS total, COUNT(*) AS count FROM invoices
          WHERE company_id = :companyId AND status <> 'cancelled' AND invoice_date >= :start AND invoice_date < :end GROUP BY 1`, range),
       q(`SELECT ${monthOf('bill_date')} AS month, SUM(total_amount) AS total FROM purchases
          WHERE company_id = :companyId AND status <> 'cancelled' AND bill_date >= :start AND bill_date < :end GROUP BY 1`, range),
@@ -305,6 +306,10 @@ class ReportService {
       Product.count({ where: { company_id: companyId } }),
       Company.findByPk(companyId, { attributes: ['gst_number', 'gst_registered'] }),
       user ? UserCompany.count({ where: { user_id: user.id } }) : Promise.resolve(1),
+      // Cost of what was sold (quantity x purchase price): stock still on the shelf is not a loss.
+      q(`SELECT ${monthOf('i.invoice_date')} AS month, SUM(ii.quantity * COALESCE(p.purchase_price, 0)) AS total
+         FROM invoice_items ii JOIN invoices i ON i.id = ii.invoice_id LEFT JOIN products p ON p.id = ii.product_id
+         WHERE i.company_id = :companyId AND i.status <> 'cancelled' AND i.invoice_date >= :start AND i.invoice_date < :end GROUP BY 1`, range),
     ]);
 
     // Business limit from the owner's Charis OS plan (1 when OS cannot be reached).
@@ -312,12 +317,14 @@ class ReportService {
     try { totalBusinessesLimit = await require('./charisOsService').businessLimit(companyId); } catch { /* keep 1 */ }
 
     const byMonth = (rows) => Object.fromEntries(rows.map((r) => [r.month, num(r.total)]));
-    const [salesM, purchasesM, expensesM, receivedM, upfrontInM, madeM, upfrontOutM] =
-      [sales, purchases, expenses, received, upfrontReceived, made, upfrontPaid].map(byMonth);
+    const [salesM, purchasesM, expensesM, receivedM, upfrontInM, madeM, upfrontOutM, cogsM] =
+      [sales, purchases, expenses, received, upfrontReceived, made, upfrontPaid, cogs].map(byMonth);
+    const invoiceCountM = Object.fromEntries(sales.map((r) => [r.month, num(r.count)]));
     const monthly = months.map(({ key }) => {
       const s = salesM[key] || 0;
       const p = purchasesM[key] || 0;
       const e = expensesM[key] || 0;
+      const c = cogsM[key] || 0;
       const moneyIn = (receivedM[key] || 0) + (upfrontInM[key] || 0);
       return {
         month: key,
@@ -325,7 +332,9 @@ class ReportService {
         sales: s,
         purchases: p,
         expenses: e,
-        profit: s - p - e,
+        cogs: c,
+        invoices: invoiceCountM[key] || 0,
+        profit: s - c - e,
         collections: moneyIn,
         moneyOut: (madeM[key] || 0) + (upfrontOutM[key] || 0) + e,
       };
@@ -348,7 +357,7 @@ class ReportService {
       monthlySales: current.sales,
       pendingPayments: pendingAmount,
       monthlyExpenses: current.expenses,
-      grossProfit: current.sales - current.purchases,
+      grossProfit: current.sales - current.cogs,
       netProfit: current.profit,
       salesChartData: days.slice(-7).map((day) => ({ date: day, sales: dailyMap[day] || 0 })),
       invoicesCount,

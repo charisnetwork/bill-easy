@@ -48,12 +48,14 @@ const authHandler = (req, res, next, options) => {
 };
 const emailOf = (req) => String(req.body?.email || '').trim().toLowerCase();
 
-// 5 failed attempts per email from one address...
+// 5 failed attempts per email in 15 minutes, from anywhere. Keyed by the email alone: behind
+// Railway's proxies the client address seen here changes between requests, so an
+// address+email key never reached the limit.
 const authPerEmail = rateLimit({
   windowMs: FIFTEEN_MINUTES,
   max: 5,
   skipSuccessfulRequests: true,
-  keyGenerator: (req) => `${ipKeyGenerator(req.ip)}|${emailOf(req)}`,
+  keyGenerator: (req) => `login|${emailOf(req)}`,
   message: authMessage,
   standardHeaders: true,
   legacyHeaders: false,

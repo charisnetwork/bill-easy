@@ -277,7 +277,8 @@ const RefreshCcw = ({ className }) => <FileText className={className} />; // Pla
 export const CustomersPage = () => {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  // Opened from global search (?search=…): start filtered.
+  const [search, setSearch] = useState(() => new URLSearchParams(window.location.search).get('search') || '');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);

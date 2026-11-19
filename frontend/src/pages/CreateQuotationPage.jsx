@@ -305,8 +305,8 @@ export const CreateQuotationPage = ({ isEdit = false }) => {
                         </SelectContent>
                       </Select>
                     </TableCell>
-                    <TableCell><Input type="number" value={item.quantity} onChange={(e) => updateItem(index, 'quantity', e.target.value)} className="w-20" /></TableCell>
-                    <TableCell><Input type="number" value={item.unit_price} onChange={(e) => updateItem(index, 'unit_price', e.target.value)} className="w-24" /></TableCell>
+                    <TableCell><Input type="number" value={item.quantity} onChange={(e) => updateItem(index, 'quantity', e.target.value)} className="w-24 min-w-[6rem]" /></TableCell>
+                    <TableCell><Input type="number" value={item.unit_price} onChange={(e) => updateItem(index, 'unit_price', e.target.value)} className="w-32 min-w-[8rem]" /></TableCell>
                     {chargesGst && <TableCell>
                       <Select value={String(item.tax_rate)} onValueChange={(v) => updateItem(index, 'tax_rate', v)}>
                         <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>

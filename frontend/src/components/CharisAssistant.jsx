@@ -6,6 +6,12 @@ import { useAuth } from '../context/AuthContext';
 
 const CharisAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
+  // The header's AI button opens the chat.
+  useEffect(() => {
+    const open = () => setIsOpen(true);
+    window.addEventListener('OPEN_ASSISTANT', open);
+    return () => window.removeEventListener('OPEN_ASSISTANT', open);
+  }, []);
   const [messages, setMessages] = useState([
     { role: 'assistant', content: 'Hello! I am your Bill Easy assistant. How can I help you with your business today?' }
   ]);

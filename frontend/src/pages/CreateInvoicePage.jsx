@@ -139,6 +139,7 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
             const q = location.state.quotationData;
             setFormData(prev => ({
               ...prev,
+              quotation_id: q.quotation_id,
               customer_id: q.customer_id,
               notes: q.notes || prev.notes,
               terms: q.terms || prev.terms,
@@ -694,7 +695,7 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                                   addItem();
                                 }
                               }}
-                              className="w-20"
+                              className="w-24 min-w-[6rem]"
                               data-testid={`item-qty-${index}`}
                             />
                           </TableCell>
@@ -714,7 +715,7 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                                 }
                               }
                             }}
-                            className="w-24"
+                            className="w-32 min-w-[8rem]"
                             data-testid={`item-price-${index}`}
                           />
                         </TableCell>
