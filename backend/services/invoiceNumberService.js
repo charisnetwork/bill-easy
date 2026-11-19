@@ -53,9 +53,10 @@ const generateInvoiceNumber = async (companyId, existingTransaction = null) => {
 
       invoiceNumber = `${prefix}-${counter.last_number}`;
 
-      // Check globally — the DB constraint is not company-scoped
+      // Numbers are per company (unique on invoice_number + company_id): another company's
+      // INV-1 must not push this company to INV-5. GST expects each business's series unbroken.
       const existing = await Invoice.findOne({
-        where: { invoice_number: invoiceNumber },
+        where: { invoice_number: invoiceNumber, company_id: companyId },
         transaction: t,
       });
 
@@ -113,9 +114,9 @@ const generateQuotationNumber = async (companyId, existingTransaction = null) =>
 
       quotationNumber = `QTN-${counter.last_number}`;
 
-      // Check globally
+      // Per company, like invoices.
       const existing = await Quotation.findOne({
-        where: { quotation_number: quotationNumber },
+        where: { quotation_number: quotationNumber, company_id: companyId },
         transaction: t,
       });
 

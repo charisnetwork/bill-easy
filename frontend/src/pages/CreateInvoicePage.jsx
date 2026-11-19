@@ -147,7 +147,7 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                 product_id: item.product_id,
                 quantity: item.quantity,
                 unit_price: item.unit_price,
-                tax_rate: item.tax_rate || 18,
+                tax_rate: Number(item.tax_rate ?? 18),
                 discount: 0,
                 description: item.description || ''
               }))
@@ -721,7 +721,7 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                         {chargesGst && (
                         <TableCell>
                           <Select
-                            value={String(item.tax_rate)}
+                            value={String(Number(item.tax_rate))}
                             onValueChange={(value) => updateItem(index, 'tax_rate', value)}
                           >
                             <SelectTrigger className="w-20">

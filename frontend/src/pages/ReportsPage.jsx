@@ -432,7 +432,7 @@ export const ReportsPage = () => {
         <h1 className="text-xl font-semibold text-slate-800">Reports</h1>
         <Button 
           onClick={() => {
-            if (!subscription?.features?.ca_share) {
+            if (!hasFeature('ca_share')) {
               window.dispatchEvent(new CustomEvent('UPGRADE_REQUIRED', { detail: { message: 'CA Reports Sharing requires a Premium or Enterprise subscription.' } }));
             } else {
               navigate('/settings?section=send-to-ca');
@@ -440,7 +440,7 @@ export const ReportsPage = () => {
           }} 
           className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2 rounded"
         >
-          <Share2 className="w-4 h-4" /> {subscription?.features?.ca_share ? 'CA Reports Sharing' : 'CA Reports Sharing 🔒'}
+          <Share2 className="w-4 h-4" /> {hasFeature('ca_share') ? 'CA Reports Sharing' : 'CA Reports Sharing 🔒'}
         </Button>
       </div>
 

@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { DashboardLayout } from './components/DashboardLayout';
 import { Toaster } from './components/ui/sonner';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { usePageTracking } from './hooks/useAnalytics';
 import { App as CapacitorApp } from '@capacitor/app';
 import { IS_NATIVE } from './config/api';
@@ -178,6 +179,12 @@ function AppRoutes() {
   );
 }
 
+// A crash on one page shows a recovery screen; navigating elsewhere clears it.
+function RouteErrorBoundary({ children }) {
+  const location = useLocation();
+  return <ErrorBoundary resetKey={location.pathname}>{children}</ErrorBoundary>;
+}
+
 function App() {
   // Light only: dark styles were never finished, and phones in dark mode showed black boxes.
   return (
@@ -185,7 +192,9 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <Suspense fallback={<PageLoader />}>
-            <AppRoutes />
+            <RouteErrorBoundary>
+              <AppRoutes />
+            </RouteErrorBoundary>
             <CharisAssistant />
           </Suspense>
         </BrowserRouter>
