@@ -118,6 +118,8 @@ const passwordSchema = z.object({
   path: ["confirmPassword"],
 });
 
+const STAFF_PERMISSION_LABELS = [['attendance_mark', 'Mark attendance'], ['staff_view', 'See staff list'], ['payroll_view', 'See salaries & payroll']];
+
 const userSchema = z.object({
   name: z.string().min(2, "Name is required"),
   email: z.string().email("Invalid email address"),
@@ -127,6 +129,7 @@ const userSchema = z.object({
     .regex(/[\W_]/, "Add at least one special character"),
   phone: z.string().optional(),
   role: z.enum(["admin", "staff"]).default("staff"),
+  permissions: z.object({ staff_view: z.boolean(), attendance_mark: z.boolean(), payroll_view: z.boolean() }).partial().optional(),
 });
 
 const businessSchema = z.object({
@@ -310,7 +313,7 @@ export const SettingsPage = () => {
 
   const newUserForm = useForm({
     resolver: zodResolver(userSchema),
-    defaultValues: { name: "", email: "", password: "", phone: "", role: "staff" },
+    defaultValues: { name: "", email: "", password: "", phone: "", role: "staff", permissions: { staff_view: false, attendance_mark: false, payroll_view: false } },
   });
 
   const businessForm = useForm({
@@ -584,6 +587,18 @@ export const SettingsPage = () => {
   };
 
   // --- Team Handlers ---
+
+  // Staff logins: what they may do in Staff & attendance (saved straight away).
+  const onTogglePermission = async (member, key, value) => {
+    const permissions = { ...(member.permissions || {}), [key]: value };
+    try {
+      await companyAPI.updateUser(member.id, { permissions });
+      setUsers((list) => list.map((u) => (u.id === member.id ? { ...u, permissions } : u)));
+      toast.success('Access updated');
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Could not update access'));
+    }
+  };
 
   const onAddUser = async (values) => {
     setSubmitting(true);
@@ -1080,11 +1095,12 @@ export const SettingsPage = () => {
                         <FormField control={newUserForm.control} name="email" render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" autoComplete="off" placeholder="member@business.com" {...field} /></FormControl><FormMessage /></FormItem>)} />
                         <FormField control={newUserForm.control} name="password" render={({ field }) => (<FormItem><FormLabel>Password for this member</FormLabel><FormControl><Input type="password" autoComplete="new-password" {...field} /></FormControl><p className="text-xs text-slate-500">8+ characters with an uppercase letter and a symbol. Do not reuse your own password.</p><FormMessage /></FormItem>)} />
                         <FormField control={newUserForm.control} name="role" render={({ field }) => (<FormItem><FormLabel>Role</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="admin">Admin</SelectItem><SelectItem value="staff">Staff</SelectItem></SelectContent></Select></FormItem>)} />
+                        {newUserForm.watch("role") === "staff" && <div className="space-y-2 rounded-lg border border-slate-200 p-3"><p className="text-sm font-medium">Staff & attendance (Enterprise)</p>{STAFF_PERMISSION_LABELS.map(([key, label]) => <FormField key={key} control={newUserForm.control} name={`permissions.${key}`} render={({ field }) => (<label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={field.value === true} onChange={(e) => field.onChange(e.target.checked)} />{label}</label>)} />)}<p className="text-xs text-slate-500">Admins can always do all of these.</p></div>}
                         <DialogFooter><Button type="submit" disabled={submitting} className="w-full bg-indigo-600">{submitting ? '...' : 'Create'}</Button></DialogFooter>
                       </form></Form></DialogContent></Dialog>
                 </div>
                 <div className="rounded-xl border border-slate-200 overflow-hidden"><Table><TableHeader className="bg-slate-50"><TableRow><TableHead>Member</TableHead><TableHead>Role</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader><TableBody>{users.map(u => (
-                  <TableRow key={u.id}><TableCell><div><div className="font-semibold">{u.name}</div><div className="text-xs text-slate-500">{u.email}</div></div></TableCell><TableCell><Badge variant="outline" className="capitalize">{u.role}</Badge></TableCell><TableCell className="text-right">{u.role !== 'owner' && u.id !== user?.id && <Button variant="ghost" size="icon" onClick={() => handleDeleteUser(u.id)} className="text-rose-600"><Trash2 className="w-4 h-4" /></Button>}</TableCell></TableRow>
+                  <TableRow key={u.id}><TableCell><div><div className="font-semibold">{u.name}</div><div className="text-xs text-slate-500">{u.email}</div></div></TableCell><TableCell><Badge variant="outline" className="capitalize">{u.role}</Badge>{u.role === 'staff' && <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">{STAFF_PERMISSION_LABELS.map(([key, label]) => <label key={key} className="flex items-center gap-1.5 text-xs text-slate-600"><input type="checkbox" checked={u.permissions?.[key] === true} onChange={(e) => onTogglePermission(u, key, e.target.checked)} />{label}</label>)}</div>}</TableCell><TableCell className="text-right">{u.role !== 'owner' && u.id !== user?.id && <Button variant="ghost" size="icon" onClick={() => handleDeleteUser(u.id)} className="text-rose-600"><Trash2 className="w-4 h-4" /></Button>}</TableCell></TableRow>
                 ))}</TableBody></Table></div>
               </div>
             )}

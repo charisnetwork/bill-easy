@@ -262,6 +262,10 @@ const getUsers = async (req, res) => {
    ADD USER
 ========================================================= */
 
+// Permissions a staff login can be given (owner/admin always have everything).
+const MEMBER_PERMISSIONS = ['staff_view', 'attendance_mark', 'payroll_view'];
+const memberPermissions = (value) => Object.fromEntries(MEMBER_PERMISSIONS.map((key) => [key, value?.[key] === true]));
+
 const addUser = async (req, res) => {
 
   try {
@@ -289,7 +293,7 @@ const addUser = async (req, res) => {
       mobile_number: mobileNum,
       // Only Admin or Staff can be added here; the role check also runs in memberValidation.
       role: role === "admin" ? "admin" : "staff",
-      permissions: permissions && typeof permissions === "object" ? permissions : {}
+      permissions: memberPermissions(permissions)
     });
 
     res.status(201).json({
@@ -356,7 +360,7 @@ const updateUser = async (req, res) => {
       name,
       mobile_number: mobileNum,
       role,
-      permissions: permissions && typeof permissions === "object" ? permissions : undefined,
+      permissions: permissions && typeof permissions === "object" ? memberPermissions(permissions) : undefined,
       is_active
     });
 

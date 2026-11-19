@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard, Users, Package, FileText, ShoppingCart,
   Wallet, BarChart3, Settings, Truck, ChevronDown, 
-  TrendingUp, Lock, Crown
+  TrendingUp, Lock, Crown, UserCheck
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { BusinessSwitcher } from './BusinessSwitcher';
@@ -14,6 +14,7 @@ export const Sidebar = ({ open, setOpen }) => {
   const { user, hasFeature, subscription } = useAuth();
   // Lock only once the plan has loaded, so paid menus never flash as locked.
   const locked = (code) => Boolean(subscription) && !hasFeature(code);
+  const canStaff = (key) => ['owner', 'admin'].includes(user?.role) || user?.permissions?.[key] === true;
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -81,6 +82,15 @@ export const Sidebar = ({ open, setOpen }) => {
       ]
     },
     {
+      // Staff & attendance (Enterprise). Each person sees only what their login may use.
+      title: 'Team',
+      items: [
+        ...(canStaff('staff_view') ? [{ path: '/staff', icon: Users, label: 'Staff', locked: locked('staff_attendance_payroll') }] : []),
+        ...(canStaff('attendance_mark') || canStaff('staff_view') ? [{ path: '/attendance', icon: UserCheck, label: 'Attendance', locked: locked('staff_attendance_payroll') }] : []),
+        ...(canStaff('payroll_view') ? [{ path: '/payroll', icon: Wallet, label: 'Payroll', locked: locked('staff_attendance_payroll') }] : []),
+      ]
+    },
+    {
       title: 'Management',
       items: [
         { 
@@ -127,7 +137,7 @@ export const Sidebar = ({ open, setOpen }) => {
 
             {/* Navigation */}
             <nav className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 py-4 px-3 space-y-6">
-              {menuSections.map((section, idx) => (
+              {menuSections.filter((section) => section.items.length).map((section, idx) => (
                 <div key={idx} className="space-y-1">
                   <h3 className="px-3 text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mb-2">
                     {section.title}

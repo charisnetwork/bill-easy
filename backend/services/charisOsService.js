@@ -191,18 +191,19 @@ function startOfMonthIst(now = new Date()) {
 
 /** Usage Bill Easy counts from its own records, per business. */
 async function usageFor(companyId, now = new Date()) {
-  const { Invoice, Product, Purchase, Godown, Company, UserCompany } = require('../models');
+  const { Invoice, Product, Purchase, Godown, Company, UserCompany, Staff } = require('../models');
   const monthStart = startOfMonthIst(now);
   const company = await Company.findByPk(companyId, { attributes: ['owner_id'] });
-  const [invoices, products, purchase_bills, godowns, businesses] = await Promise.all([
+  const [invoices, products, purchase_bills, godowns, businesses, staff_members] = await Promise.all([
     Invoice.count({ where: { company_id: companyId, createdAt: { [Op.gte]: monthStart } } }),
     Product.count({ where: { company_id: companyId } }),
     Purchase.count({ where: { company_id: companyId, createdAt: { [Op.gte]: monthStart } } }),
     Godown.count({ where: { company_id: companyId, is_active: true } }), // same list Settings shows
     // Businesses are counted for the owner: every business they own shares the plan.
     company?.owner_id ? UserCompany.count({ where: { user_id: company.owner_id, role: 'owner' } }) : 1,
+    Staff.count({ where: { company_id: companyId, is_active: true, deleted_at: null } }),
   ]);
-  return { invoices, products, purchase_bills, godowns, businesses };
+  return { invoices, products, purchase_bills, godowns, businesses, staff_members };
 }
 
 /** Number of businesses the owner's plan allows (1000 stands for unlimited in the UI). */
@@ -344,6 +345,7 @@ const BILLEASY_FEATURES = [
   { code: 'ai_assistant', name: 'AI assistant', group: 'AI tools', description: 'Ask questions about your sales, stock and dues' },
   { code: 'ai_messages', name: 'AI messages per month', group: 'AI tools', kind: 'limit', unit: 'messages', reset_periods: ['monthly'], description: 'AI answers each month; quick searches are free' },
   { code: 'staff_attendance_payroll', name: 'Staff attendance & payroll', group: 'Team', description: 'Attendance, salary and payroll' },
+  { code: 'staff_members', name: 'Staff members', group: 'Team', kind: 'limit', unit: 'staff', reset_periods: ['total'], description: 'Active staff records per business (Staff & attendance). Leave off for no limit' },
   { code: 'businesses', name: 'Businesses', group: 'Team', kind: 'limit', unit: 'businesses', reset_periods: ['total'], description: 'Businesses one owner can manage' },
 ];
 

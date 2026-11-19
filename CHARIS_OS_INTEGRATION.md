@@ -26,6 +26,7 @@ Charis OS.
 | `eway_bills` | on/off | E-way bill screens and generation |
 | `multi_godowns` | on/off | Creating/editing godowns |
 | `staff_attendance_payroll` | on/off | Staff, attendance and payroll |
+| `staff_members` | limit, total | Active staff records per business (off = no limit) |
 | `recurring_invoices` | on/off | Recurring invoices |
 | `ai_assistant` | on/off | Charis AI chat |
 | `bulk_download_print_invoices` | on/off | Bulk invoice download/print |

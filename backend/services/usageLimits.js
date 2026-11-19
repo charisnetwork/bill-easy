@@ -15,6 +15,7 @@ const LABELS = {
   products: 'Item limit',
   purchase_bills: 'Monthly purchase bill limit',
   godowns: 'Godown limit',
+  staff_members: 'Staff limit',
   businesses: 'Business limit',
   report_exports: 'Monthly report download limit',
   ai_messages: 'Monthly AI message limit',
@@ -57,9 +58,15 @@ const requireFeature = (code) => async (req, res, next) => {
   }
 };
 
-const requireRecordLimit = (code) => async (req, res, next) => {
+// unlistedIsUnlimited: for limits inside a module the route already gates (staff in Staff &
+// Attendance). A plan that ticks the module but publishes no limit row means "no limit";
+// a row that is switched off or capped still applies.
+const requireRecordLimit = (code, { unlistedIsUnlimited = false } = {}) => async (req, res, next) => {
   try {
-    const limit = charisOs.limitFor(await charisOs.getSnapshot(req.companyId), code);
+    const snapshot = await charisOs.getSnapshot(req.companyId);
+    const listed = (snapshot?.entitlements || []).some((e) => e.feature_code === code);
+    if (unlistedIsUnlimited && !listed && snapshot?.status === 'active') return next();
+    const limit = charisOs.limitFor(snapshot, code);
     if (limit !== null) {
       const used = (await charisOs.usageFor(req.companyId))[code] || 0;
       if (used >= limit) throw new QuotaError(code, limit, used);

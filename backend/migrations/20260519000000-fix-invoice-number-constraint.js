@@ -43,8 +43,15 @@ module.exports = {
           AND constraint_name = 'invoices_number_company_unique'
           AND constraint_type = 'UNIQUE'
       `);
+      // The model sync may already have created it as a unique index of the same name: that
+      // enforces the same rule, and adding the constraint on top would fail on every start
+      // (stopping every later migration).
+      const [indexes] = await queryInterface.sequelize.query(`
+        SELECT indexname FROM pg_indexes
+        WHERE tablename = 'invoices' AND indexname = 'invoices_number_company_unique'
+      `);
 
-      if (rows.length === 0) {
+      if (rows.length === 0 && indexes.length === 0) {
         console.log('[Migration] Adding compound unique (invoice_number, company_id)...');
         await queryInterface.sequelize.query(`
           ALTER TABLE invoices

@@ -53,6 +53,9 @@ const CreateEWayBillPage   = lazy(() => import('./pages/CreateEWayBillPage'));
 const ExpensesPage         = lazy(() => import('./pages/ExpensesPage'));
 const PaymentsInPage       = lazy(() => import('./pages/PaymentsInPage'));
 const ReportsPage          = lazy(() => import('./pages/ReportsPage'));
+const StaffPage            = lazy(() => import('./pages/staff/StaffPage'));
+const AttendancePage       = lazy(() => import('./pages/staff/AttendancePage'));
+const PayrollPage          = lazy(() => import('./pages/staff/PayrollPage'));
 const SalesReturnPage      = lazy(() => import('./pages/SalesReturnPage'));
 const StockTransferPage    = lazy(() => import('./pages/StockTransferPage'));
 const SubscriptionPage     = lazy(() => import('./pages/SubscriptionPage'));
@@ -162,6 +165,9 @@ function AppRoutes() {
       <Route path="/expenses"      element={<ProtectedRoute><DashboardLayout><ExpensesPage /></DashboardLayout></ProtectedRoute>} />
       <Route path="/payments-in"   element={<ProtectedRoute><DashboardLayout><PaymentsInPage /></DashboardLayout></ProtectedRoute>} />
       <Route path="/reports"       element={<ProtectedRoute><DashboardLayout><ReportsPage /></DashboardLayout></ProtectedRoute>} />
+      <Route path="/staff"         element={<ProtectedRoute><DashboardLayout><StaffPage /></DashboardLayout></ProtectedRoute>} />
+      <Route path="/attendance"    element={<ProtectedRoute><DashboardLayout><AttendancePage /></DashboardLayout></ProtectedRoute>} />
+      <Route path="/payroll"       element={<ProtectedRoute><DashboardLayout><PayrollPage /></DashboardLayout></ProtectedRoute>} />
       <Route path="/sales-return"  element={<ProtectedRoute><DashboardLayout><SalesReturnPage /></DashboardLayout></ProtectedRoute>} />
       <Route path="/stock-transfer" element={<ProtectedRoute><DashboardLayout><StockTransferPage /></DashboardLayout></ProtectedRoute>} />
       <Route path="/subscription"  element={<ProtectedRoute><DashboardLayout><SubscriptionPage /></DashboardLayout></ProtectedRoute>} />

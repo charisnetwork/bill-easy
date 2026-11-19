@@ -449,23 +449,54 @@ const StockLevel = sequelize.define('StockLevel', {
   quantity: { type: DataTypes.DECIMAL(12,2), defaultValue: 0 }
 }, { tableName: 'stocklevels', indexes: [{ unique: true, fields: ['product_id', 'godown_id'] }] });
 
+// Staff records (separate from sign-in users; one may optionally link to a login).
 const Staff = sequelize.define('Staff', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
   company_id: { type: DataTypes.UUID, allowNull: false },
   name: { type: DataTypes.STRING, allowNull: false },
   phone: { type: DataTypes.STRING },
-  role: { type: DataTypes.STRING },
-  salary: { type: DataTypes.DECIMAL(12,2), defaultValue: 0 },
-  is_active: { type: DataTypes.BOOLEAN, defaultValue: true }
+  email: { type: DataTypes.STRING },
+  role: { type: DataTypes.STRING }, // designation
+  department: { type: DataTypes.STRING },
+  joining_date: { type: DataTypes.DATEONLY },
+  salary_type: { type: DataTypes.STRING(10), allowNull: false, defaultValue: 'monthly' }, // monthly | daily | hourly
+  salary: { type: DataTypes.DECIMAL(12,2), defaultValue: 0 }, // per month, day or hour
+  weekly_offs: { type: DataTypes.JSONB, allowNull: false, defaultValue: [0] }, // 0 = Sunday … 6 = Saturday
+  user_id: { type: DataTypes.UUID },
+  notes: { type: DataTypes.TEXT },
+  is_active: { type: DataTypes.BOOLEAN, defaultValue: true },
+  deleted_at: { type: DataTypes.DATE } // removed staff keep their attendance and payments
 }, { tableName: 'staff' });
 
+// One record per staff member per day.
 const StaffAttendance = sequelize.define('StaffAttendance', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+  company_id: { type: DataTypes.UUID },
   staff_id: { type: DataTypes.UUID, allowNull: false },
   date: { type: DataTypes.DATEONLY, defaultValue: DataTypes.NOW },
-  status: { type: DataTypes.ENUM('present', 'absent', 'late', 'half-day'), defaultValue: 'present' },
+  // present | absent | half_day | paid_leave | unpaid_leave | week_off | holiday (late = present)
+  status: { type: DataTypes.STRING(20), allowNull: false, defaultValue: 'present' },
+  check_in: { type: DataTypes.STRING(5) },
+  check_out: { type: DataTypes.STRING(5) },
+  overtime_hours: { type: DataTypes.DECIMAL(5,2), defaultValue: 0 },
+  marked_by: { type: DataTypes.UUID },
   notes: { type: DataTypes.TEXT }
-}, { tableName: 'staffattendance' });
+}, { tableName: 'staffattendance', indexes: [{ unique: true, fields: ['staff_id', 'date'], name: 'staffattendance_staff_date_unique' }] });
+
+// Salary paid and advances given; salary payments are also recorded as an expense.
+const StaffPayment = sequelize.define('StaffPayment', {
+  id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+  company_id: { type: DataTypes.UUID, allowNull: false },
+  staff_id: { type: DataTypes.UUID, allowNull: false },
+  type: { type: DataTypes.STRING(10), allowNull: false }, // salary | advance
+  month: { type: DataTypes.STRING(7), allowNull: false }, // YYYY-MM it belongs to
+  amount: { type: DataTypes.DECIMAL(12,2), allowNull: false },
+  date: { type: DataTypes.DATEONLY, allowNull: false },
+  payment_method: { type: DataTypes.STRING },
+  expense_id: { type: DataTypes.UUID },
+  created_by: { type: DataTypes.UUID },
+  notes: { type: DataTypes.TEXT }
+}, { tableName: 'staff_payments', indexes: [{ fields: ['company_id', 'month'] }, { fields: ['staff_id', 'month'] }] });
 
 const Enquiry = sequelize.define('Enquiry', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
@@ -706,6 +737,8 @@ Staff.belongsTo(Company, { foreignKey: 'company_id' });
 
 Staff.hasMany(StaffAttendance, { foreignKey: 'staff_id' });
 StaffAttendance.belongsTo(Staff, { foreignKey: 'staff_id' });
+Staff.hasMany(StaffPayment, { foreignKey: 'staff_id' });
+StaffPayment.belongsTo(Staff, { foreignKey: 'staff_id' });
 
 /* =========================================
    USERCOMPANY RELATIONSHIPS
@@ -821,6 +854,7 @@ module.exports = {
   Godown,
   Staff,
   StaffAttendance,
+  StaffPayment,
   Quotation,
   QuotationItem,
   QuotationCounter,
