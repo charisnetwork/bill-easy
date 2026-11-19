@@ -377,6 +377,8 @@ const Expense = sequelize.define('Expense',{
   date: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
   category: { type: DataTypes.STRING, allowNull: false },
   amount: { type: DataTypes.DECIMAL(12,2), defaultValue: 0 },
+  // GST on the expense's tax invoice (included in amount); input tax credit if GST registered.
+  gst_amount: { type: DataTypes.DECIMAL(12,2), defaultValue: 0 },
   payment_method: { type: DataTypes.STRING },
   notes: { type: DataTypes.TEXT },
   reference_number: { type: DataTypes.STRING }

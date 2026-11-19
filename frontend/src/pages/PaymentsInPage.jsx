@@ -232,7 +232,7 @@ export const PaymentsInPage = () => {
                   <SelectContent>
                     <SelectItem value="Cash">Cash</SelectItem>
                     <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                    <SelectItem value="UPI/GPay">UPI/GPay</SelectItem>
+                    <SelectItem value="UPI/GPay">UPI</SelectItem>
                     <SelectItem value="Cheque">Cheque</SelectItem>
                     <SelectItem value="Card">Credit/Debit Card</SelectItem>
                   </SelectContent>

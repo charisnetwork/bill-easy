@@ -214,7 +214,7 @@ export const CreateQuotationPage = ({ isEdit = false }) => {
             <CardHeader><CardTitle>Quotation Details</CardTitle></CardHeader>
             <CardContent className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>{industryConfig.labels.customer} *</Label>
+                <Label>{industryConfig.labels.customer || 'Customer'} *</Label>
                 <Select value={formData.customer_id} onValueChange={(v) => setFormData({ ...formData, customer_id: v })}>
                   <SelectTrigger><SelectValue placeholder="Select customer" /></SelectTrigger>
                   <SelectContent>

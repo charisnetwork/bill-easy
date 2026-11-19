@@ -198,7 +198,7 @@ function App() {
             <CharisAssistant />
           </Suspense>
         </BrowserRouter>
-        <Toaster position="top-right" richColors />
+        <Toaster position="top-right" richColors duration={3000} closeButton />
       </AuthProvider>
     </ThemeProvider>
   );

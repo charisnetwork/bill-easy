@@ -409,17 +409,18 @@ const CreatePurchasePage = ({ isEdit = false }) => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="pl-6 w-[40%]">Product</TableHead>
-                    <TableHead className="w-[15%] text-right">Qty</TableHead>
-                    <TableHead className="w-[20%] text-right">Price</TableHead>
-                    <TableHead className="w-[15%] text-right">Total</TableHead>
+                    <TableHead className="pl-6 w-[34%]">Product</TableHead>
+                    <TableHead className="w-[13%] text-right">Qty</TableHead>
+                    <TableHead className="w-[17%] text-right">Price</TableHead>
+                    <TableHead className="w-[12%] text-right">GST%</TableHead>
+                    <TableHead className="w-[14%] text-right">Total</TableHead>
                     <TableHead className="w-[10%]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {formData.items.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-slate-500">
+                      <TableCell colSpan={6} className="text-center py-8 text-slate-500">
                         No items added. Click "Add Row" to start.
                       </TableCell>
                     </TableRow>
@@ -471,6 +472,12 @@ const CreatePurchasePage = ({ isEdit = false }) => {
                         </TableCell>
                         <TableCell>
                           <Input type="number" className="text-right border-none shadow-none" value={item.unit_price} onChange={(e) => updateItem(index, 'unit_price', e.target.value)} />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {/* The supplier's GST on this line: recorded for input tax credit. */}
+                          <select aria-label="GST rate" className="h-9 rounded-md border border-slate-200 bg-white px-2 text-sm" value={String(Number(item.tax_rate) || 0)} onChange={(e) => updateItem(index, 'tax_rate', e.target.value)}>
+                            {['0', '5', '12', '18', '28'].map((rate) => <option key={rate} value={rate}>{rate}%</option>)}
+                          </select>
                         </TableCell>
                         <TableCell className="text-right font-mono text-sm">
                           ₹{item.total.toFixed(2)}

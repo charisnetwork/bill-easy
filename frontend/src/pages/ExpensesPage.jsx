@@ -26,6 +26,7 @@ const ExpenseForm = ({ expense, categories, onSave, onClose }) => {
   const [formData, setFormData] = useState({
     category: expense?.category || '',
     amount: expense?.amount || '',
+    gst_amount: expense?.gst_amount && Number(expense.gst_amount) ? expense.gst_amount : '',
     payment_method: expense?.payment_method || '',
     date: expense?.date ? new Date(expense.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     reference_number: expense?.reference_number || '',
@@ -67,6 +68,11 @@ const ExpenseForm = ({ expense, categories, onSave, onClose }) => {
         <div className="space-y-2">
           <Label>Amount *</Label>
           <Input type="number" step="0.01" min="0" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} required data-testid="expense-amount-input" />
+        </div>
+        <div className="space-y-2">
+          <Label>GST paid (optional)</Label>
+          <Input type="number" step="0.01" min="0" value={formData.gst_amount} onChange={(e) => setFormData({ ...formData, gst_amount: e.target.value })} placeholder="From the bill, if it shows GST" />
+          <p className="text-xs text-slate-500">Included in the amount. Counted as input tax credit if your business is GST registered.</p>
         </div>
         <div className="space-y-2">
           <Label>Date</Label>

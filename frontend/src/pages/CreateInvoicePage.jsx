@@ -40,6 +40,7 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
   const [loading, setLoading] = useState(false);
   // Unregistered businesses issue a Bill of Supply: no GST (the server enforces this too).
   const [chargesGst, setChargesGst] = useState(true);
+  const [customerOpen, setCustomerOpen] = useState(false); // closes once a customer is picked
 
   // Quick-create customer dialog
   const [showNewCustomer, setShowNewCustomer] = useState(false);
@@ -396,7 +397,7 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                       New Customer
                     </button>
                   </div>
-                  <Popover>
+                  <Popover open={customerOpen} onOpenChange={setCustomerOpen}>
                     <PopoverTrigger asChild>
                       <Button variant="outline" role="combobox" className={cn("w-full justify-between font-normal", !formData.customer_id && "text-slate-500")} data-testid="customer-select">
                         {formData.customer_id 
@@ -418,7 +419,7 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                               <CommandItem
                                 key={customer.id}
                                 value={customer.name + " " + (customer.phone || "")}
-                                onSelect={() => setFormData({ ...formData, customer_id: customer.id })}
+                                onSelect={() => { setFormData({ ...formData, customer_id: customer.id }); setCustomerOpen(false); }}
                               >
                                 <div className="flex flex-col">
                                   <span className="font-medium">{customer.name}</span>

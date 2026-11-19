@@ -47,7 +47,8 @@ export const RegisterPage = () => {
     try {
       const { data } = await utilityAPI.getPincode(formData.pincode);
       const postOffice = data?.[0]?.PostOffice?.[0];
-      if (postOffice) setFormData((current) => ({ ...current, city: postOffice.District || current.city, state: postOffice.State || current.state }));
+      // The PIN gives the district; keep a city the person already typed (Mangaluru, not Dakshina Kannada).
+      if (postOffice) setFormData((current) => ({ ...current, city: current.city.trim() || postOffice.District || '', state: postOffice.State || current.state }));
     } catch {
       toast.error('Could not look up this PIN code. You can enter the address manually.');
     }

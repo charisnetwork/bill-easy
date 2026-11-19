@@ -615,7 +615,14 @@ class ReportService {
       }
     }) || 0;
 
-    const netGSTPayable = Number(outputGST) - Number(inputGSTPurchases);
+    const inputGSTExpenses = await Expense.sum('gst_amount', {
+      where: { company_id: companyId, date: { [Op.between]: [start, end] } }
+    }) || 0;
+    // Only a GST-registered business can claim input tax credit (or collect output GST).
+    const gstCompany = await Company.findByPk(companyId, { attributes: ['gst_registered', 'gst_number'] });
+    const gstRegistered = Boolean(gstCompany?.gst_registered || gstCompany?.gst_number);
+    const inputITC = gstRegistered ? Number(inputGSTPurchases) + Number(inputGSTExpenses) : 0;
+    const netGSTPayable = (gstRegistered ? Number(outputGST) : 0) - inputITC;
 
     const cashFlowTrend = [];
     for (let i = 5; i >= 0; i--) {
@@ -668,8 +675,9 @@ class ReportService {
         totalOutstanding: Number(totalOutstanding)
       },
       taxSnapshot: {
-        outputGST: Number(outputGST),
-        inputITC: Number(inputGSTPurchases),
+        gstRegistered,
+        outputGST: gstRegistered ? Number(outputGST) : 0,
+        inputITC,
         netGSTPayable: netGSTPayable > 0 ? Number(netGSTPayable) : 0,
         itcCreditBalance: netGSTPayable < 0 ? Math.abs(Number(netGSTPayable)) : 0
       },

@@ -762,18 +762,19 @@ export const SettingsPage = () => {
       <div className="flex-1 flex flex-col overflow-hidden bg-slate-50">
 
         {/* Header with Section Title + Actions */}
-        <header className="border-b border-slate-200 bg-white flex items-center justify-between px-6 py-3 shrink-0">
-          <div>
+        <header className="border-b border-slate-200 bg-white flex flex-wrap items-center justify-between gap-3 px-6 py-3 shrink-0">
+          <div className="min-w-0">
             <h2 className="text-lg font-bold text-slate-900">{currentSection.title}</h2>
             <p className="text-xs text-slate-500">{currentSection.subtitle}</p>
           </div>
-          <div className="flex items-center gap-2">
+          {/* Narrow windows: the buttons wrap and keep their full labels; Help shrinks to its icon. */}
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <Button className="h-8 bg-[#E66E26] hover:bg-[#d45d1d] text-white text-xs font-semibold" onClick={() => navigate('/settings/business/new')}>
               Create new business
             </Button>
-            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 border-slate-300" onClick={() => setSearchParams({ section: 'help' })}>
+            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 border-slate-300" aria-label="Help & support" title="Help & support" onClick={() => setSearchParams({ section: 'help' })}>
               <MessageCircle className="w-3.5 h-3.5" />
-              Help & support
+              <span className="hidden xl:inline">Help & support</span>
             </Button>
             {/* Sections with their own save (invoice design, godowns, team…) hide the shared buttons. */}
             {currentForm && (<>
