@@ -116,3 +116,14 @@ test('the session summary carries feature switches and limits for the browser', 
   // A suspended plan switches everything off.
   assert.deepEqual(summaryFromSnapshot({ status: 'suspended', entitlements: [{ feature_code: 'godowns', enabled: true, limit_type: 'limited', limit_value: 2 }] }).limits, { godowns: 0 });
 });
+
+test('a new business starts on the 14-day trial; a lapsed one falls back to Free, never the trial', () => {
+  const { startingPlan } = require('../services/charisOsService');
+  const trial = { id: 'trial', price: 0, duration_unit: 'day', duration_value: 14 };
+  const free = { id: 'free', price: 0, duration_unit: 'month', duration_value: 1 };
+  const pro = { id: 'pro', price: 179, duration_unit: 'month', duration_value: 1 };
+  assert.equal(startingPlan([pro, free, trial], 'unassigned').id, 'trial');
+  assert.equal(startingPlan([pro, free, trial], 'expired').id, 'free');
+  assert.equal(startingPlan([pro, trial], 'expired'), null, 'no Free plan: the business must choose a paid one');
+  assert.equal(startingPlan([pro, free], 'unassigned').id, 'free', 'no trial in the catalog: Free as before');
+});

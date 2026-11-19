@@ -61,7 +61,9 @@ const planView = (plan) => ({
 
 const getPlans = handle(async () => {
   const catalog = await charisOs.getCatalog();
-  return { managed_by: MANAGED, checkout_enabled: catalog.checkout_enabled === true, plans: catalog.plans.map(planView), features: catalog.features || [] };
+  // The free trial (a ₹0 plan in days) is given at sign-up, never chosen on the plan page.
+  const choosable = catalog.plans.filter((plan) => !(Number(plan.price) === 0 && plan.duration_unit === 'day'));
+  return { managed_by: MANAGED, checkout_enabled: catalog.checkout_enabled === true, plans: choosable.map(planView), features: catalog.features || [] };
 });
 
 const getCurrentSubscription = handle(async (req) => {

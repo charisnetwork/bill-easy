@@ -292,13 +292,22 @@ async function checkout(companyId, action = '', body) {
  * New customers get the catalog's free plan (a visible ₹0 plan) when OS offers one.
  * OS activates ₹0 plans only for customers without a current term.
  */
+function startingPlan(plans, status) {
+  const zero = plans.filter(p => Number(p.price) === 0);
+  const isTrial = (plan) => plan.duration_unit === 'day';
+  return (status === 'unassigned' ? zero.find(isTrial) : undefined) || zero.find(p => !isTrial(p)) || null;
+}
+
 async function claimFreePlan(companyId, actorId) {
   if (!enabled()) return null;
   const { synced } = await syncCompany(companyId);
   if (!synced) return null;
   const snapshot = await fetchSnapshot(companyId);
   if (snapshot.status !== 'unassigned' && snapshot.status !== 'expired' && snapshot.status !== 'cancelled') return snapshot;
-  const free = (await getCatalog()).plans.find(p => Number(p.price) === 0);
+  // A ₹0 plan measured in days is the free trial: only for a business that never had a plan
+  // (OS also refuses it a second time). Afterwards a lapsed business falls back to the ₹0 plan
+  // that is not a trial (Free), if the catalog has one.
+  const free = startingPlan((await getCatalog()).plans, snapshot.status);
   if (!free) return snapshot;
   try {
     await checkout(companyId, 'orders', { plan_id: free.id, idempotency_key: require('crypto').randomUUID(), actor_id: String(actorId) });
@@ -392,6 +401,7 @@ module.exports = {
   charisOsConfig,
   checkout,
   claimFreePlan,
+  startingPlan,
   clearCache,
   enabled,
   featureAllowed,
