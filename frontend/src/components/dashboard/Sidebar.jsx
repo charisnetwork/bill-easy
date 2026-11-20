@@ -10,7 +10,9 @@ import { cn } from '../../lib/utils';
 import { BusinessSwitcher } from './BusinessSwitcher';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export const Sidebar = ({ open, setOpen }) => {
+// desktopHidden: pages with their own side menu (Settings) hide this one on wide screens;
+// on phones it stays reachable from the Menu button.
+export const Sidebar = ({ open, setOpen, desktopHidden = false }) => {
   const { user, hasFeature, subscription } = useAuth();
   // Lock only once the plan has loaded, so paid menus never flash as locked.
   const locked = (code) => Boolean(subscription) && !hasFeature(code);
@@ -124,6 +126,7 @@ export const Sidebar = ({ open, setOpen }) => {
       <motion.aside 
         className={cn(
           "fixed md:sticky top-0 left-0 z-50 h-screen shrink-0 transition-transform duration-300 md:translate-x-0 w-[280px]",
+          desktopHidden && "md:hidden",
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >

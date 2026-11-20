@@ -82,7 +82,8 @@ export const AuthProvider = ({ children }) => {
       () => {
         clearState();
         window.location.href = '/login';
-      }
+      },
+      () => refreshAccessToken()
     );
   }, [clearState]);
 

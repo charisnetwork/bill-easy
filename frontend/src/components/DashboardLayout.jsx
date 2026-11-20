@@ -17,7 +17,7 @@ import {
 } from './ui/dropdown-menu';
 import { motion } from 'framer-motion';
 
-export const DashboardLayout = ({ children }) => {
+export const DashboardLayout = ({ children, hideSidebar = false }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [cmdkOpen, setCmdkOpen] = useState(false);
   const location = useLocation();
@@ -30,7 +30,7 @@ export const DashboardLayout = ({ children }) => {
       
       <UpgradeDialog />
       
-      <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
+      <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} desktopHidden={hideSidebar} />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden relative w-full min-w-0 print:block print:overflow-visible">

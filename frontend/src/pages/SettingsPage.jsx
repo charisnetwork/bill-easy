@@ -732,14 +732,15 @@ export const SettingsPage = () => {
           </div>
         </div>
 
-        {/* Back to Dashboard */}
+        {/* Back to the main dashboard (the main menu is hidden on this page) */}
         <div className="px-3 pt-3">
           <button
             onClick={() => navigate('/dashboard')}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#4F46E5] text-white text-xs font-semibold rounded-lg hover:bg-[#4338CA] transition-colors"
+            aria-label="Back to dashboard"
+            className="w-full flex items-center gap-2 px-3 py-2 text-[13px] font-semibold text-[#4F46E5] rounded-lg border border-indigo-100 bg-indigo-50 hover:bg-indigo-100 transition-colors"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Back to Dashboard
+            <ArrowLeft className="w-4 h-4" />
+            Dashboard
           </button>
         </div>
 

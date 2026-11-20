@@ -24,7 +24,7 @@ function hoursWorked(record) {
  * payments: { type: 'salary'|'advance', amount } for the month.
  * A day with no record is a week off when it falls on a weekly-off day, otherwise "not marked"
  * (not paid, and shown so the owner can mark it). Unmarked days after `today` (month still
- * running) or before the joining date are not counted at all.
+ * running) are not counted, and nothing before the joining date counts, marked or not.
  */
 function payrollFor(staff, records, payments, month, today = new Date(Date.now() + 330 * 60_000).toISOString().slice(0, 10)) {
   const days = monthDays(month);
@@ -35,7 +35,9 @@ function payrollFor(staff, records, payments, month, today = new Date(Date.now()
   let hours = 0; let overtimeHours = 0; let upcoming = 0;
   for (const date of days) {
     const record = byDate.get(date);
-    if (!record && (date > today || (joined && date < joined))) { upcoming += date > today ? 1 : 0; continue; }
+    // Before joining nothing counts, even a record marked by mistake; later days only when marked.
+    if (joined && date < joined) continue;
+    if (!record && date > today) { upcoming += 1; continue; }
     if (!record) {
       const weekday = new Date(`${date}T00:00:00Z`).getUTCDay();
       counts[offs.has(weekday) ? 'week_off' : 'not_marked'] += 1;

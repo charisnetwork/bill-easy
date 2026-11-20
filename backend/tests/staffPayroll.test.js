@@ -48,3 +48,12 @@ test('a running month pays only days so far; days before joining are not counted
   assert.equal(pay.payableDays, 3);
   assert.equal(pay.gross, 3000);
 });
+
+test('nothing before the joining date is paid, even attendance marked by mistake', () => {
+  const staff = { salary_type: 'hourly', salary: 100, weekly_offs: [], joining_date: '2026-11-10' };
+  const records = [{ date: '2026-11-05', status: 'present' }, { date: '2026-11-10', status: 'present' }];
+  const pay = payrollFor(staff, records, [], '2026-11', '2026-11-10');
+  assert.equal(pay.hours, 8);
+  assert.equal(pay.gross, 800);
+  assert.equal(pay.counts.present, 1);
+});

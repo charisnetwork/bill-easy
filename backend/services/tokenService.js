@@ -189,6 +189,16 @@ const revokeToken = async (tokenHash) => {
 };
 
 /**
+ * Revoke one sign-in session (all its refresh tokens), e.g. on logout.
+ */
+const revokeSession = async (userId, sessionId) => {
+  await RefreshToken.update(
+    { revoked_at: new Date() },
+    { where: { user_id: userId, session_id: sessionId, revoked_at: null } }
+  );
+};
+
+/**
  * Revoke all tokens for a user (mass logout)
  */
 const revokeAllUserTokens = async (userId, exceptSessionId = null) => {
@@ -259,6 +269,7 @@ module.exports = {
   rotateRefreshToken,
   verifyRefreshToken,
   revokeToken,
+  revokeSession,
   revokeAllUserTokens,
   incrementTokenVersion,
   cleanupOldTokens,

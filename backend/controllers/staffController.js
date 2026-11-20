@@ -124,13 +124,14 @@ const getDayAttendance = async (req, res) => {
   if (!can(req, 'attendance_mark') && !can(req, 'staff_view')) return deny(res);
   try {
     const date = req.query.date ? dateValue(req.query.date, 'Date') : today();
-    const staff = await Staff.findAll({ where: { company_id: req.companyId, deleted_at: null, is_active: true }, attributes: ['id', 'name', 'role', 'weekly_offs'], order: [['name', 'ASC']] });
+    // People who joined after this day aren't listed for it.
+    const staff = await Staff.findAll({ where: { company_id: req.companyId, deleted_at: null, is_active: true, [Op.or]: [{ joining_date: null }, { joining_date: { [Op.lte]: date } }] }, attributes: ['id', 'name', 'role', 'weekly_offs', 'salary_type'], order: [['name', 'ASC']] });
     const records = await StaffAttendance.findAll({ where: { company_id: req.companyId, date } });
     const byStaff = new Map(records.map((r) => [r.staff_id, r]));
     const weekday = new Date(`${date}T00:00:00Z`).getUTCDay();
     res.json({
       date, locked: !isAdmin(req) && date < shiftDate(today(), -EDIT_WINDOW_DAYS),
-      staff: staff.map((s) => ({ id: s.id, name: s.name, role: s.role, weeklyOff: (s.weekly_offs || []).includes(weekday), record: byStaff.get(s.id) || null })),
+      staff: staff.map((s) => ({ id: s.id, name: s.name, role: s.role, salary_type: s.salary_type, weeklyOff: (s.weekly_offs || []).includes(weekday), record: byStaff.get(s.id) || null })),
     });
   } catch (error) { fail(res, error, 'Failed to load attendance'); }
 };
@@ -150,14 +151,18 @@ const saveAttendance = async (req, res) => {
     const entries = Array.isArray(req.body.entries) ? req.body.entries : [];
     if (!entries.length || entries.length > 500) throw bad('Send between 1 and 500 attendance entries');
     const ids = [...new Set(entries.map((e) => staffId(e?.staff_id)))];
-    const owned = await Staff.count({ where: { id: { [Op.in]: ids }, company_id: req.companyId, deleted_at: null }, transaction });
-    if (owned !== ids.length) throw bad('One or more staff members were not found', 404);
+    const owned = await Staff.findAll({ where: { id: { [Op.in]: ids }, company_id: req.companyId, deleted_at: null }, attributes: ['id', 'name', 'joining_date'], transaction });
+    if (owned.length !== ids.length) throw bad('One or more staff members were not found', 404);
+    const early = owned.find((s) => s.joining_date && date < String(s.joining_date).slice(0, 10));
+    if (early) throw bad(`${early.name} joined on ${String(early.joining_date).slice(0, 10)}. Attendance can't be marked before the joining date`);
     const rows = entries.map((e) => {
       if (!STATUSES.includes(e.status)) throw bad(`Status must be one of: ${STATUSES.join(', ')}`);
       const overtime = e.overtime_hours === undefined || e.overtime_hours === '' ? 0 : Number(e.overtime_hours);
       if (!Number.isFinite(overtime) || overtime < 0 || overtime > 16) throw bad('Overtime must be between 0 and 16 hours');
       const notes = e.notes === undefined || e.notes === null ? null : String(e.notes).slice(0, 500);
-      return { company_id: req.companyId, staff_id: e.staff_id, date, status: e.status, check_in: time(e.check_in, 'Check-in'), check_out: time(e.check_out, 'Check-out'), overtime_hours: overtime, notes, marked_by: req.user?.id || null };
+      const checkIn = time(e.check_in, 'Check-in'); const checkOut = time(e.check_out, 'Check-out');
+      if (checkIn && checkOut && checkOut <= checkIn) throw bad('Check-out must be later than check-in on the same day');
+      return { company_id: req.companyId, staff_id: e.staff_id, date, status: e.status, check_in: checkIn, check_out: checkOut, overtime_hours: overtime, notes, marked_by: req.user?.id || null };
     });
     await StaffAttendance.bulkCreate(rows, { transaction, updateOnDuplicate: ['status', 'check_in', 'check_out', 'overtime_hours', 'notes', 'marked_by', 'company_id', 'updatedAt'], conflictAttributes: ['staff_id', 'date'] });
     await transaction.commit();

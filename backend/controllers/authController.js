@@ -371,6 +371,10 @@ const logout = async (req, res) => {
       const tokenHash = tokenService.hashToken(refreshToken);
       await tokenService.revokeToken(tokenHash);
     }
+    // End the whole session, so its access token stops working too.
+    if (req.user?.id && req.sessionId) {
+      await tokenService.revokeSession(req.user.id, req.sessionId);
+    }
     
     // Clear cookie
     res.clearCookie(REFRESH_COOKIE_NAME, { path: '/' });

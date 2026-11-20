@@ -171,7 +171,7 @@ function AppRoutes() {
       <Route path="/sales-return"  element={<ProtectedRoute><DashboardLayout><SalesReturnPage /></DashboardLayout></ProtectedRoute>} />
       <Route path="/stock-transfer" element={<ProtectedRoute><DashboardLayout><StockTransferPage /></DashboardLayout></ProtectedRoute>} />
       <Route path="/subscription"  element={<ProtectedRoute><DashboardLayout><SubscriptionPage /></DashboardLayout></ProtectedRoute>} />
-      <Route path="/settings"      element={<ProtectedRoute><DashboardLayout><SettingsPage /></DashboardLayout></ProtectedRoute>} />
+      <Route path="/settings"      element={<ProtectedRoute><DashboardLayout hideSidebar><SettingsPage /></DashboardLayout></ProtectedRoute>} />
       <Route path="/settings/business/new" element={<ProtectedRoute><DashboardLayout><AddBusinessPage /></DashboardLayout></ProtectedRoute>} />
       <Route path="/wattvision"    element={<ProtectedRoute><DashboardLayout><WattVisionPage /></DashboardLayout></ProtectedRoute>} />
       <Route path="/recurring"     element={<ProtectedRoute><DashboardLayout><RecurringSubscriptionsPage /></DashboardLayout></ProtectedRoute>} />

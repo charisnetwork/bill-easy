@@ -12,11 +12,14 @@ const api = axios.create({
 // In-memory token storage reference (set by AuthContext)
 let accessTokenGetter = () => null;
 let logoutHandler = () => {};
+let refreshHandler = null;
+let refreshing = null; // one refresh at a time, shared by requests that expire together
 
-// Called by AuthContext to set up token access
-export const setAuthHandlers = (getToken, logout) => {
+// Called by AuthContext to set up token access and the cookie-based refresh
+export const setAuthHandlers = (getToken, logout, refresh = null) => {
   accessTokenGetter = getToken;
   logoutHandler = logout;
+  refreshHandler = refresh;
 };
 
 // Request interceptor - adds auth token
@@ -40,16 +43,25 @@ api.interceptors.request.use((config) => {
 // Response interceptor - handles errors
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    // Log API errors only in development
-    if (import.meta.env?.DEV) {
-      // API error logged
+  async (error) => {
+    // The 15-minute access token ran out: refresh it from the sign-in cookie once and retry,
+    // so pages (and the assistant) never show "Token expired".
+    const original = error.config;
+    if (error.response?.status === 401 && error.response?.data?.code === 'TOKEN_EXPIRED' && refreshHandler && original && !original._retry) {
+      original._retry = true;
+      try {
+        refreshing = refreshing || refreshHandler().finally(() => { refreshing = null; });
+        await refreshing;
+        original.headers.Authorization = `Bearer ${accessTokenGetter()}`;
+        return api(original);
+      } catch {
+        logoutHandler();
+        return Promise.reject(error);
+      }
     }
-    
-    // Handle 401 errors - AuthContext will handle token refresh
-    // Only redirect if it's not a token_expired error (which AuthContext handles)
-    if (error.response?.status === 401 && 
-        error.response?.data?.code !== 'TOKEN_EXPIRED') {
+
+    // Any other 401 (signed out, session revoked, refresh failed): back to the login page.
+    if (error.response?.status === 401) {
       logoutHandler();
     }
     

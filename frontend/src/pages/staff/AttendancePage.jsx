@@ -33,6 +33,8 @@ export default function AttendancePage() {
   const save = async () => {
     const entries = Object.entries(rows).filter(([, row]) => row.status).map(([staff_id, row]) => ({ staff_id, ...row, overtime_hours: row.overtime_hours === '' ? 0 : Number(row.overtime_hours) }));
     if (!entries.length) return toast.error('Choose a status for at least one person');
+    const badTimes = day.staff.find((s) => rows[s.id]?.check_in && rows[s.id]?.check_out && rows[s.id].check_out <= rows[s.id].check_in);
+    if (badTimes) return toast.error(`${badTimes.name}: check-out must be later than check-in`);
     setSaving(true);
     try { toast.success((await staffApi.saveDay(date, entries)).data.message); load(); }
     catch (error) { toast.error(errorText(error, 'Could not save attendance')); }
@@ -46,7 +48,7 @@ export default function AttendancePage() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Attendance</h1>
-          <p className="text-sm text-slate-500">Mark each person for the day. Weekly offs are filled in for you.</p>
+          <p className="text-sm text-slate-500">Mark each person for the day. Weekly offs are filled in for you. For hourly staff, In and Out times set the hours paid; without them a present day counts as 8 hours and a half day as 4.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Input type="date" value={date} max={todayIst()} onChange={(e) => setDate(e.target.value)} className="w-44" />
@@ -72,7 +74,7 @@ export default function AttendancePage() {
                     </select>
                   </td>
                   <td className="p-3"><Input type="time" disabled={readOnly} className="w-28" value={row.check_in || ''} onChange={(e) => set(s.id, 'check_in', e.target.value)} /></td>
-                  <td className="p-3"><Input type="time" disabled={readOnly} className="w-28" value={row.check_out || ''} onChange={(e) => set(s.id, 'check_out', e.target.value)} /></td>
+                  <td className="p-3"><Input type="time" disabled={readOnly} min={row.check_in || undefined} aria-invalid={Boolean(row.check_in && row.check_out && row.check_out <= row.check_in)} className={`w-28 ${row.check_in && row.check_out && row.check_out <= row.check_in ? 'border-red-400' : ''}`} value={row.check_out || ''} onChange={(e) => set(s.id, 'check_out', e.target.value)} /></td>
                   <td className="p-3"><Input type="number" min="0" max="16" step="0.5" disabled={readOnly} className="w-24" value={row.overtime_hours} onChange={(e) => set(s.id, 'overtime_hours', e.target.value)} /></td>
                   <td className="p-3"><Input disabled={readOnly} maxLength={500} className="min-w-[10rem]" value={row.notes || ''} onChange={(e) => set(s.id, 'notes', e.target.value)} /></td>
                 </tr>); })}

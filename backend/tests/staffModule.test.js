@@ -86,6 +86,9 @@ test('staff & attendance: plan, permissions, one record a day, tenant isolation,
     const day = (await call('GET', `/attendance?date=${today}`)).body;
     assert.equal(day.staff.find((s) => s.id === asha.id).record.status, 'present');
     assert.equal((await call('PUT', '/attendance', { date: today, entries: [{ staff_id: asha.id, status: 'maybe' }] })).status, 400);
+    const times = await call('PUT', '/attendance', { date: today, entries: [{ staff_id: asha.id, status: 'present', check_in: '18:00', check_out: '09:00' }] });
+    assert.equal(times.status, 400);
+    assert.match(times.body.error, /later than check-in/);
   });
 
   await t.test("another business's staff cannot be marked, edited or paid", async () => {
@@ -114,6 +117,19 @@ test('staff & attendance: plan, permissions, one record a day, tenant isolation,
     const csv = await call('GET', `/payroll/export?month=${month}`);
     assert.equal(csv.status, 200);
     assert.match(csv.body, /Asha/);
+  });
+
+  await t.test('attendance before the joining date is refused, and the day list leaves them out', async () => {
+    actor = owner; entitlements = [grant('staff_attendance_payroll'), grant('staff_members', 10)];
+    const late = (await call('POST', '/', { name: 'Late Joiner', salary_type: 'hourly', salary: 100, joining_date: today })).body;
+    assert.ok(late.id, JSON.stringify(late));
+    const before = new Date(Date.parse(`${today}T00:00:00Z`) - 86400_000).toISOString().slice(0, 10);
+    const refused = await call('PUT', '/attendance', { date: before, entries: [{ staff_id: late.id, status: 'present' }] });
+    assert.equal(refused.status, 400);
+    assert.match(refused.body.error, /joining date/);
+    assert.ok(!(await call('GET', `/attendance?date=${before}`)).body.staff.some((s) => s.id === late.id));
+    assert.ok((await call('GET', `/attendance?date=${today}`)).body.staff.some((s) => s.id === late.id));
+    assert.equal((await call('DELETE', `/${late.id}`)).status, 200);
   });
 
   await t.test('removing a member keeps their history', async () => {

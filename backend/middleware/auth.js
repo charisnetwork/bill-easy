@@ -95,26 +95,24 @@ const authenticateToken = async (req, res, next) => {
       });
     }
 
-    // 5. Optional: Verify session is still valid (check if refresh token exists and not revoked)
-    // This adds extra security but adds a DB query to every request
-    // Uncomment if you want strict session validation
-    /*
-    const sessionValid = await RefreshToken.findOne({
+    // 5. The session must still be signed in: logout revokes it, and the access token stops
+    //    working at once instead of at its 15-minute expiry. Tokens without a session id
+    //    (none are issued now) are refused.
+    const sessionValid = decoded.sid && await RefreshToken.findOne({
       where: {
         session_id: decoded.sid,
         user_id: decoded.sub,
         revoked_at: null,
         expires_at: { [require('sequelize').Op.gt]: new Date() }
-      }
+      },
+      attributes: ['id']
     });
-    
     if (!sessionValid) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         error: 'Session expired or revoked',
         code: 'SESSION_INVALID'
       });
     }
-    */
 
     // 6. Charis OS operator restriction blocks the whole account.
     if (await charisOs.isRestricted(decoded.tid)) {
