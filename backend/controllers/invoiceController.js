@@ -173,11 +173,19 @@ const createInvoice = async (req, res) => {
       // If still no godown_id, it will be null (optional)
     }
 
-    // Stock Validation (soft check — warns but doesn't block)
+    // Stock Validation (soft check — warns but doesn't block). One query for all products and
+    // one for their godown stock, not two per line.
     const stockWarnings = [];
+    const productIds = [...new Set(items.map((item) => item.product_id))];
+    const [products, godownStock] = await Promise.all([
+      Product.findAll({ where: { id: productIds }, transaction }),
+      godown_id ? StockLevel.findAll({ where: { product_id: productIds, godown_id }, transaction }) : [],
+    ]);
+    const productById = new Map(products.map((p) => [p.id, p]));
+    const stockByProduct = new Map(godownStock.map((s) => [s.product_id, s]));
     for (const item of items) {
       const qty = parseFloat(item.quantity) || 0;
-      const product = await Product.findByPk(item.product_id, { transaction });
+      const product = productById.get(item.product_id);
       
       if (!product) {
         throw new Error(`Product with ID ${item.product_id} not found`);
@@ -190,15 +198,10 @@ const createInvoice = async (req, res) => {
       }
 
       // Godown stock check — only block if godown stock is explicitly tracked and positive
-      if (godown_id) {
-        const stock = await StockLevel.findOne({
-          where: { product_id: item.product_id, godown_id },
-          transaction
-        });
-        if (stock && parseFloat(stock.quantity) > 0 && parseFloat(stock.quantity) < qty) {
-          stockWarnings.push(`Low godown stock: ${product.name} (Godown available: ${stock.quantity})`);
-          console.warn(`[GODOWN STOCK WARNING] ${product.name}: godown stock ${stock.quantity}, requested ${qty}`);
-        }
+      const stock = stockByProduct.get(item.product_id);
+      if (stock && parseFloat(stock.quantity) > 0 && parseFloat(stock.quantity) < qty) {
+        stockWarnings.push(`Low godown stock: ${product.name} (Godown available: ${stock.quantity})`);
+        console.warn(`[GODOWN STOCK WARNING] ${product.name}: godown stock ${stock.quantity}, requested ${qty}`);
       }
     }
 

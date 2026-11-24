@@ -18,6 +18,9 @@ class CharisOsError extends Error {
 }
 
 const SNAPSHOT_TTL_MS = 60 * 1000;
+// After the TTL a snapshot is still served (while one background request refreshes it) for this
+// long, so a request never waits on OS just because the cache aged. Never past the term's end.
+const SNAPSHOT_STALE_MS = 10 * 60 * 1000;
 const TENANT_TTL_MS = 5 * 60 * 1000;
 const STATUSES = ['active', 'pending', 'suspended', 'cancelled', 'expired', 'unassigned'];
 
@@ -108,11 +111,18 @@ function parseSnapshot(data, appId, tenantId) {
 }
 
 const snapshotCache = new Map();
+const inFlight = new Map();
 const tenantCache = new Map();
 
+// Bumped by clearCache: a request that was already under way (from before a plan change) must
+// neither be joined nor cached afterwards.
+let cacheGeneration = 0;
+
 function clearCache(tenantId) {
-  if (!tenantId) { snapshotCache.clear(); tenantCache.clear(); return; }
+  cacheGeneration += 1;
+  if (!tenantId) { snapshotCache.clear(); tenantCache.clear(); inFlight.clear(); return; }
   snapshotCache.delete(tenantId);
+  inFlight.delete(tenantId);
 }
 
 /** The OS customer for a business: the earliest business owned by the same owner. */
@@ -135,16 +145,34 @@ async function billingTenantId(companyId) {
   return tenantId;
 }
 
+/** One OS request per tenant at a time: a page firing six calls waits on a single fetch. */
+function loadSnapshot(tenantId, appId) {
+  if (inFlight.has(tenantId)) return inFlight.get(tenantId);
+  const generation = cacheGeneration;
+  const request = (async () => {
+    const snapshot = parseSnapshot(await osRequest(`tenants/${encodeURIComponent(tenantId)}/subscription`), appId, tenantId);
+    if (generation !== cacheGeneration) return snapshot;
+    if (snapshotCache.size >= 2000) snapshotCache.clear();
+    const endsAt = snapshot.status === 'active' && snapshot.ends_at ? Date.parse(snapshot.ends_at) : Infinity;
+    const now = Date.now();
+    snapshotCache.set(tenantId, { snapshot, until: Math.min(now + SNAPSHOT_TTL_MS, endsAt), staleUntil: Math.min(now + SNAPSHOT_STALE_MS, endsAt) });
+    return snapshot;
+  })().finally(() => { if (inFlight.get(tenantId) === request) inFlight.delete(tenantId); });
+  inFlight.set(tenantId, request);
+  return request;
+}
+
 async function fetchSnapshot(companyId) {
   const config = charisOsConfig();
   const tenantId = await billingTenantId(companyId);
   const entry = snapshotCache.get(tenantId);
-  if (entry && entry.until > Date.now()) return entry.snapshot;
-  const snapshot = parseSnapshot(await osRequest(`tenants/${encodeURIComponent(tenantId)}/subscription`), config.appId, tenantId);
-  if (snapshotCache.size >= 2000) snapshotCache.clear();
-  const endsAt = snapshot.status === 'active' && snapshot.ends_at ? Date.parse(snapshot.ends_at) : Infinity;
-  snapshotCache.set(tenantId, { snapshot, until: Math.min(Date.now() + SNAPSHOT_TTL_MS, endsAt) });
-  return snapshot;
+  const now = Date.now();
+  if (entry && entry.until > now) return entry.snapshot;
+  if (entry && entry.staleUntil > now) {
+    loadSnapshot(tenantId, config.appId).catch(() => { /* keep serving the last snapshot */ });
+    return entry.snapshot;
+  }
+  return loadSnapshot(tenantId, config.appId);
 }
 
 const NO_TERM = new Set(['unassigned', 'expired', 'cancelled']);
