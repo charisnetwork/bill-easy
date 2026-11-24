@@ -89,7 +89,6 @@ import {
   QrCode,
   Type,
   Bell,
-  Gift,
   HelpCircle,
   Info,
   ArrowLeft,
@@ -669,7 +668,6 @@ export const SettingsPage = () => {
     { id: 'payments', label: 'Payment & Bank', icon: CreditCard },
     { id: 'reminders', label: 'Reminders', icon: Bell },
     { id: 'send-to-ca', label: 'CA Portal', icon: Mail },
-    { id: 'refer', label: 'Refer & Earn', icon: Gift },
     { id: 'help', label: 'Help And Support', icon: HelpCircle },
   ];
 
@@ -685,7 +683,6 @@ export const SettingsPage = () => {
     'team': { title: 'Manage Users', subtitle: 'Add and manage team members' },
     'reminders': { title: 'Reminders', subtitle: 'Set up automated reminders' },
     'send-to-ca': { title: 'CA Portal', subtitle: 'Directly send GSTR-1 Excel reports to your CA' },
-    'refer': { title: 'Refer & Earn', subtitle: 'Share Bill Easy and earn rewards' },
     'help': { title: 'Help And Support', subtitle: 'Get help with Bill Easy' },
   };
 
@@ -1179,20 +1176,6 @@ export const SettingsPage = () => {
                   <Bell className="w-12 h-12 text-slate-300 mx-auto" />
                   <h4 className="text-lg font-bold text-slate-700">Coming Soon</h4>
                   <p className="text-sm text-slate-500 max-w-md mx-auto">Automated payment reminders, overdue notifications, and follow-up scheduling will be available in a future update.</p>
-                </div>
-              </div>
-            )}
-
-            {activeSection === 'refer' && (
-              <div className="space-y-8">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3"><Gift className="w-6 h-6 text-[#E66E26]" /><h3 className="text-xl font-bold">Refer & Earn</h3></div>
-                  <p className="text-sm text-slate-500">Share Bill Easy with other businesses and earn rewards.</p>
-                </div>
-                <div className="p-8 bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-200 text-center space-y-3">
-                  <Gift className="w-12 h-12 text-orange-400 mx-auto" />
-                  <h4 className="text-lg font-bold text-slate-700">Referral Program</h4>
-                  <p className="text-sm text-slate-500 max-w-md mx-auto">Invite your business contacts to Bill Easy. When they subscribe, you both earn rewards! Coming soon.</p>
                 </div>
               </div>
             )}

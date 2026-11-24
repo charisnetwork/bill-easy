@@ -54,12 +54,17 @@ export const getErrorMessage = (error, defaultMessage = 'An error occurred') => 
     return 'Could not reach Bill Easy. Check your internet connection and try again.';
   }
 
-  if (error?.response?.data) {
-    const data = error.response.data;
+  const status = error?.response?.status;
+  const data = error?.response?.data;
+  if (data && typeof data === 'object') {
     if (typeof data.error === 'string') return data.error;
     if (data.message && typeof data.message === 'string') return data.message;
-    return defaultMessage;
   }
+  // A 502/503/504 page from the host (no JSON body) means the server is restarting or busy.
+  if (status >= 502 && status <= 504) {
+    return 'Bill Easy is busy right now. Please wait a moment and try again.';
+  }
+  if (data) return defaultMessage;
 
   return error?.message || defaultMessage;
 };

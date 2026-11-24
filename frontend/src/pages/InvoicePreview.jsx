@@ -36,7 +36,7 @@ import {
   Layout
 } from "lucide-react";
 import { format } from "date-fns";
-import { cn } from "../lib/utils";
+import { cn, paymentMethodLabel } from "../lib/utils";
 import { toast } from "sonner";
 import { InvoiceDocument } from "../components/invoice/InvoiceDocument";
 import { normalizeInvoiceSettings, templateById } from "../lib/invoice/invoiceCore";
@@ -382,7 +382,7 @@ const InvoicePreview = () => {
                             <span className="text-[10px] font-black text-slate-300 uppercase">{format(new Date(pmt.payment_date), 'dd MMM yyyy')}</span>
                          </div>
                          <div className="flex justify-between items-center">
-                            <span className="text-[9px] font-black uppercase bg-slate-100 px-2 py-1 rounded tracking-widest text-slate-500">{pmt.payment_method}</span>
+                            <span className="text-[9px] font-black uppercase bg-slate-100 px-2 py-1 rounded tracking-widest text-slate-500">{paymentMethodLabel(pmt.payment_method)}</span>
                             {pmt.reference_number && <span className="text-[9px] text-slate-400 font-mono tracking-tighter">#{pmt.reference_number}</span>}
                          </div>
                       </div>

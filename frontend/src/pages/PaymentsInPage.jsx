@@ -18,6 +18,7 @@ import { Badge } from '../components/ui/badge';
 import { Plus, Search, Trash2, IndianRupee, Wallet, Calendar, User, FileText, Loader2, RefreshCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { paymentMethodLabel } from '../lib/utils';
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-IN', {
@@ -314,7 +315,7 @@ export const PaymentsInPage = () => {
                     </TableCell>
                     <TableCell>
                       <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                        {p.payment_method}
+                        {paymentMethodLabel(p.payment_method)}
                       </span>
                     </TableCell>
                     <TableCell className="text-right font-black text-emerald-600">

@@ -5,12 +5,11 @@ import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
-import { useToast } from '../hooks/use-toast';
+import { toast } from 'sonner';
 import { API_BASE_URL } from '../config/api';
 import { COMPANY } from '../config/company';
 
 const ContactPage = () => {
-  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -34,20 +33,13 @@ const ContactPage = () => {
       });
 
       if (response.ok) {
-        toast({
-          title: "Enquiry Sent!",
-          description: "Our team will get back to you within 24 hours.",
-        });
+        toast.success("Enquiry sent! Our team will get back to you within 24 hours.");
         e.target.reset();
       } else {
         throw new Error('Failed to send enquiry');
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Something went wrong. Please try again later.",
-      });
+      toast.error("Something went wrong. Please try again later.");
     } finally {
       setIsSubmitting(false);
     }
