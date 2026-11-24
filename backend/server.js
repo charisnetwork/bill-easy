@@ -594,8 +594,35 @@ const startServer = async () => {
     }
 
     // Only use alter: true in development; in production, use migrations
-    const syncOptions = process.env.NODE_ENV === 'production' ? {} : { alter: true };
-    await sequelize.sync(syncOptions);
+    // users <-> companies reference each other, and for such a cycle sequelize.sync() alters every
+    // table on every start whatever the options: each start re-added every unique constraint
+    // (users_email_key1 … key56) and rewrote every column. In production only tables that do not
+    // exist yet are created.
+    if (process.env.NODE_ENV !== 'production') {
+      await sequelize.sync({ alter: true });
+    } else {
+      const tableName = (t) => (typeof t === 'string' ? t : t.tableName);
+      const existing = new Set((await queryInterface.showAllTables()).map(tableName));
+      const all = Object.values(sequelize.models);
+      const missing = all.filter((m) => !existing.has(tableName(m.getTableName())));
+      if (missing.length === all.length) {
+        await sequelize.sync(); // empty database: the one full build
+        // The list indexes migration ran before these tables existed; it is safe to run again.
+        await require('./migrations/20261124000000-list-indexes-and-duplicate-keys').up(queryInterface);
+      } else {
+        // A new table can reference another new one: whatever fails is retried after the rest.
+        let pending = missing;
+        let lastError = null;
+        for (let pass = 0; pending.length && pass < 3; pass++) {
+          const failed = [];
+          for (const model of pending) {
+            try { await model.sync(); } catch (error) { failed.push(model); lastError = error; }
+          }
+          pending = failed;
+        }
+        if (pending.length) throw lastError;
+      }
+    }
     // Database synchronized
 
     // Ensure data integrity
