@@ -27,7 +27,8 @@ function phone(value) {
   if (value === undefined) return undefined;
   const text = String(value ?? '').trim();
   if (!text) return null;
-  if (!/^[+0-9 ()-]{6,20}$/.test(text)) throw invalid('Phone number must contain only digits (and + for international numbers).');
+  if (!/^[+0-9 ()-]+$/.test(text)) throw invalid('Phone number must contain only digits (and + for international numbers).');
+  if (text.length > 20) throw invalid('Phone number is too long.');
   const digits = text.replace(/[^0-9]/g, '');
   if (text.startsWith('+') && !text.startsWith('+91')) {
     if (digits.length < 7 || digits.length > 15) throw invalid('International phone numbers need 7–15 digits after the +.');

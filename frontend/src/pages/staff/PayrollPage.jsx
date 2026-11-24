@@ -67,7 +67,7 @@ export default function PayrollPage() {
               : !data.rows.length ? <tr><td colSpan={9} className="p-6 text-center text-slate-500">No staff this month.</td></tr>
               : data.rows.map((r) => (
                 <tr key={r.staff.id} className="border-t">
-                  <td className="p-3 font-medium">{r.staff.name}<span className="block text-xs text-slate-400">{rupees(r.staff.salary)} {SALARY_UNIT[r.staff.salary_type]}</span></td>
+                  <td className="p-3 font-medium min-w-[8rem]">{r.staff.name}<span className="block text-xs text-slate-400">{rupees(r.staff.salary)} {SALARY_UNIT[r.staff.salary_type]}</span></td>
                   <td className="p-3 text-right">{r.staff.salary_type === 'hourly' ? `${r.hours} h` : r.payableDays}</td>
                   <td className={`p-3 text-right ${r.counts.not_marked ? 'text-amber-700 font-semibold' : 'text-slate-400'}`}>{r.counts.not_marked}</td>
                   <td className="p-3 text-right font-mono">{rupees(r.gross)}</td>

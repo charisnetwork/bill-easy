@@ -66,16 +66,16 @@ export default function AttendancePage() {
               : !day.staff.length ? <tr><td colSpan={6} className="p-6 text-center text-slate-500">No active staff. Add them on the Staff page.</td></tr>
               : day.staff.map((s) => { const row = rows[s.id] || {}; return (
                 <tr key={s.id} className="border-t">
-                  <td className="p-3 font-medium">{s.name}<span className="block text-xs text-slate-400">{s.role}</span></td>
+                  <td className="p-3 font-medium min-w-[8rem]">{s.name}<span className="block text-xs text-slate-400">{s.role}</span></td>
                   <td className="p-3">
-                    <select aria-label={`Status for ${s.name}`} disabled={readOnly} className={`h-9 rounded-md border px-2 text-sm ${row.status ? STATUS_TONE[row.status] : 'bg-white'}`} value={row.status || ''} onChange={(e) => set(s.id, 'status', e.target.value)}>
+                    <select aria-label={`Status for ${s.name}`} disabled={readOnly} className={`h-9 min-w-[7.5rem] rounded-md border px-2 text-sm ${row.status ? STATUS_TONE[row.status] : 'bg-white'}`} value={row.status || ''} onChange={(e) => set(s.id, 'status', e.target.value)}>
                       <option value="">Not marked</option>
                       {Object.entries(STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                     </select>
                   </td>
                   <td className="p-3"><Input type="time" disabled={readOnly} className="w-28" value={row.check_in || ''} onChange={(e) => set(s.id, 'check_in', e.target.value)} /></td>
                   <td className="p-3"><Input type="time" disabled={readOnly} min={row.check_in || undefined} aria-invalid={Boolean(row.check_in && row.check_out && row.check_out <= row.check_in)} className={`w-28 ${row.check_in && row.check_out && row.check_out <= row.check_in ? 'border-red-400' : ''}`} value={row.check_out || ''} onChange={(e) => set(s.id, 'check_out', e.target.value)} /></td>
-                  <td className="p-3"><Input type="number" min="0" max="16" step="0.5" disabled={readOnly} className="w-24" value={row.overtime_hours} onChange={(e) => set(s.id, 'overtime_hours', e.target.value)} /></td>
+                  <td className="p-3"><Input type="number" min="0" max="16" step="0.5" disabled={readOnly} className="w-20" value={row.overtime_hours} onChange={(e) => set(s.id, 'overtime_hours', e.target.value)} /></td>
                   <td className="p-3"><Input disabled={readOnly} maxLength={500} className="min-w-[10rem]" value={row.notes || ''} onChange={(e) => set(s.id, 'notes', e.target.value)} /></td>
                 </tr>); })}
           </tbody>

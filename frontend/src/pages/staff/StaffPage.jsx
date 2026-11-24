@@ -11,7 +11,7 @@ import { canStaff, staffApi, errorText, rupees, SALARY_UNIT, WEEKDAYS } from './
 
 const EMPTY = { name: '', phone: '', email: '', role: '', department: '', joining_date: '', salary_type: 'monthly', salary: '', weekly_offs: [0], notes: '', is_active: true };
 
-/** Staff records: separate from app logins (Settings → Team members). */
+/** Staff records: separate from app logins (Settings → Manage Users). */
 export default function StaffPage() {
   const { user } = useAuth();
   const admin = ['owner', 'admin'].includes(user?.role);
@@ -33,7 +33,7 @@ export default function StaffPage() {
 
   const open = (row) => {
     setEditing(row || {});
-    setForm(row ? { ...EMPTY, ...row, salary: row.salary ?? '', joining_date: row.joining_date || '', phone: row.phone || '', email: row.email || '', role: row.role || '', department: row.department || '', notes: row.notes || '' } : EMPTY);
+    setForm(row ? { ...EMPTY, ...row, salary: row.salary ?? '', joining_date: row.joining_date || '', phone: row.phone || '', email: row.email || '', role: row.role || '', department: row.department || '', notes: row.notes || '' } : { ...EMPTY, joining_date: new Date().toLocaleDateString('en-CA') }); // new staff: joined today unless changed
   };
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }));
   const toggleOff = (day) => set('weekly_offs', form.weekly_offs.includes(day) ? form.weekly_offs.filter((d) => d !== day) : [...form.weekly_offs, day]);
@@ -62,7 +62,7 @@ export default function StaffPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Staff</h1>
-          <p className="text-sm text-slate-500">Your team's records, salary and weekly offs. App logins are in Settings → Team members.</p>
+          <p className="text-sm text-slate-500">Your team's records, salary and weekly offs. App logins are in Settings → Manage Users.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" asChild><Link to="/attendance"><CalendarCheck className="w-4 h-4 mr-2" />Attendance</Link></Button>
