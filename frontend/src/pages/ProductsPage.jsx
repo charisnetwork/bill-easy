@@ -19,6 +19,7 @@ import { Checkbox } from '../components/ui/checkbox';
 import { Plus, Search, Edit, Trash2, Package, AlertTriangle, Filter, FileUp, Loader2, X, Hash } from 'lucide-react';
 import { toast } from 'sonner';
 import { getErrorMessage } from '../config/api';
+import { gstRateOptions, gstRateValue } from '../lib/gstRates';
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-IN', {
@@ -514,18 +515,14 @@ const ProductForm = ({ product, categories, onSave, fetchCategories, onClose }) 
         <div className="form-field">
           <Label className="form-label">GST Rate (%)</Label>
           <Select
-            value={String(formData.gst_rate)}
+            value={gstRateValue(formData.gst_rate)}
             onValueChange={(value) => setFormData({ ...formData, gst_rate: value })}
           >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="0">0%</SelectItem>
-              <SelectItem value="5">5%</SelectItem>
-              <SelectItem value="12">12%</SelectItem>
-              <SelectItem value="18">18%</SelectItem>
-              <SelectItem value="28">28%</SelectItem>
+              {gstRateOptions(product?.gst_rate ?? formData.gst_rate).map((rate) => <SelectItem key={rate} value={rate}>{rate}%</SelectItem>)}
             </SelectContent>
           </Select>
         </div>

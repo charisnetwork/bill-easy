@@ -25,6 +25,7 @@ import { Plus, Trash2, Camera, FileText, Upload, Save, X, Loader2, ArrowLeft, Ch
 import { cn } from '../lib/utils';
 import { toast } from 'sonner';
 import { getErrorMessage } from '../config/api';
+import { gstRateOptions, gstRateValue } from '../lib/gstRates';
 
 const CreatePurchasePage = ({ isEdit = false }) => {
   const navigate = useNavigate();
@@ -475,8 +476,8 @@ const CreatePurchasePage = ({ isEdit = false }) => {
                         </TableCell>
                         <TableCell className="text-right">
                           {/* The supplier's GST on this line: recorded for input tax credit. */}
-                          <select aria-label="GST rate" className="h-9 rounded-md border border-slate-200 bg-white px-2 text-sm" value={String(Number(item.tax_rate) || 0)} onChange={(e) => updateItem(index, 'tax_rate', e.target.value)}>
-                            {['0', '5', '12', '18', '28'].map((rate) => <option key={rate} value={rate}>{rate}%</option>)}
+                          <select aria-label="GST rate" className="h-9 rounded-md border border-slate-200 bg-white px-2 text-sm" value={gstRateValue(item.tax_rate)} onChange={(e) => updateItem(index, 'tax_rate', e.target.value)}>
+                            {gstRateOptions(item.tax_rate).map((rate) => <option key={rate} value={rate}>{rate}%</option>)}
                           </select>
                         </TableCell>
                         <TableCell className="text-right font-mono text-sm">

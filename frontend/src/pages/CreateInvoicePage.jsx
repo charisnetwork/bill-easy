@@ -24,6 +24,7 @@ import {
 import { ArrowLeft, Plus, Trash2, Save, Wallet, UserPlus, Loader2, Search, Check } from 'lucide-react';
 import { Switch } from '../components/ui/switch';
 import { toast } from 'sonner';
+import { gstRateOptions, gstRateValue } from '../lib/gstRates';
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-IN', {
@@ -41,6 +42,7 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
   // Unregistered businesses issue a Bill of Supply: no GST (the server enforces this too).
   const [chargesGst, setChargesGst] = useState(true);
   const [customerOpen, setCustomerOpen] = useState(false); // closes once a customer is picked
+  const [itemOpen, setItemOpen] = useState(null); // index of the line whose item picker is open
 
   // Quick-create customer dialog
   const [showNewCustomer, setShowNewCustomer] = useState(false);
@@ -590,7 +592,8 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
               Add Item
             </Button>
           </CardHeader>
-          <CardContent>
+          {/* Less side padding below xl: at 980 px every item column (Total included) stays in view. */}
+          <CardContent className="px-3 xl:px-6">
             {formData.items.length === 0 ? (
               <div className="text-center py-8 text-slate-500">
                 <p>No items added yet</p>
@@ -607,13 +610,13 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-1/3">{industryConfig.labels.itemName}</TableHead>
+                      <TableHead className="min-w-[9rem]">{industryConfig.labels.itemName}</TableHead>
                       {industryConfig.fields.showQty && <TableHead>{industryConfig.labels.qty}</TableHead>}
                       <TableHead>{industryConfig.labels.price}</TableHead>
                       {chargesGst && <TableHead>GST%</TableHead>}
                       {industryConfig.fields.showDiscount && <TableHead>Discount</TableHead>}
                       <TableHead className="text-right">Total</TableHead>
-                      <TableHead className="w-12"></TableHead>
+                      <TableHead className="w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -621,19 +624,21 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                       <TableRow key={index}>
                         <TableCell>
                           <div className="space-y-2">
-                            <Popover>
+                            <Popover open={itemOpen === index} onOpenChange={(open) => setItemOpen(open ? index : null)}>
                               <PopoverTrigger asChild>
                                   <Button 
                                     variant="outline" 
                                     role="combobox" 
                                     className={cn("w-full justify-between font-normal", !item.product_id && "text-slate-500")}
                                   >
+                                    <span className="truncate max-w-[7rem] lg:max-w-[10rem] xl:max-w-[16rem]">
                                     {item.product_id 
                                       ? (() => {
                                           const p = products.find(p => p.id === item.product_id);
                                           return p ? `${p.name} (${formatCurrency(p.sale_price)})` : 'Select item';
                                         })()
                                       : `Select ${industryConfig.labels.itemName.toLowerCase()}`}
+                                    </span>
                                     <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                   </Button>
                               </PopoverTrigger>
@@ -647,7 +652,7 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                                         <CommandItem
                                           key={product.id}
                                           value={product.name + " " + (product.sku || "") + " " + (product.barcode || "")}
-                                          onSelect={() => updateItem(index, 'product_id', product.id)}
+                                          onSelect={() => { updateItem(index, 'product_id', product.id); setItemOpen(null); }}
                                         >
                                           <div className="flex flex-col">
                                             <span className="font-medium">{product.name}</span>
@@ -696,7 +701,7 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                                   addItem();
                                 }
                               }}
-                              className="w-24 min-w-[6rem]"
+                              className="w-[4.5rem] min-w-[4.5rem] px-2"
                               data-testid={`item-qty-${index}`}
                             />
                           </TableCell>
@@ -716,25 +721,21 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                                 }
                               }
                             }}
-                            className="w-32 min-w-[8rem]"
+                            className="w-28 min-w-[7rem] px-2"
                             data-testid={`item-price-${index}`}
                           />
                         </TableCell>
                         {chargesGst && (
                         <TableCell>
                           <Select
-                            value={String(Number(item.tax_rate))}
+                            value={gstRateValue(item.tax_rate)}
                             onValueChange={(value) => updateItem(index, 'tax_rate', value)}
                           >
-                            <SelectTrigger className="w-20">
+                            <SelectTrigger className="w-[4.5rem] px-2">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="0">0%</SelectItem>
-                              <SelectItem value="5">5%</SelectItem>
-                              <SelectItem value="12">12%</SelectItem>
-                              <SelectItem value="18">18%</SelectItem>
-                              <SelectItem value="28">28%</SelectItem>
+                              {gstRateOptions(item.tax_rate).map((rate) => <SelectItem key={rate} value={rate}>{rate}%</SelectItem>)}
                             </SelectContent>
                           </Select>
                         </TableCell>
@@ -747,7 +748,7 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                               step="0.01"
                               value={item.discount}
                               onChange={(e) => updateItem(index, 'discount', e.target.value)}
-                              className="w-20"
+                              className="w-16 px-2"
                             />
                           </TableCell>
                         )}

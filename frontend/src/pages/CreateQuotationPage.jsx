@@ -16,6 +16,7 @@ import {
 import { ArrowLeft, Plus, Trash2, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { getIndustryConfig } from '../lib/industryConfig';
+import { gstRateOptions, gstRateValue } from '../lib/gstRates';
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-IN', {
@@ -308,9 +309,9 @@ export const CreateQuotationPage = ({ isEdit = false }) => {
                     <TableCell><Input type="number" value={item.quantity} onChange={(e) => updateItem(index, 'quantity', e.target.value)} className="w-24 min-w-[6rem]" /></TableCell>
                     <TableCell><Input type="number" value={item.unit_price} onChange={(e) => updateItem(index, 'unit_price', e.target.value)} className="w-32 min-w-[8rem]" /></TableCell>
                     {chargesGst && <TableCell>
-                      <Select value={String(item.tax_rate)} onValueChange={(v) => updateItem(index, 'tax_rate', v)}>
+                      <Select value={gstRateValue(item.tax_rate)} onValueChange={(v) => updateItem(index, 'tax_rate', v)}>
                         <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
-                        <SelectContent><SelectItem value="0">0%</SelectItem><SelectItem value="5">5%</SelectItem><SelectItem value="12">12%</SelectItem><SelectItem value="18">18%</SelectItem><SelectItem value="28">28%</SelectItem></SelectContent>
+                        <SelectContent>{gstRateOptions(item.tax_rate).map((rate) => <SelectItem key={rate} value={rate}>{rate}%</SelectItem>)}</SelectContent>
                       </Select>
                     </TableCell>}
                     <TableCell className="text-right font-mono">{formatCurrency((parseFloat(item.quantity || 0) * parseFloat(item.unit_price || 0)) * (1 + (chargesGst ? parseFloat(item.tax_rate || 0) : 0)/100))}</TableCell>
