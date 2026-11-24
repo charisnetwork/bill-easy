@@ -25,6 +25,7 @@ import { ArrowLeft, Plus, Trash2, Save, Wallet, UserPlus, Loader2, Search, Check
 import { Switch } from '../components/ui/switch';
 import { toast } from 'sonner';
 import { gstRateOptions, gstRateValue } from '../lib/gstRates';
+import { clamp, lineItemProblem } from '../lib/invoice/lineItemRules';
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-IN', {
@@ -251,9 +252,10 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
     let taxAmount = 0;
     
     items.forEach(item => {
-      const qty = parseFloat(item.quantity) || 0;
-      const price = parseFloat(item.unit_price) || 0;
-      const itemDiscount = parseFloat(item.discount) || 0;
+      // Clamped so the summary never shows a negative bill while typing (saving is refused anyway).
+      const qty = clamp(parseFloat(item.quantity), 0);
+      const price = clamp(parseFloat(item.unit_price), 0);
+      const itemDiscount = clamp(parseFloat(item.discount), 0, qty * price);
       const taxRate = chargesGst ? parseFloat(item.tax_rate) || 0 : 0;
       
       const itemSubtotal = (qty * price) - itemDiscount;
@@ -265,9 +267,9 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
 
     let discountAmount = 0;
     if (formData.discount_type === 'percentage') {
-      discountAmount = (subtotal * parseFloat(formData.discount || 0)) / 100;
+      discountAmount = (subtotal * clamp(parseFloat(formData.discount || 0), 0, 100)) / 100;
     } else {
-      discountAmount = parseFloat(formData.discount || 0);
+      discountAmount = clamp(parseFloat(formData.discount || 0), 0, subtotal);
     }
 
     const amountWithGst = subtotal + taxAmount - discountAmount;
@@ -327,6 +329,16 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
     );
     if (invalidItems.length > 0) {
       toast.error('Please fill all item details');
+      return;
+    }
+
+    const problem = lineItemProblem({
+      items: formData.items.map(item => ({ quantity: industryConfig.fields.showQty ? item.quantity : 1, unit_price: item.unit_price, discount: item.discount })),
+      discount: formData.discount,
+      discount_type: formData.discount_type,
+    });
+    if (problem) {
+      toast.error(problem);
       return;
     }
 
@@ -691,8 +703,8 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                           <TableCell>
                             <Input
                               type="number"
-                              min="1"
-                              step="0.01"
+                              min="0.001"
+                              step="any"
                               value={item.quantity}
                               onChange={(e) => updateItem(index, 'quantity', e.target.value)}
                               onKeyDown={(e) => {
@@ -792,8 +804,9 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
               <CardTitle>Discount</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="form-grid" style={{gridTemplateColumns: '1fr auto'}}>
-                <div className="form-field">
+              {/* Wraps on narrow cards: the amount keeps a usable width and the type sits below it. */}
+              <div className="flex flex-wrap items-end gap-2">
+                <div className="form-field flex-1 min-w-[120px]">
                   <Label className="form-label sr-only">Discount Amount</Label>
                   <Input
                     type="number"
@@ -809,7 +822,7 @@ export const CreateInvoicePage = ({ isEdit = false }) => {
                   value={formData.discount_type}
                   onValueChange={(value) => setFormData({ ...formData, discount_type: value })}
                 >
-                  <SelectTrigger className="w-32 mt-auto">
+                  <SelectTrigger className="w-32 shrink-0">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

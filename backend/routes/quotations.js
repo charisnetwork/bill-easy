@@ -1,3 +1,4 @@
+const { refuseBadLineItems } = require('../services/lineItemRules');
 const express = require('express');
 const router = express.Router();
 const {
@@ -22,8 +23,8 @@ router.get('/', getQuotations);
 router.get('/next-number', require('../controllers/quotationController').getNextQuotationNumber);
 router.get('/:id', getQuotation);
 router.get('/:id/pdf', downloadQuotationPdf);
-router.post('/', createQuotation);
-router.put('/:id', updateQuotation);
+router.post('/', refuseBadLineItems, createQuotation);
+router.put('/:id', refuseBadLineItems, updateQuotation);
 router.delete('/:id', deleteQuotation);
 
 module.exports = router;

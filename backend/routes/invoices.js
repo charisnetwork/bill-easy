@@ -1,3 +1,4 @@
+const { refuseBadLineItems } = require('../services/lineItemRules');
 const express = require('express');
 const router = express.Router();
 
@@ -55,6 +56,7 @@ router.post(
   '/',
   checkSubscriptionQuota('invoices'),
   invoiceValidation,
+  refuseBadLineItems,
   createInvoice
 );
 
@@ -64,7 +66,7 @@ UPDATE INVOICE
 --------------------------------
 */
 
-router.put('/:id', invoiceValidation, updateInvoice);
+router.put('/:id', invoiceValidation, refuseBadLineItems, updateInvoice);
 
 /*
 --------------------------------

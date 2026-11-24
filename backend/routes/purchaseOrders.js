@@ -1,3 +1,4 @@
+const { refuseBadLineItems } = require('../services/lineItemRules');
 const express = require('express');
 const router = express.Router();
 const purchaseOrderController = require('../controllers/purchaseOrderController');
@@ -12,8 +13,8 @@ router.use(requireFeature('purchase_orders'));
 router.get('/', purchaseOrderController.getPurchaseOrders);
 router.get('/:id', purchaseOrderController.getPurchaseOrder);
 router.get('/:id/pdf', purchaseOrderController.downloadPdf);
-router.post('/', purchaseOrderController.createPurchaseOrder);
-router.put('/:id', purchaseOrderController.updatePurchaseOrder);
+router.post('/', refuseBadLineItems, purchaseOrderController.createPurchaseOrder);
+router.put('/:id', refuseBadLineItems, purchaseOrderController.updatePurchaseOrder);
 router.delete('/:id', purchaseOrderController.deletePurchaseOrder);
 
 module.exports = router;

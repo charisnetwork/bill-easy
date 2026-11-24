@@ -1,3 +1,4 @@
+const { refuseBadLineItems } = require('../services/lineItemRules');
 const express = require('express');
 const router = express.Router();
 const { 
@@ -15,8 +16,8 @@ router.use(companyContext);
 
 router.get('/', getPurchases);
 router.get('/:id', getPurchase);
-router.post('/', requireRecordLimit('purchase_bills'), createPurchase);
-router.put('/:id', updatePurchase);
+router.post('/', requireRecordLimit('purchase_bills'), refuseBadLineItems, createPurchase);
+router.put('/:id', refuseBadLineItems, updatePurchase);
 router.delete('/:id', deletePurchase);
 router.post('/:id/payment', recordPayment);
 router.post('/parse-pdf', requireRecordLimit('purchase_bills'), uploadPurchaseFile.single('file'), parsePurchasePDF);

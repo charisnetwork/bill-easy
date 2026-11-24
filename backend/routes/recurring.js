@@ -1,3 +1,4 @@
+const { refuseBadLineItems } = require('../services/lineItemRules');
 const express = require('express');
 const router = express.Router();
 const { authenticateToken, checkFeatureAccess } = require('../middleware/auth');
@@ -18,8 +19,8 @@ router.use(checkFeatureAccess('recurring_invoices'));
 
 router.get('/', getRecurringSubscriptions);
 router.get('/:id', getRecurringSubscriptionById);
-router.post('/', createRecurringSubscription);
-router.put('/:id', updateRecurringSubscription);
+router.post('/', refuseBadLineItems, createRecurringSubscription);
+router.put('/:id', refuseBadLineItems, updateRecurringSubscription);
 router.patch('/:id/status', toggleStatus);
 router.post('/:id/trigger', triggerNow);
 router.delete('/:id', deleteRecurringSubscription);
