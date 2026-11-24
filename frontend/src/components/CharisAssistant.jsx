@@ -3,9 +3,15 @@ import { Send, X, MessageSquare, Bot, User, Loader2, Sparkles, Minus } from 'luc
 import { cn } from '../lib/utils';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useLocation } from 'react-router-dom';
+
+// Form pages keep their Save / Add Item buttons bottom-right; the round launcher would cover them.
+// There the header's AI button still opens the chat.
+const FORM_PAGE = /\/(new|edit)\/?$/;
 
 const CharisAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const onFormPage = FORM_PAGE.test(useLocation().pathname);
   // The header's AI button opens the chat.
   useEffect(() => {
     const open = () => setIsOpen(true);
@@ -163,6 +169,7 @@ const CharisAssistant = () => {
 
       {/* Floating Ball Button */}
       <button 
+        hidden={onFormPage && !isOpen}
         onClick={(e) => {
           e.stopPropagation(); // Prevent click outside from firing immediately
           setIsOpen(!isOpen);

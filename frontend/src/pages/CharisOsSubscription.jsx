@@ -25,13 +25,16 @@ const tierName = (plan, grouped) => (grouped ? plan.name.replace(/\s+(monthly|ye
 // Per-month equivalents of yearly prices are shown rounded; the yearly total is exact.
 const perMonth = (amount) => Math.round(amount / 12);
 
+// A limit with no number (unlimited, or limited with none set) reads "Unlimited", on the card and in the table.
+const isUnlimited = (f) => f.limit_type === 'unlimited' || (f.limit_type === 'limited' && (f.limit_value === null || f.limit_value === undefined || Number(f.limit_value) < 0));
+
 const featureLine = (f) => {
   const period = RESET[f.reset_period] && !/month|year|day/i.test(f.name) ? ` ${RESET[f.reset_period].replace('/', 'per ')}` : '';
   // "1 Business", not "1 Businesses".
   const singular = (word) => (/esses$/.test(word) ? word.replace(/esses$/, 'ess') : word.replace(/([^s])s$/, '$1'));
   const name = Number(f.limit_value) === 1 ? singular(f.name) : f.name;
+  if (isUnlimited(f)) return { strong: 'Unlimited', text: f.name };
   if (f.limit_type === 'limited') return { strong: Number(f.limit_value).toLocaleString('en-IN'), text: `${name}${period}` };
-  if (f.limit_type === 'unlimited' && ['invoices', 'products', 'businesses'].includes(f.feature_code)) return { strong: 'Unlimited', text: f.name };
   return { strong: null, text: f.name };
 };
 
@@ -190,8 +193,9 @@ export const CharisOsSubscription = ({ current: initialCurrent }) => {
   const cell = (plan, code) => {
     const f = plan.features.find((x) => x.feature_code === code);
     if (!f?.enabled) return <X className="w-4 h-4 text-slate-300 mx-auto" />;
+    if (isUnlimited(f)) return <span className="font-semibold text-slate-800">Unlimited</span>;
     if (f.limit_type === 'limited') return <span className="font-semibold text-slate-800">{Number(f.limit_value).toLocaleString('en-IN')}{RESET[f.reset_period] || ''}</span>;
-    return <Check className="w-5 h-5 text-emerald-600 mx-auto" />;
+    return <Check className="w-5 h-5 text-emerald-600 mx-auto" aria-label="Included" />;
   };
 
   return (

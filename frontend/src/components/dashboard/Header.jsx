@@ -59,9 +59,10 @@ export const Header = ({ setSidebarOpen, setCmdkOpen }) => {
           <Menu className="w-5 h-5 text-slate-600" />
         </button>
 
-        <div className="hidden md:flex flex-col">
-          <div className="flex items-center text-[11px] font-medium text-slate-400 mb-0.5">
-            Bill Easy <span className="mx-1.5">•</span> {company?.name || 'Workspace'}
+        <div className="hidden md:flex flex-col min-w-0">
+          {/* One line at any width: the business name is cut with "…" and hidden below 1024 px. */}
+          <div className="flex items-center whitespace-nowrap overflow-hidden text-[11px] font-medium text-slate-400 mb-0.5 max-w-[220px]">
+            Bill Easy<span className="hidden lg:inline truncate"><span className="mx-1.5">•</span>{company?.name || 'Workspace'}</span>
           </div>
           <h2 className="text-sm font-bold text-slate-800 tracking-tight flex items-center gap-2">
             {getBreadcrumbs()}
